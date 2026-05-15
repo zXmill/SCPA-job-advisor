@@ -102,6 +102,10 @@ The **Hybrid Blending Service** combines NCF and SBERT scores using an α-weight
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
+```
+<img width="802" height="501" alt="image" src="https://github.com/user-attachments/assets/e9c33134-6bdb-4f84-bfdc-80fdee47608b" />
+```
+
 #### Mermaid Diagram (for Markdown renderers)
 
 ```mermaid
