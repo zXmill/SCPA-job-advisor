@@ -1,293 +1,438 @@
-# SCPA Architecture Documentation
+# SCPA Detailed System Diagram
 
-> Generated from actual codebase audit. All diagrams reflect the real implementation as of the current commit.
+This document explains the current SCPA project as it exists in code today.
+It is written for two audiences at the same time:
 
----
+- Non-technical readers can follow the plain-language story and the simple diagrams.
+- Technical reviewers can trace each feature to the service, endpoint, data store, and model path that implements it.
 
-## 1. Overview
+## How to Read This File
 
-SCPA (Smart Career Pathway Assistant) is an Indonesia-focused job recommendation system built as a modular microservices application. It combines three ML approaches — semantic similarity (SBERT), collaborative filtering (NCF), and reinforcement learning (DQN) — into a hybrid recommendation pipeline.
+SCPA means Smart Career Pathway Assistant. The app helps a student or job seeker create a profile, find Indonesian job listings, and receive ranked job recommendations.
 
-**Real tech stack**
+The project uses service names such as SBERT, NCF, and DQN. Those names are useful shorthand, but the current implementation has important runtime differences:
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 16.2.6 + React + TypeScript + Tailwind CSS + Framer Motion |
-| API Gateway | FastAPI (Python 3.12), port 8000 |
-| Scraping | FastAPI + BeautifulSoup4 + httpx, port 8001 |
-| Semantic Matching | FastAPI + sentence-transformers fallback + deterministic scoring, port 8002 |
-| Collaborative Filtering | FastAPI + online matrix factorization (numpy), port 8003 |
-| Reinforcement Learning | FastAPI + online linear Q-function (numpy), port 8004 |
-| Pipeline Orchestrator | FastAPI + 5-stage HTTP pipeline, port 8005 |
-| Database | PostgreSQL 15 (Alpine), port 5432 |
-| Container Runtime | Docker Compose (7 services) |
-| Auth | JWT (PyJWT) + bcrypt password hashing |
+| Label in this document | Meaning |
+|---|---|
+| Active runtime | Used by the frontend, gateway, Docker Compose, or the pipeline API. |
+| Optional runtime | Can be enabled by environment variable or manual command. |
+| Offline/demo | Used by scripts, notebooks, generated reports, or thesis/demo runs. |
+| Disconnected | Code exists, but is not currently called by the active runtime path. |
+| Risk | A behavior that may mislead users, evaluators, or future developers if not documented. |
 
----
-
-## 2. Architecture Diagram
-
-### High-Level System Architecture
+## One-Screen Summary
 
 ```mermaid
-flowchart TD
-    subgraph External
-        User["User (Browser)"]
-        JobBoards["Job Boards:<br/>LinkedIn, JobStreet,<br/>Glints, Kalibrr,<br/>Karir, TechInAsia,<br/>Indeed"]
+flowchart LR
+    Person["Student or job seeker"] --> Browser["Browser UI<br/>Next.js frontend"]
+    Browser --> Gateway["API Gateway<br/>FastAPI"]
+    Gateway --> DB["PostgreSQL<br/>users, jobs, skills, applications"]
+    Gateway --> Pipeline["Recommendation Pipeline<br/>FastAPI"]
+    Pipeline --> Scraper["Scraper<br/>collects job candidates"]
+    Pipeline --> SBERT["SBERT service<br/>semantic text matching"]
+    Pipeline --> NCF["NCF service<br/>online user-item factor scoring"]
+    Pipeline --> DQN["DQN service<br/>online Q-style reranking"]
+    Pipeline --> Aggregator["Stage 5 aggregator<br/>final score and explanation"]
+    Aggregator --> Gateway
+    Gateway --> Browser
+```
+
+Plain-language version:
+
+1. The user logs in and fills out a profile.
+2. The frontend asks the gateway for recommendations.
+3. The gateway loads the user's profile and skills from the database.
+4. The gateway asks the pipeline to rank jobs.
+5. The pipeline gathers job candidates, scores them with SBERT, NCF, and DQN-style signals, then combines the scores.
+6. The gateway stores or updates the recommended jobs in PostgreSQL.
+7. The frontend shows job cards with match percentage, score breakdown, company logo, and explanation text.
+
+## Project Map
+
+| Area | Path | What it owns | Runtime status |
+|---|---|---|---|
+| Frontend app | `frontend/src/app/` | Pages for auth, onboarding, dashboard, profile, jobs, applications, recommendations | Active runtime |
+| Frontend API client | `frontend/src/lib/api.ts` | Browser-to-gateway calls and JWT storage | Active runtime |
+| Gateway | `services/gateway/main.py` | Auth, profile, jobs, applications, recommendation proxy, logo proxy | Active runtime |
+| Pipeline | `services/pipeline/main.py` | Orchestrates scraper -> SBERT -> NCF -> DQN -> aggregate | Active runtime |
+| Pipeline stages | `services/pipeline/stages/` | Individual recommendation stages | Active runtime |
+| Scraper | `services/scraper/main.py` | Extracts and normalizes job listings | Active runtime |
+| SBERT service | `services/sbert/main.py` | Text embeddings and semantic similarity | Active runtime, with optional transformer |
+| NCF service | `services/ncf/main.py` | Online matrix-factor user-job scoring | Active runtime |
+| DQN service | `services/dqn/main.py` | Online Q-style job reranking and its own hardcoded learning path endpoint | Active runtime, but not used by gateway learning path |
+| Hybrid service | `services/hybrid/main.py` | Separate hybrid API with circuit-breaker/fairness ideas | Disconnected from Docker and active pipeline |
+| Database models | `db/models.py` | SQLAlchemy model definitions | Active for gateway and migrations |
+| Migrations | `db/migrations/` | PostgreSQL schema changes | Active setup path |
+| Evaluation | `services/evaluation/recommendation_metrics.py` | Ranking metrics such as Precision@K, Recall@K, NDCG@K | Offline/demo |
+| Scripts | `scripts/` | Training, full pipeline demo, verification, reports | Offline/demo |
+| Notebooks | `notebooks/` | ML readiness and metric reports | Offline/demo |
+| Reports | `reports/` | Generated metrics, recommendations, artifacts, research extraction | Offline/demo |
+
+## Feature Inventory
+
+| Feature | User-facing result | Primary code path | Data touched | Current caveat |
+|---|---|---|---|---|
+| Registration | User creates account and receives JWT | `POST /api/auth/register` in gateway | `users` | No email verification flow is wired. |
+| Login | User receives access token | `POST /api/auth/login` | `users.last_login_at` | Token is stored in browser localStorage. |
+| Current user | Frontend gets profile and skills | `GET /api/auth/me` | `users`, `user_skills` | Skills are returned as structured rows. |
+| Profile edit | User updates name, study program, university, skills | `PUT /api/profile` | `users`, `user_skills` | Gateway invalidates NCF user factor best-effort. |
+| Onboarding | Three-step profile completion | `PUT /api/profile/onboarding` | `users`, `user_skills` | Step 3 only updates completion percent. |
+| Job listing | User browses paginated jobs | `GET /api/jobs` | `jobs.match_data` | SQL filters for Indonesian sources/locations. |
+| Job detail | User opens a job page | `GET /api/jobs/{job_id}` | `jobs` | String job IDs are mapped to stable UUIDs. |
+| Apply to jobs | User submits selected jobs | `POST /api/applications` | `applications` | Application creation is not forwarded as model feedback. |
+| Recommendations | User sees ranked jobs and score bars | `POST /api/recommendations` -> pipeline | `users`, `user_skills`, `jobs`, model JSON weights | Gateway returns an empty list if pipeline is unavailable. |
+| Learning path | Dashboard suggests skills to learn | `POST /api/learning-path` in gateway | `user_skills` | Gateway uses hardcoded rule-based list, not the DQN service. |
+| Company logo proxy | Browser loads safe company logos | `GET /api/company-logo` | External image host | Only allowlisted HTTPS logo hosts are proxied. |
+| Background scraping/training | Pipeline periodically refreshes job candidates | `_continual_training_loop()` in pipeline | `jobs`, NCF/DQN JSON files | This refreshes/upserts jobs and model inputs; it is not full retraining. |
+| Offline reports | Thesis/demo metrics and artifacts | `scripts/run_full_pipeline.py`, notebooks | `reports/`, `notebooks/training_runs/` | Metrics are sample/demo dependent. |
+
+## Runtime Architecture
+
+```mermaid
+flowchart TB
+    subgraph External["Outside Docker / Browser"]
+        User["User"]
+        Browser["Next.js frontend<br/>localhost:3000 in dev"]
+        JobBoards["Public job boards<br/>LinkedIn, JobStreet, Glints,<br/>Kalibrr, Karir, TechInAsia, Indeed"]
     end
 
-    subgraph DockerCompose["Docker Compose Network"]
-        direction TB
-        Frontend["Frontend<br/>Next.js 16<br/>Port 3000 (dev)"]
-        Gateway["Gateway<br/>FastAPI<br/>Port 8000"]
-        Pipeline["Pipeline<br/>FastAPI<br/>Port 8005"]
-        Scraper["Scraper<br/>FastAPI<br/>Port 8001"]
-        SBERT["SBERT<br/>FastAPI<br/>Port 8002"]
-        NCF["NCF<br/>FastAPI<br/>Port 8003"]
-        DQN["DQN<br/>FastAPI<br/>Port 8004"]
-        Postgres["PostgreSQL 15<br/>Port 5432"]
+    subgraph Compose["Docker Compose services"]
+        Gateway["gateway<br/>FastAPI :8000"]
+        Pipeline["pipeline<br/>FastAPI :8005"]
+        Scraper["scraper<br/>FastAPI :8001"]
+        SBERT["sbert<br/>FastAPI :8002"]
+        NCF["ncf<br/>FastAPI :8003"]
+        DQN["dqn<br/>FastAPI :8004"]
+        Postgres["postgres<br/>PostgreSQL 15 :5432"]
+        Weights["weights volume<br/>/app/weights"]
+        PgData["postgres_data volume"]
     end
 
-    subgraph OfflineAssets["Offline / Not in Compose"]
-        HybridSvc["Hybrid Service<br/>Port NOT in compose<br/>Exists but unused"]
-        Notebooks["Jupyter Notebooks<br/>(training/evaluation)"]
-        Scripts["scripts/ (legacy runner)"]
+    subgraph Offline["Offline or disconnected assets"]
+        Hybrid["services/hybrid/main.py<br/>not in docker-compose"]
+        Scripts["scripts/<br/>demo, retrain, verify"]
+        Notebooks["notebooks/<br/>evaluation and readiness"]
+        Reports["reports/<br/>metrics and artifacts"]
     end
 
-    User -->|HTTP| Frontend
-    Frontend -->|REST API<br/>Bearer JWT| Gateway
-    Gateway -->|SQLAlchemy async| Postgres
-    Gateway -->|HTTP internal| Pipeline
-    Pipeline -->|HTTP internal| Scraper
-    Pipeline -->|HTTP internal| SBERT
-    Pipeline -->|HTTP internal| NCF
-    Pipeline -->|HTTP internal| DQN
-    Scraper -->|HTTP external| JobBoards
-    NCF -->|JSON file| WeightsVol["Docker Volume:<br/>weights"]
-    DQN -->|JSON file| WeightsVol
-    SBERT -->|Model files| WeightsVol
+    User --> Browser
+    Browser -->|"Fetch API + Bearer JWT"| Gateway
+    Gateway -->|"SQLAlchemy async"| Postgres
+    Gateway -->|"HTTP /pipeline/run"| Pipeline
+    Pipeline -->|"HTTP /scrape/run"| Scraper
+    Pipeline -->|"HTTP /encode"| SBERT
+    Pipeline -->|"HTTP /recommend/ncf"| NCF
+    Pipeline -->|"HTTP /rank"| DQN
+    Scraper -->|"httpx + parsing"| JobBoards
+    Postgres --> PgData
+    SBERT --> Weights
+    NCF -->|"online_ncf.json"| Weights
+    DQN -->|"online_dqn.json"| Weights
+    Scripts --> Reports
+    Notebooks --> Reports
 ```
 
 ### Service Communication Matrix
 
-| From | To | Protocol | Purpose |
-|------|-----|----------|---------|
-| Gateway | Pipeline | HTTP (httpx) | Recommendation requests, learning path |
-| Gateway | Postgres | SQLAlchemy asyncpg | Auth, jobs, applications, profiles |
-| Pipeline | Scraper | HTTP (httpx) | Fetch job candidates |
-| Pipeline | SBERT | HTTP (httpx) | Encode profile + jobs, compute similarity |
-| Pipeline | NCF | HTTP (httpx) | Score jobs via matrix factorization |
-| Pipeline | DQN | HTTP (httpx) | Rerank jobs via Q-function |
-| Scraper | Job boards | HTTP (httpx + BeautifulSoup) | Fetch live job listings |
-| Frontend | Gateway | Fetch API | All data operations |
+| Caller | Target | Protocol | Main request | Main response |
+|---|---|---|---|---|
+| Frontend | Gateway | HTTP/JSON | Auth, profile, jobs, applications, recommendations | User/job/recommendation JSON |
+| Gateway | PostgreSQL | SQLAlchemy async | User, skill, job, application reads/writes | Rows and counts |
+| Gateway | Pipeline | HTTP/JSON | `/pipeline/run`, `/pipeline/invalidate-user/{id}` | Ranked jobs, stage summaries |
+| Pipeline | Scraper | HTTP/JSON | `/scrape/run` | Normalized job candidates |
+| Pipeline | SBERT | HTTP/JSON | `/encode` | User/job embeddings |
+| Pipeline | NCF | HTTP/JSON | `/recommend/ncf`, `/feedback`, `/jobs/upsert` | User-job scores and training status |
+| Pipeline | DQN | HTTP/JSON | `/rank`, `/reward`, `/jobs/upsert` | Q-style ranking scores and training status |
+| Scraper | Job boards | HTTP/HTML/JSON | Search/result pages and optional detail pages | Raw page content |
 
----
-
-## 3. System Flowchart
-
-### Full App Flow: User Action to Recommendation Result
-
-```mermaid
-flowchart LR
-    A["User opens<br/>/recommendations"] --> B["Frontend<br/>Next.js page"]
-    B --> C["Auth check:<br/>localStorage JWT"]
-    C -->|"No token"| D["Redirect to /auth"]
-    C -->|"Has token"| E["POST /api/recommendations<br/>with Bearer token"]
-    E --> F["Gateway:<br/>1. Validate JWT<br/>2. Load user from DB<br/>3. Build profile payload"]
-    F --> G["Gateway POST<br/>/pipeline/run"]
-    G --> H["Pipeline Stage 1:<br/>Scrape or DB candidates"]
-    H --> I["Pipeline Stage 2:<br/>SBERT encode + cosine similarity"]
-    I --> J["Pipeline Stage 3:<br/>NCF predict scores"]
-    J --> K["Pipeline Stage 4:<br/>DQN rank + Q-values"]
-    K --> L["Pipeline Stage 5:<br/>Aggregate with skill alignment"]
-    L --> M["Pipeline returns<br/>ranked jobs + scores"]
-    M --> N["Gateway:<br/>1. Upsert jobs to DB<br/>2. Map to frontend schema"]
-    N --> O["JSON response:<br/>recommendations[]"]
-    O --> P["Frontend renders<br/>job cards + score bars"]
-```
-
----
-
-## 4. Data Flow Diagram
-
-### How Data Moves Through the System
+## User Journey: Recommendation Request
 
 ```mermaid
 flowchart TD
-    subgraph UserData["User Data"]
-        UD1["Registration form:<br/>name, email, password"]
-        UD2["Profile form:<br/>program_studi, university, skills"]
-        UD3["Onboarding:<br/>step 1-3 data"]
-    end
-
-    subgraph JobData["Job Data"]
-        JD1["Scraped HTML/JSON<br/>from job boards"]
-        JD2["Normalized JobItem:<br/>title, company, location,<br/>description, tags, source_url"]
-        JD3["Enriched job:<br/>+ salary_text, + full description"]
-        JD4["DB jobs row:<br/>+ UUID, + match_data JSONB"]
-    end
-
-    subgraph MLData["ML / Interaction Data"]
-        MD1["User profile text:<br/>name + program_studi + skills"]
-        MD2["SBERT embeddings:<br/>384-dim float[]"]
-        MD3["NCF factors:<br/>user_factors, item_factors,<br/>user_bias, item_bias"]
-        MD4["DQN replay:<br/>state, action, reward,<br/>next_state, done"]
-        MD5["Interaction events:<br/>view, click, apply, save,<br/>skip, dismiss"]
-    end
-
-    subgraph OutputData["Output Data"]
-        OD1["Recommendations:<br/>job + hybrid_score +<br/>sbert_score + ncf_score +<br/>dqn_score + explanation"]
-        OD2["Learning path:<br/>hardcoded skill sequence<br/>by target_role"]
-        OD3["Job listings:<br/>paginated, filtered<br/>by location/experience"]
-        OD4["Applications:<br/>user_id + job_id +<br/>status + applied_at"]
-    end
-
-    UD1 -->|"POST /api/auth/register"| DB_USERS["DB: users"]
-    UD2 -->|"PUT /api/profile"| DB_USERS
-    UD2 -->|"PUT /api/profile"| DB_SKILLS["DB: user_skills"]
-    UD3 -->|"PUT /api/profile/onboarding"| DB_USERS
-
-    JD1 -->|"httpx fetch"| Scraper
-    Scraper -->|"extract_jobs()"| JD2
-    JD2 -->|"_enrich_job_detail()"| JD3
-    JD3 -->|"Pipeline / DB upsert"| JD4
-    JD4 -->|"SELECT ... LIMIT/OFFSET"| GatewayJobs["Gateway /api/jobs"]
-
-    MD1 -->|"/encode"| SBERT
-    SBERT -->|"embeddings[]"| MD2
-    MD2 -->|"cosine similarity"| PipelineEncode["Pipeline Stage 2"]
-    PipelineEncode -->|"sbert_score"| PipelineNCF["Pipeline Stage 3"]
-    PipelineNCF -->|"ncf_score"| PipelineDQN["Pipeline Stage 4"]
-    PipelineDQN -->|"dqn_score"| PipelineAgg["Pipeline Stage 5"]
-
-    MD5 -->|"POST /feedback"| NCF
-    MD5 -->|"POST /feedback"| DQN
-    MD5 -->|"INSERT"| DB_INTERACTIONS["DB: user_interactions"]
-
-    PipelineAgg -->|"final_score + explanation"| OD1
-    DQN -->|"/learning-path"| OD2
-    DB_JOBS["DB: jobs"] -->|"Paginated query"| OD3
-    DB_APPLICATIONS["DB: applications"] -->|"SELECT"| OD4
+    A["User opens /recommendations"] --> B{"Does browser have JWT?"}
+    B -->|"No"| C["Redirect to /auth"]
+    B -->|"Yes"| D["Frontend calls<br/>POST /api/recommendations"]
+    D --> E["Gateway validates JWT"]
+    E --> F["Gateway loads user and skills<br/>from PostgreSQL"]
+    F --> G["Gateway counts interactions<br/>applications + user_interactions + user_job_interactions"]
+    G --> H["Gateway sends PipelineRunRequest<br/>user_id, profile, interaction_count, limit"]
+    H --> I["Pipeline Stage 1<br/>candidate jobs"]
+    I --> J["Pipeline Stage 2<br/>semantic embeddings and SBERT score"]
+    J --> K["Pipeline Stage 3<br/>NCF score"]
+    K --> L["Pipeline Stage 4<br/>DQN-style rerank score"]
+    L --> M["Pipeline Stage 5<br/>weighted aggregate and explanation"]
+    M --> N["Gateway upserts jobs to DB"]
+    N --> O["Gateway maps response to frontend schema"]
+    O --> P["Frontend renders ranked cards"]
 ```
 
----
-
-## 5. Sequence Diagram
-
-### Runtime Interaction: User Opens Recommendations Page
+### Sequence Diagram
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User
-    participant FE as Frontend<br/>(Next.js /recommendations)
-    participant GW as Gateway<br/>(FastAPI :8000)
-    participant DB as PostgreSQL<br/>(:5432)
-    participant PL as Pipeline<br/>(FastAPI :8005)
-    participant SC as Scraper<br/>(FastAPI :8001)
-    participant SB as SBERT<br/>(FastAPI :8002)
-    participant NC as NCF<br/>(FastAPI :8003)
-    participant DQ as DQN<br/>(FastAPI :8004)
+    participant FE as Frontend
+    participant GW as Gateway :8000
+    participant DB as PostgreSQL
+    participant PL as Pipeline :8005
+    participant SC as Scraper :8001
+    participant SB as SBERT :8002
+    participant NC as NCF :8003
+    participant DQ as DQN :8004
 
-    User->>FE: Navigate to /recommendations
-    FE->>GW: POST /api/recommendations<br/>Authorization: Bearer {jwt}
-    GW->>DB: SELECT users + user_skills<br/>WHERE id = token.sub
-    DB-->>GW: user row + skills[]
-    GW->>DB: SELECT COUNT(*) FROM user_interactions<br/>WHERE user_id = ?
+    User->>FE: Open /recommendations
+    FE->>GW: POST /api/recommendations with Bearer JWT
+    GW->>GW: Decode and validate JWT
+    GW->>DB: SELECT user row and skills
+    DB-->>GW: Profile data
+    GW->>DB: Count applications and interaction rows
     DB-->>GW: interaction_count
-    GW->>PL: POST /pipeline/run<br/>{user_id, profile, interaction_count, limit}
-
-    PL->>SC: GET /scrape/run?limit=250<br/>(or query DB jobs if refresh=false)
-    SC-->>PL: ScrapeResponse {jobs[], count}
-    PL->>PL: Build user profile text<br/>from program_studi + skills
-
-    PL->>SB: POST /encode<br/>{texts: [profile_text, job_text1, ...]}
-    SB-->>PL: EncodeResponse {embeddings[]}
-    PL->>PL: Compute cosine similarity<br/>profile vs each job
-
-    PL->>NC: POST /recommend/ncf<br/>{user_id, candidates[], profile_text, embedding}
-    NC-->>PL: NCFResponse {recommendations[]}
-
-    PL->>DQ: POST /rank<br/>{user_id, job_candidates[], session_ctx}
-    DQ-->>PL: RankResponse {ranked[]}
-
-    PL->>PL: Stage 5 Aggregate:<br/>dynamic weights + skill alignment<br/>+ penalty logic
-    PL-->>GW: PipelineRunResponse<br/>{ranked[], timings_ms, stages}
-
-    GW->>DB: INSERT/UPSERT jobs<br/>(ON CONFLICT DO UPDATE)
-    DB-->>GW: OK
-    GW-->>FE: {recommendations[], fairness_tpr_gap}
-    FE-->>User: Render job cards<br/>with match % and score bars
+    GW->>PL: POST /pipeline/run
+    PL->>SC: POST /scrape/run or use DB/cache candidates
+    SC-->>PL: jobs[]
+    PL->>SB: POST /encode profile + job texts
+    SB-->>PL: embeddings[]
+    PL->>PL: Compute cosine similarity as sbert_score
+    PL->>NC: POST /recommend/ncf candidates + embeddings
+    NC-->>PL: ncf_score per job
+    PL->>DQ: POST /rank candidates + session context
+    DQ-->>PL: q_value per job
+    PL->>PL: Aggregate final_score and explanation
+    PL-->>GW: ranked[]
+    GW->>DB: INSERT/UPDATE recommended jobs
+    GW-->>FE: recommendations[]
+    FE-->>User: Job cards with score bars
 ```
 
----
+## Recommendation Pipeline: Six-Stage Interpretation
 
-## 6. Pipeline Flowchart
+The active pipeline is implemented as five code stages. In recommendation-system language, it behaves like a candidate pipeline:
 
-### ML and Scraping Pipeline (5 Stages)
+| Recsys concept | SCPA stage | Code | What happens |
+|---|---|---|---|
+| Source | Stage 1 | `stage_1_scrape.py` | Load candidate jobs from database, in-memory cache, scraper, or fallback jobs. |
+| Hydrator | Stage 2 | `stage_2_encode.py` | Add embeddings and semantic scores. |
+| Scorer | Stage 3 | `stage_3_ncf_score.py` | Add NCF score. |
+| Scorer/reranker | Stage 4 | `stage_4_dqn_rank.py` | Add DQN-style rank score. |
+| Selector | Stage 5 | `stage_5_aggregate.py` | Compute final score, sort, return top K. |
+| Side effect | Gateway and pipeline feedback endpoints | `gateway/main.py`, `pipeline/main.py` | Upsert jobs, optional feedback forwarding. Frontend feedback is not wired yet. |
 
 ```mermaid
 flowchart TD
-    Start["PipelineRunRequest<br/>{user_id, profile, limit}"] --> S1
+    Start["PipelineRunRequest"] --> S1["Stage 1: Candidate source"]
+    S1 --> S1a{"refresh_jobs true?"}
+    S1a -->|"No + DB has jobs"| DBJobs["Use active DB jobs"]
+    S1a -->|"No + cache has jobs"| CacheJobs["Use pipeline JOB_CACHE"]
+    S1a -->|"Yes or no DB/cache"| ScrapeJobs["Call scraper /scrape/run"]
+    ScrapeJobs --> Upsert["Upsert scraped jobs to PostgreSQL when DB is configured"]
+    DBJobs --> Merge["Normalized candidate list"]
+    CacheJobs --> Merge
+    Upsert --> Merge
 
-    subgraph Stage1["Stage 1: Scrape / DB Candidates"]
-        S1["run_scrape_stage"]
-        S1a["If refresh=true:<br/>call Scraper /scrape/run"]
-        S1b["If refresh=false:<br/>SELECT from DB jobs<br/>+ Indonesia filter"]
-        S1 --> S1a
-        S1 --> S1b
-        S1a --> S1c["Normalize + deduplicate"]
-        S1b --> S1c
-    end
+    Merge --> S2["Stage 2: SBERT encode"]
+    S2 --> E1["Build profile_text and job_texts"]
+    E1 --> E2["POST /encode"]
+    E2 --> E3["Cosine similarity -> sbert_score"]
 
-    subgraph Stage2["Stage 2: SBERT Encode"]
-        S2["run_encode_stage"]
-        S2a["POST /encode<br/>profile_text + job_texts"]
-        S2b["Cosine similarity<br/>user_emb vs job_embs"]
-        S2 --> S2a --> S2b
-    end
+    E3 --> S3["Stage 3: NCF scoring"]
+    S3 --> N1["POST /recommend/ncf"]
+    N1 --> N2["score = sigmoid(dot(user,item)+biases)"]
 
-    subgraph Stage3["Stage 3: NCF Score"]
-        S3["run_ncf_score_stage"]
-        S3a["POST /recommend/ncf<br/>{user_id, candidates}"]
-        S3b["predict_one:<br/>sigmoid(dot(user_vec, item_vec) + bias)"]
-        S3 --> S3a --> S3b
-    end
+    N2 --> S4["Stage 4: DQN-style rerank"]
+    S4 --> D1["POST /rank"]
+    D1 --> D2["q_value from linear weights + SBERT/NCF prior"]
 
-    subgraph Stage4["Stage 4: DQN Rank"]
-        S4["run_dqn_rank_stage"]
-        S4a["POST /rank<br/>{user_id, candidates}"]
-        S4b["Q-value per job<br/>normalize to [0,1]"]
-        S4 --> S4a --> S4b
-    end
-
-    subgraph Stage5["Stage 5: Aggregate"]
-        S5["run_aggregate_stage"]
-        S5a["Dynamic weights:<br/>cold(0.75/0.2/0.05)<br/>warm(0.55/0.35/0.1)<br/>active(0.45/0.4/0.15)"]
-        S5b["Skill alignment:<br/>token overlap + domain match<br/>+ penalty for mismatches"]
-        S5c["Sort by final_score<br/>+ generate explanation"]
-        S5 --> S5a --> S5b --> S5c
-    end
-
-    S1c --> S2
-    S2b --> S3
-    S3b --> S4
-    S4b --> S5
-    S5c --> End["PipelineRunResponse<br/>{ranked[], timings_ms, stages}"]
+    D2 --> S5["Stage 5: Aggregate"]
+    S5 --> W["Choose weights by interaction_count"]
+    W --> A["Add skill alignment and penalties"]
+    A --> Sort["Sort by final_score"]
+    Sort --> End["PipelineRunResponse ranked[]"]
 ```
 
----
+### Active Aggregation Weights
 
-## 7. Database ERD
+| User segment | Condition | SBERT weight | NCF weight | DQN weight | Meaning |
+|---|---:|---:|---:|---:|---|
+| Cold | `interaction_count <= 0` | 0.75 | 0.20 | 0.05 | Trust profile text and skill alignment most. |
+| Warm | `1 <= interaction_count <= 20` | 0.55 | 0.35 | 0.10 | Start trusting interaction patterns. |
+| Active | `interaction_count > 20` | 0.45 | 0.40 | 0.15 | Give learned feedback more influence. |
 
-### Core Tables (from `db/models.py` and migrations 001-005)
+The final score is:
+
+```text
+base_score = SBERT*w_sbert + NCF*w_ncf + DQN*w_dqn
+final_score = clamp(base_score + 0.18*skill_alignment - penalty, 0, 1)
+```
+
+## Model-Service Truth Table
+
+| Service name | What the name suggests | What the active code does | Correct way to describe it now |
+|---|---|---|---|
+| SBERT | Sentence-BERT semantic embeddings | Uses `SentenceTransformer` only when `SBERT_ENABLE_TRANSFORMER=1`; otherwise uses deterministic category/token embeddings. Docker Compose sets the transformer flag to `1`. Local tests often force fallback mode. | "SBERT service with optional real SentenceTransformer and deterministic fallback." |
+| NCF | Neural Collaborative Filtering with neural user-item interaction function | Defines a PyTorch `NeuralCF` class, but the active HTTP path uses `OnlineNCF`, an online matrix-factorization model with dot product and biases. | "Online collaborative filtering / matrix factor scorer." |
+| DQN | Deep Q-Network reinforcement-learning agent | Defines a PyTorch `QNetwork`, but active `/rank` uses `OnlineDQN`, a linear Q-style scorer over job features with TD update support. | "Online Q-style reranker; not a full deep Q-network in active serving." |
+| Hybrid | Separate hybrid service | `services/hybrid/main.py` exists, but Docker Compose and the active pipeline use `stage_5_aggregate.py` instead. | "Stage 5 aggregation is active; standalone hybrid service is disconnected." |
+
+## SBERT Flow
+
+```mermaid
+flowchart TD
+    A["Profile text<br/>study program + skills"] --> B["Job texts<br/>title + company + location + description + experience"]
+    A --> C{"SBERT_ENABLE_TRANSFORMER?"}
+    B --> C
+    C -->|"1 / true / yes"| D["Load SentenceTransformer<br/>MODEL_DIR if populated, else MODEL_NAME"]
+    C -->|"not enabled or load fails"| E["Deterministic fallback embedding<br/>category aliases + hashed token features"]
+    D --> F["model.encode(..., normalize_embeddings=True)"]
+    E --> G["deterministic_embedding(text)"]
+    F --> H["Normalized embeddings"]
+    G --> H
+    H --> I["Pipeline computes cosine similarity"]
+    I --> J["sbert_score in [0,1]"]
+```
+
+### SBERT Implementation Details
+
+| Detail | Current behavior |
+|---|---|
+| Default model name | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` |
+| Embedding dimension | 384 |
+| Optional real model flag | `SBERT_ENABLE_TRANSFORMER=1` |
+| Docker Compose setting | Sets `SBERT_ENABLE_TRANSFORMER: "1"` |
+| Local fallback | Category aliases for communication, language, event, software, data, business, design, plus stable hashed token features |
+| Optional cache | Redis if `REDIS_URL` exists |
+| Main endpoint used by pipeline | `POST /encode` |
+| Separate semantic endpoint | `POST /match/semantic` |
+| Key risk | Some docs mention `SBERT_FORCE_FALLBACK`, but the service code only checks `SBERT_ENABLE_TRANSFORMER`. |
+
+## NCF Flow
+
+```mermaid
+flowchart TD
+    A["Pipeline sends candidates<br/>id, title, description, tags, embedding"] --> B["OnlineNCF.recommend"]
+    B --> C{"Known user?"}
+    C -->|"No"| D["Create user factor<br/>from profile embedding or stable seed"]
+    C -->|"Yes"| E["Reuse user factor"]
+    D --> F["Item factor lookup"]
+    E --> F
+    F --> G{"Known item?"}
+    G -->|"No"| H["Create item factor<br/>from job embedding or stable seed"]
+    G -->|"Yes"| I["Reuse item factor"]
+    H --> J["Predict"]
+    I --> J
+    J --> K["sigmoid(dot(user,item) + user_bias + item_bias + global_bias)"]
+    K --> L["ncf_score"]
+
+    M["Feedback event"] --> N["target from event value<br/>apply/click/save/view/skip"]
+    N --> O["SGD updates user factor,<br/>item factor, biases, global bias"]
+    O --> P["Save online_ncf.json"]
+```
+
+### NCF Implementation Details
+
+| Detail | Current behavior |
+|---|---|
+| Active class | `OnlineNCF` |
+| Factor dimension | `NCF_FACTOR_DIM`, default 64 |
+| Learning rate | `NCF_LEARNING_RATE`, default 0.045 |
+| Regularization | `NCF_REGULARIZATION`, default 0.0005 |
+| Persistence | JSON file `online_ncf.json` in model directory |
+| PyTorch `NeuralCF` class | Exists and can be used by training scripts, but is not the active HTTP serving path |
+| Key risk | Calling the active path "NCF" can overclaim neural collaborative filtering because active inference uses a dot product, which the NCF paper specifically tried to move beyond. |
+
+## DQN Flow
+
+```mermaid
+flowchart TD
+    A["Pipeline sends candidates<br/>with embedding, SBERT score, NCF score"] --> B["OnlineDQN.rank"]
+    B --> C["Build feature vector<br/>projected embedding + 6 dense features"]
+    C --> D["Linear q_raw = dot(weights, features)"]
+    D --> E["Prior = 0.55*SBERT + 0.35*NCF"]
+    E --> F["q_value = 0.65*sigmoid(q_raw) + 0.35*prior"]
+    F --> G["Sort by q_value"]
+    G --> H["dqn_score after pipeline normalization"]
+
+    I["Feedback event"] --> J["Compute reward<br/>click/apply/view positive, skip negative"]
+    J --> K["TD target = reward + gamma*max(target Q)"]
+    K --> L["weights += learning_rate * td_error * features"]
+    L --> M["Every 10 steps: soft update target weights"]
+    M --> N["Save online_dqn.json"]
+```
+
+### DQN Implementation Details
+
+| Detail | Current behavior |
+|---|---|
+| Active class | `OnlineDQN` |
+| Feature dimension | `DQN_EMBED_DIM + 6`, default 70 |
+| Learning rate | `DQN_LEARNING_RATE`, default 0.03 |
+| Discount | `DQN_GAMMA`, default 0.92 |
+| Persistence | JSON file `online_dqn.json` |
+| Replay storage | In-memory deque during service life; only summary is saved to JSON |
+| PyTorch `QNetwork` class | Exists and is used by training scripts, but not by active `/rank` |
+| Learning path endpoint in DQN service | Hardcoded role-to-skill sequences |
+| Gateway learning path endpoint | Does not call DQN service; it uses a separate hardcoded list |
+| Key risk | This is a Q-style online reranker, not a full deep Q-network serving path. |
+
+## Data Flow
+
+```mermaid
+flowchart TB
+    subgraph Profile["User profile data"]
+        Register["Register<br/>name, email, password"]
+        ProfileForm["Profile/onboarding<br/>study program, university, skills"]
+        JWT["JWT access token"]
+    end
+
+    subgraph Jobs["Job data"]
+        ExternalPages["External job pages"]
+        Scraped["Scraped job rows<br/>title, company, location, description"]
+        Normalized["Normalized candidate<br/>id, skills, tags, source_url, logo"]
+        JobRows["PostgreSQL jobs rows<br/>UUID + match_data JSONB"]
+    end
+
+    subgraph ModelData["Model/runtime data"]
+        ProfileText["profile_text"]
+        Embeddings["embeddings"]
+        Scores["sbert_score, ncf_score, dqn_score"]
+        WeightsJson["online_ncf.json<br/>online_dqn.json"]
+    end
+
+    subgraph Output["User-visible output"]
+        Recs["recommendations[]"]
+        JobCards["job cards with match percent"]
+        Apps["applications[]"]
+        Skills["learning path skill suggestions"]
+    end
+
+    Register --> JWT
+    Register --> DBUsers["users"]
+    ProfileForm --> DBUsers
+    ProfileForm --> DBSkills["user_skills"]
+    ExternalPages --> Scraped
+    Scraped --> Normalized
+    Normalized --> JobRows
+    DBUsers --> ProfileText
+    DBSkills --> ProfileText
+    JobRows --> Normalized
+    ProfileText --> Embeddings
+    Normalized --> Embeddings
+    Embeddings --> Scores
+    Scores --> Recs
+    WeightsJson --> Scores
+    Recs --> JobCards
+    JobRows --> Apps
+    DBSkills --> Skills
+```
+
+## Database ERD
 
 ```mermaid
 erDiagram
-    users ||--o{ user_skills : has
-    users ||--o{ applications : has
-    users ||--o{ user_interactions : has
-    users ||--o{ user_job_interactions : has
+    users ||--o{ user_skills : owns
+    users ||--o{ applications : submits
+    users ||--o{ user_interactions : generates
+    users ||--o{ user_job_interactions : generates
     users ||--o{ dqn_session_logs : has
     users ||--o{ dqn_replay_archive : has
     jobs ||--o{ applications : receives
@@ -386,10 +531,10 @@ erDiagram
     dqn_replay_archive {
         bigint id PK
         uuid user_id FK
-        float[] state
+        float_array state
         int action
         float reward
-        float[] next_state
+        float_array next_state
         boolean done
         datetime created_at
     }
@@ -417,445 +562,282 @@ erDiagram
     }
 ```
 
-### Table Summary
+### Database Table Status
 
-| Table | Source | Status | Notes |
-|-------|--------|--------|-------|
-| `users` | models.py + 001 | Active | Core auth/profile table |
-| `jobs` | models.py + 001 + 004 + 005 | Active | `company_logo` added in 004, `salary_text` in 005 |
-| `applications` | models.py + 001 | Active | User job applications |
-| `user_skills` | models.py + 001 | Active | Many-to-one with users |
-| `user_interactions` | models.py + 001 | Active | DQN training data (action logs) |
-| `user_job_interactions` | 003 | Active | Fine-grained click/save/apply/dismiss |
-| `dqn_session_logs` | 003 | Active | DQN session state |
-| `dqn_replay_archive` | 003 | Active | DQN replay buffer persisted to DB |
-| `hybrid_weights` | 003 | Exists but unused | No runtime code writes to this table |
-| `hybrid_request_log` | 003 | Exists but unused | No runtime code writes to this table |
+| Table | Current role |
+|---|---|
+| `users` | Active auth/profile table. |
+| `user_skills` | Active profile-skill table. |
+| `jobs` | Active job listing table. |
+| `applications` | Active application table. |
+| `user_interactions` | Counted by gateway, but frontend does not currently insert rows. |
+| `user_job_interactions` | Counted by gateway, but no active frontend path writes it. |
+| `dqn_session_logs` | Schema exists for DQN history, but active DQN runtime stores JSON file state. |
+| `dqn_replay_archive` | Schema exists for DQN replay archive, but active DQN runtime does not write it. |
+| `hybrid_weights` | Schema exists, but active aggregator uses hardcoded dynamic weights. |
+| `hybrid_request_log` | Schema exists, but active runtime does not write request logs here. |
 
-### Missing / Recommended Tables
-
-| Table | Why Missing | Recommendation |
-|-------|-------------|----------------|
-| `cv_resumes` | No resume upload feature exists in frontend or gateway | Add if CV parsing is needed |
-| `email_verifications` | Email verification flag exists but no email service is wired | Add SMTP integration first |
-| `job_skills` | Skills are stored in `match_data` JSONB or inferred at runtime | Normalize if frequent skill queries needed |
-| `career_paths` | DQN `/learning-path` returns hardcoded sequences | Persist user-generated paths if needed |
-
----
-
-## 8. Focused Diagrams
-
-### 8.1 Scraper Flow
+## Frontend Route Map
 
 ```mermaid
-flowchart TD
-    A["SOURCE_QUERIES<br/>25+ queries (tech + non-tech)"] --> B["SOURCE_URL_TEMPLATES<br/>per-source URL generation"]
-    B --> C["_configured_seed_urls()<br/>or SCRAPER_SEED_URLS env"]
-    C --> D["async fetch<br/>httpx + User-Agent"]
-    D --> E["_parse_fetched_content()<br/>HTML -> BeautifulSoup<br/>JSON -> direct parse"]
-    E --> F["extract_jobs()<br/>JobItem {job_id, title, company,<br/>location, description, tags,<br/>source_url, content_hash}"]
-    F --> G["Deduplicate by<br/>content_hash"]
-    G --> H["_enrich_jobs_with_detail()<br/>Fetch source_url for full<br/>description + salary_text"]
-    H -->|"Host allowlist check<br/>follow_redirects=False"| I["ScrapeResponse<br/>{count, jobs[], deduplicated}"]
-```
-
-**Key implementation details**
-
-- `LOCAL_SOURCE_HOSTS` allowlist prevents SSRF in detail enrichment
-- `INDONESIA_TERMS` filters for Indonesia-specific jobs
-- `SOURCE_QUERIES` includes both tech (software engineer, python) and non-tech (HR, finance, marketing, nurse, teacher, legal)
-- If no seeds configured, falls back to bundled HTML sample data
-- Concurrency controlled by `SCRAPER_CONCURRENCY` semaphore (default 6)
-
-### 8.2 SBERT Flow
-
-```mermaid
-flowchart TD
-    A["User profile text:<br/>name + program_studi + skills"] --> B{"SBERT_ENABLE_TRANSFORMER=1?"}
-    B -->|Yes| C["Load sentence-transformers<br/>paraphrase-multilingual-MiniLM-L12-v2"]
-    B -->|No (default)| D["deterministic_embedding()<br/>Category scores + stable noise"]
-    C --> E["model.encode(texts)<br/>384-dim float[]"]
-    D --> F["_category_scores(tokens)<br/>+ _stable_noise(token)<br/>+ normalize"]
-    E --> G["Cosine similarity<br/>profile_emb vs job_emb"]
-    F --> G
-    G --> H["Score in [0,1]<br/>via (cos + 1) / 2"]
-    H --> I{"Redis configured?"}
-    I -->|Yes| J["Cache embedding<br/>SHA256 key -> Redis"]
-    I -->|No| K["Return directly"]
-```
-
-**Key implementation details**
-
-- Two runtime modes: real transformer (requires `SBERT_ENABLE_TRANSFORMER=1`) or deterministic fallback
-- Fallback uses 7 category aliases (communication, language, event, software, data, business, design) with Indonesian normalization
-- Embedding dimension: 384
-- Optional Redis caching with TTL (default 3600s)
-- Endpoints: `POST /encode`, `POST /match/semantic`, `GET /metrics`
-
-### 8.3 NCF Flow
-
-```mermaid
-flowchart TD
-    A["POST /recommend/ncf<br/>{user_id, candidates[], profile_text}"] --> B["OnlineNCF.recommend()"]
-    B --> C["_user_vector()<br/>If new user:<br/>seed from profile_text/embedding"]
-    C --> D["_item_vector()<br/>For each candidate job:<br/>seed from job embedding/text"]
-    D --> E["predict_one()<br/>sigmoid(dot(user_vec, item_vec)<br/>+ user_bias + item_bias + global_bias)"]
-    E --> F["Sort by score<br/>Return top N"]
-    F --> G["NCFResponse<br/>{recommendations[{job_id, score}]}"]
-
-    H["POST /feedback<br/>{user_id, job_id, event}"] --> I["OnlineNCF.learn_one()<br/>SGD update"]
-    I --> J["user_factors += lr * (error * item_vec - reg * user_factors)"]
-    I --> K["item_factors += lr * (error * old_user - reg * item_factors)"]
-    J --> L["model.save()<br/>-> online_ncf.json"]
-    K --> L
-```
-
-**Key implementation details**
-
-- Online matrix factorization with SGD on implicit feedback
-- Factor dimension: 64 (configurable via `NCF_FACTOR_DIM`)
-- Learning rate: 0.045, Regularization: 0.0005
-- Event targets: apply=1.0, click=1.0, save=0.85, view=0.45, skip=0.02
-- Persisted to `online_ncf.json` (JSON file, not DB)
-- NeuralCF PyTorch class exists but is not used in the online path (numpy path is active)
-
-### 8.4 DQN Flow
-
-```mermaid
-flowchart TD
-    A["POST /rank<br/>{user_id, job_candidates[], session_ctx}"] --> B["OnlineDQN.rank()"]
-    B --> C["Build feature vector<br/>per job:<br/>embedding[0:64] +<br/>6 hand-crafted features"]
-    C --> D["Q = dot(weights, features)<br/>(linear Q-function)"]
-    D --> E["Sort by Q-value<br/>Return ranked[]"]
-
-    F["POST /feedback<br/>{user_id, job_id, event}"] --> G["OnlineDQN.learn()"]
-    G --> H["Compute reward from<br/>EVENT_REWARDS table"]
-    H --> I["Add to replay buffer<br/>(deque, max 5000)"]
-    I --> J["SGD on MSE loss:<br/>weights += lr * error * feature"]
-    J --> K["Soft update target_weights<br/>tau=0.05"]
-    K --> L["agent.save()<br/>-> online_dqn.json"]
-```
-
-**Key implementation details**
-
-- Linear Q-function (no hidden layers in production), not the QNetwork class
-- Feature dimension: 64 + 6 = 70
-- Replay buffer: deque(maxlen=5000)
-- Learning rate: 0.03, Gamma: 0.92
-- Persisted to `online_dqn.json`
-- `/learning-path` is hardcoded skill sequences by role (data scientist, backend, frontend, business analyst, MC, etc.)
-
-### 8.5 Hybrid / Aggregation Flow
-
-```mermaid
-flowchart TD
-    A["Stage 5: run_aggregate_stage"] --> B["dynamic_weights()<br/>Based on interaction_count"]
-    B --> C["Cold: 0.75 SBERT / 0.20 NCF / 0.05 DQN"]
-    B --> D["Warm: 0.55 SBERT / 0.35 NCF / 0.10 DQN"]
-    B --> E["Active: 0.45 SBERT / 0.40 NCF / 0.15 DQN"]
-    C --> F["_alignment()<br/>Token overlap + domain match"]
-    D --> F
-    E --> F
-    F --> G["final_score =<br/>base_score + 0.18*alignment<br/>- penalty"]
-    G --> H["Sort descending<br/>Generate explanation[]"]
-    H --> I["AggregateStageResult<br/>{ranked[], summary}"]
-```
-
-**Note on the standalone Hybrid service**
-
-- `services/hybrid/main.py` exists as a standalone FastAPI service
-- It has circuit breaker logic, fairness tracking, and fallback scoring
-- **It is NOT in docker-compose.yml and is NOT called by the pipeline**
-- The pipeline uses `stage_5_aggregate.py` for aggregation instead
-- The hybrid service is effectively disconnected from the runtime architecture
-
-### 8.6 API Endpoint Flow
-
-#### Gateway Endpoints (`services/gateway/main.py`)
-
-| Method | Path | Handler | Description |
-|--------|------|---------|-------------|
-| GET | `/` | root | Service info |
-| GET | `/health` | health | Health check |
-| GET | `/ready` | ready | Ready check (probes pipeline) |
-| GET | `/api/company-logo` | proxy_company_logo | Logo proxy with host allowlist |
-| POST | `/api/auth/register` | register | Create user + return JWT |
-| POST | `/api/auth/login` | login | Verify password + return JWT |
-| GET | `/api/auth/me` | me | Return current user + skills |
-| PUT | `/api/profile` | update_profile | Update user profile + skills |
-| PUT | `/api/profile/onboarding` | onboarding | Save onboarding step data |
-| GET | `/api/jobs` | get_jobs | Paginated job listings (Indonesia filter in SQL) |
-| GET | `/api/jobs/{job_id}` | get_job | Single job detail |
-| GET | `/api/applications` | get_applications | User's applications |
-| POST | `/api/applications` | create_applications | Submit applications |
-| POST | `/api/learning-path` | learning_path | Calls DQN /learning-path directly |
-| POST | `/api/recommendations` | run_pipeline | Calls Pipeline /pipeline/run |
-| POST | `/pipeline/run` | run_pipeline_direct | Direct pipeline proxy |
-
-#### Pipeline Endpoints (`services/pipeline/main.py`)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Health + downstream status |
-| POST | `/pipeline/run` | Run full 5-stage pipeline |
-| GET | `/training/status` | Continual training state |
-| POST | `/training/run-once` | Trigger one training cycle |
-| POST | `/feedback` | Forward feedback to NCF + DQN |
-
-#### Scraper Endpoints (`services/scraper/main.py`)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Health + seed config |
-| POST | `/scrape/html` | Extract jobs from provided HTML |
-| POST | `/scrape/url` | Fetch URL then extract jobs |
-| POST | `/scrape/run` | Run full scrape cycle |
-| GET | `/sample` | Return bundled sample jobs |
-
-#### SBERT Endpoints (`services/sbert/main.py`)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Health check |
-| POST | `/match/semantic` | Score user vs job descriptions |
-| POST | `/encode` | Encode texts to embeddings |
-| GET | `/metrics` | Service metrics |
-
-#### NCF Endpoints (`services/ncf/main.py`)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Health check |
-| POST | `/jobs/upsert` | Add/update job item factors |
-| POST | `/feedback` | Record feedback event + SGD update |
-| POST | `/train` | Trigger training batch |
-| POST | `/predict` | Predict score for single user-job pair |
-| POST | `/recommend/ncf` | Recommend top-N for user |
-| POST | `/users/{user_id}/invalidate` | Remove user factors (e.g., profile change) |
-| GET | `/model/status` | Model metrics |
-
-#### DQN Endpoints (`services/dqn/main.py`)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Health check |
-| POST | `/jobs/upsert` | Add/update job features |
-| POST | `/rank` | Rank candidates by Q-value |
-| POST | `/learning-path` | Return hardcoded skill sequence |
-| POST | `/rerank` | Rerank with session history |
-| POST | `/reward` | Record reward + learn |
-| POST | `/feedback` | Alias for /reward |
-| POST | `/train` | Soft update + save |
-| GET | `/model/status` | Model metrics |
-
-### 8.7 Frontend Page / Component Flow
-
-```mermaid
-flowchart TD
-    subgraph Pages["App Router Pages"]
-        P1["/ (Landing)"]
-        P2["/auth (Login/Register)"]
-        P3["/onboarding (3 steps)"]
-        P4["/dashboard"]
-        P5["/profile"]
-        P6["/analytics (Job Listings)"]
-        P7["/recommendations"]
-        P8["/jobs/[id] (Detail)"]
-        P9["/apply (Multi-select)"]
+flowchart TB
+    subgraph Routes["Next.js pages"]
+        Landing["/"]
+        Auth["/auth"]
+        Onboarding["/onboarding"]
+        Dashboard["/dashboard"]
+        Profile["/profile"]
+        Analytics["/analytics"]
+        Recs["/recommendations"]
+        JobDetail["/jobs/[id]"]
+        Apply["/apply"]
     end
 
-    subgraph Layout["Shared Layout"]
-        L1["AppLayout<br/>Navbar + Footer"]
-        L2["AuthProvider<br/>(React Context)"]
-        L3["api.ts<br/>(ApiClient singleton)"]
+    subgraph Client["frontend/src/lib"]
+        Api["api.ts<br/>ApiClient"]
+        AuthCtx["auth-context.tsx<br/>AuthProvider"]
     end
 
-    subgraph Components["UI Components"]
-        C1["GlassCard, Button, Badge"]
-        C2["CompanyLogo, Avatar"]
-        C3["MatchScore, MatchDonut"]
-        C4["Pagination"]
-        C5["PageHeader"]
-    end
-
-    P2 -->|"JWT stored in<br/>localStorage"| L2
-    L2 -->|"api.setToken()"| L3
-    P4 -->|"GET /api/recommendations<br/>GET /api/applications"| L3
-    P6 -->|"GET /api/jobs?page=&limit="| L3
-    P7 -->|"POST /api/recommendations"| L3
-    P8 -->|"GET /api/jobs/{id}"| L3
-    P9 -->|"GET /api/jobs<br/>POST /api/applications"| L3
-    P5 -->|"PUT /api/profile"| L3
+    Auth -->|"login/register"| Api
+    Auth --> AuthCtx
+    Onboarding -->|"save profile steps"| Api
+    Dashboard -->|"recommendations, applications,<br/>learning path, current user"| Api
+    Profile -->|"get/update profile<br/>get applications"| Api
+    Analytics -->|"job list"| Api
+    Recs -->|"recommendations"| Api
+    JobDetail -->|"job detail"| Api
+    Apply -->|"jobs + submit applications"| Api
+    AuthCtx -->|"JWT from localStorage"| Api
 ```
 
-**Frontend route mapping**
+| Page | User sees | Gateway calls |
+|---|---|---|
+| `/` | Landing page | None |
+| `/auth` | Login/register form | `/api/auth/login`, `/api/auth/register` |
+| `/onboarding` | Profile wizard | `/api/profile/onboarding` |
+| `/dashboard` | Overview, top recommendations, applications, suggested skills | `/api/recommendations`, `/api/applications`, `/api/learning-path`, `/api/auth/me` |
+| `/profile` | Profile edit and application list | `/api/auth/me`, `/api/profile`, `/api/applications` |
+| `/analytics` | Job listings with filters | `/api/jobs` |
+| `/recommendations` | Ranked recommendations with score bars | `/api/recommendations` |
+| `/jobs/[id]` | Single job detail | `/api/jobs/{id}` |
+| `/apply` | Multi-select application flow | `/api/jobs`, `/api/applications` |
 
-| Page | API Calls | Key Feature |
-|------|-----------|-------------|
-| `/` | None | Marketing landing |
-| `/auth` | `POST /api/auth/login`, `POST /api/auth/register` | JWT auth |
-| `/onboarding` | `PUT /api/profile/onboarding` | Step 1-3 wizard |
-| `/dashboard` | `POST /api/recommendations`, `GET /api/applications`, `POST /api/learning-path` | Overview + quick actions |
-| `/profile` | `GET /api/auth/me`, `PUT /api/profile` | Edit skills + program |
-| `/analytics` | `GET /api/jobs` | Job listings + filters + pagination |
-| `/recommendations` | `POST /api/recommendations` | ML recommendations with score breakdown |
-| `/jobs/[id]` | `GET /api/jobs/{id}` | Job detail + apply link |
-| `/apply` | `GET /api/jobs`, `POST /api/applications` | Multi-select application submit |
+## API Surface
 
-### 8.8 Docker / Runtime Flow
+### Gateway Endpoints
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/` | No | Gateway service info |
+| GET | `/health` | No | Gateway health |
+| GET | `/ready` | No | Gateway + pipeline readiness |
+| GET | `/api/company-logo` | No | Logo proxy for allowlisted hosts |
+| POST | `/api/auth/register` | No | Register and return JWT |
+| POST | `/api/auth/login` | No | Login and return JWT |
+| GET | `/api/auth/me` | Yes | Current user and skills |
+| PUT | `/api/profile` | Yes | Update profile and skills |
+| PUT | `/api/profile/onboarding` | Yes | Save onboarding step |
+| GET | `/api/jobs` | No | Paginated Indonesian job list |
+| GET | `/api/jobs/{job_id}` | No | Job detail |
+| GET | `/api/applications` | Yes | User applications |
+| POST | `/api/applications` | Yes | Create applications |
+| POST | `/api/learning-path` | Yes | Rule-based suggested skills |
+| POST | `/api/recommendations` | Yes | Authenticated recommendation run |
+| POST | `/recommendations` | Yes | Alias for recommendation run |
+| POST | `/pipeline/run` | No explicit auth dependency | Direct pipeline proxy |
+
+### Pipeline Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/health` | Pipeline health and downstream URLs |
+| POST | `/pipeline/run` | Full recommendation pipeline |
+| GET | `/training/status` | Continual training/scrape cycle status |
+| POST | `/training/run-once` | Trigger one scrape/embedding/upsert cycle |
+| POST | `/feedback` | Forward feedback to NCF and DQN |
+| POST | `/pipeline/invalidate-user/{user_id}` | Forward user factor invalidation to NCF |
+
+### Model and Scraper Endpoints
+
+| Service | Method | Path | Purpose |
+|---|---|---|---|
+| Scraper | GET | `/health` | Health and seed config |
+| Scraper | POST | `/scrape/html` | Extract jobs from provided HTML |
+| Scraper | POST | `/scrape/url` | Fetch and extract one URL |
+| Scraper | POST | `/scrape/run` | Run scraping cycle |
+| Scraper | GET | `/sample` | Return bundled sample jobs |
+| SBERT | GET | `/health` | Health, model mode, embedding dimension |
+| SBERT | POST | `/encode` | Encode text list |
+| SBERT | POST | `/match/semantic` | Direct semantic score endpoint |
+| SBERT | GET | `/metrics` | Operational metadata |
+| NCF | GET | `/health` | Health and item/user counts |
+| NCF | POST | `/jobs/upsert` | Add/update candidate item factors |
+| NCF | POST | `/recommend/ncf` | Score candidates |
+| NCF | POST | `/predict` | Alias to recommendation scoring |
+| NCF | POST | `/feedback` | Learn from feedback event |
+| NCF | POST | `/train` | Demo training batch |
+| NCF | POST | `/users/{user_id}/invalidate` | Clear user factor/bias |
+| NCF | GET | `/model/status`, `/metrics` | Model metadata |
+| DQN | GET | `/health` | Health and training steps |
+| DQN | POST | `/jobs/upsert` | Add/update job features |
+| DQN | POST | `/rank` | Rank job candidates |
+| DQN | POST | `/rerank` | Rank with session history |
+| DQN | POST | `/reward`, `/feedback` | Learn from reward event |
+| DQN | POST | `/learning-path` | Hardcoded role-skill path from DQN service |
+| DQN | POST | `/train` | Soft update/save |
+| DQN | GET | `/model/status`, `/metrics` | Model metadata |
+
+## Background Training and Feedback
 
 ```mermaid
 flowchart TD
-    subgraph DockerHost["Docker Host"]
-        subgraph ComposeFile["docker-compose.yml"]
-            Postgres["postgres:15-alpine<br/>5432:5432<br/>Volume: postgres_data"]
-            Gateway["gateway<br/>8000:8000<br/>DependsOn: postgres, pipeline"]
-            Scraper["scraper<br/>8001:8001<br/>No depends_on"]
-            SBERT["sbert<br/>8002:8002<br/>Volume: weights"]
-            NCF["ncf<br/>8003:8003<br/>Volume: weights"]
-            DQN["dqn<br/>8004:8004<br/>Volume: weights"]
-            Pipeline["pipeline<br/>8005:8005<br/>DependsOn: scraper, sbert, ncf, dqn"]
-        end
-    end
+    A["Pipeline starts"] --> B{"CONTINUAL_TRAINING_ENABLED?"}
+    B -->|"false"| C["No background loop"]
+    B -->|"true"| D["Start _continual_training_loop"]
+    D --> E["Call scraper for fresh jobs"]
+    E --> F["Call SBERT /encode"]
+    F --> G["Update JOB_CACHE"]
+    G --> H["POST jobs to NCF /jobs/upsert"]
+    H --> I["POST jobs to DQN /jobs/upsert"]
+    I --> J["Sleep interval"]
+    J --> D
 
-    subgraph StartupOrder["Startup Order"]
-        S1["1. Postgres<br/>healthcheck: pg_isready"]
-        S2["2. Scraper, SBERT, NCF, DQN<br/>(in parallel)"]
-        S3["3. Pipeline<br/>healthcheck: /health"]
-        S4["4. Gateway<br/>healthcheck: /health"]
-    end
-
-    S1 --> S2
-    S2 --> S3
-    S3 --> S4
+    K["Optional feedback call<br/>POST /pipeline/feedback"] --> L["Encode profile/job"]
+    L --> M["Forward to NCF /feedback"]
+    L --> N["Forward to DQN /reward"]
 ```
 
-**Docker Compose services**
+Important current limitation: the frontend API client has no `feedback` method. Users can view recommendation cards, open job detail, and apply, but those actions are not automatically sent to `/pipeline/feedback`.
 
-| Service | Image | Build Context | Ports | Environment Key |
-|---------|-------|--------------|-------|----------------|
-| postgres | postgres:15-alpine | N/A | 5432 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` |
-| gateway | Dockerfile | `./services/gateway` | 8000 | `PIPELINE_URL`, `DATABASE_URL`, `JWT_SECRET` |
-| scraper | Dockerfile | `./services/scraper` | 8001 | `SCRAPER_SEED_URLS`, `JOBS_TARGET` |
-| sbert | Dockerfile | `./services/sbert` | 8002 | `MODEL_NAME`, `SBERT_ENABLE_TRANSFORMER` |
-| ncf | Dockerfile | `./services/ncf` | 8003 | `MODEL_DIR` |
-| dqn | Dockerfile | `./services/dqn` | 8004 | `MODEL_DIR` |
-| pipeline | Dockerfile | `./services/pipeline` | 8005 | `SCRAPER_URL`, `SBERT_URL`, `NCF_URL`, `DQN_URL` |
+## Docker Compose Startup Flow
 
-**No Redis container** is defined in docker-compose.yml. Redis is optional in SBERT only.
+```mermaid
+flowchart LR
+    Postgres["1. postgres<br/>healthcheck pg_isready"] --> Models["2. scraper, sbert,<br/>ncf, dqn"]
+    Models --> Pipeline["3. pipeline<br/>waits for service health"]
+    Pipeline --> Gateway["4. gateway<br/>waits for postgres + pipeline"]
+    Gateway --> Frontend["5. frontend dev server<br/>manual npm run dev"]
+```
 
-**No Celery/RabbitMQ/Kafka** is used anywhere in the runtime.
+| Compose service | Port | Main environment variables |
+|---|---:|---|
+| postgres | 5432 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` |
+| gateway | 8000 | `PIPELINE_URL`, `DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET` |
+| scraper | 8001 | `SCRAPER_SEED_URLS`, `JOBS_TARGET`, source enable flags |
+| sbert | 8002 | `SBERT_ENABLE_TRANSFORMER`, `MODEL_NAME`, `MODEL_DIR` |
+| ncf | 8003 | `MODEL_DIR` |
+| dqn | 8004 | `MODEL_DIR` |
+| pipeline | 8005 | `SCRAPER_URL`, `SBERT_URL`, `NCF_URL`, `DQN_URL`, `DATABASE_URL` |
 
-### 8.9 Evaluation Metrics Flow
+Docker Compose does not include:
+
+- Redis
+- Celery
+- RabbitMQ
+- Kafka
+- Nginx
+- `services/hybrid`
+
+## Offline Evaluation and Reports
+
+```mermaid
+flowchart TB
+    Sample["data/sample<br/>users, jobs, interactions, milestones"] --> Validate["validate_sample_dataset"]
+    Validate --> Retrain["scripts/retrain_models.py"]
+    Retrain --> SBERTArtifact["sbert_similarity_head.pt"]
+    Retrain --> NCFArtifact["online_ncf.json"]
+    Retrain --> DQNArtifact["dqn_model.pt"]
+    Validate --> Full["scripts/run_full_pipeline.py"]
+    Full --> Metrics["services/evaluation/recommendation_metrics.py"]
+    Metrics --> CSV["reports/full_pipeline_metrics.csv"]
+    Full --> JSON["reports/full_pipeline_summary.json<br/>reports/full_pipeline_recommendations.json"]
+    Full --> NotebookInputs["notebooks/training_runs/readiness/"]
+```
+
+| Artifact | Purpose | Caveat |
+|---|---|---|
+| `reports/full_pipeline_metrics.csv` | Offline metric comparison | Depends on sample/demo labels. |
+| `reports/full_pipeline_summary.json` | Full pipeline summary | Not the same as live frontend behavior. |
+| `reports/full_pipeline_recommendations.json` | Demo recommendation output | Uses script-level flow. |
+| `reports/retraining_artifacts/retraining_manifest.json` | Retraining summary | DQN checkpoint training is synthetic. |
+| `reports/model_research_playwright.json` | Browser-backed source extraction for this review | Research artifact, not app runtime. |
+| `notebooks/scpa_ml_readiness_evaluation.ipynb` | ML readiness notebook | Generated notebook should be regenerated from scripts when changed. |
+
+## Failure and Fallback Paths
 
 ```mermaid
 flowchart TD
-    A["services/evaluation/<br/>recommendation_metrics.py"] --> B["precision_at_k()"]
-    A --> C["recall_at_k()"]
-    A --> D["hit_rate_at_k()"]
-    A --> E["ndcg_at_k()"]
-    A --> F["average_precision_at_k()"]
-
-    B --> G["notebooks/<br/>evaluation_metrics_validation.ipynb"]
-    C --> G
-    D --> G
-    E --> G
-    F --> G
-
-    G --> H["reports/<br/>evaluation_artifacts/"]
-    G --> I["notebooks/training_runs/<br/>readiness_metrics.json"]
-    G --> J["notebooks/training_runs/<br/>readiness_report.html"]
+    A["Recommendation request"] --> B["Gateway calls pipeline"]
+    B --> C{"Pipeline reachable?"}
+    C -->|"No: 502/503/504"| D["Gateway returns empty recommendations[]"]
+    C -->|"Yes"| E["Pipeline Stage 1"]
+    E --> F{"DB jobs available and no refresh?"}
+    F -->|"Yes"| G["Use DB jobs"]
+    F -->|"No"| H{"JOB_CACHE available?"}
+    H -->|"Yes and no DB"| I["Use in-memory cache"]
+    H -->|"No"| J["Call scraper"]
+    J --> K{"Scraper succeeds?"}
+    K -->|"No"| L["Use fallback jobs"]
+    K -->|"Yes"| M["Use scraped jobs"]
+    G --> N["Continue scoring"]
+    I --> N
+    L --> N
+    M --> N
+    N --> O{"SBERT transformer available?"}
+    O -->|"Yes"| P["Use SentenceTransformer"]
+    O -->|"No"| Q["Use deterministic fallback"]
+    P --> R["Return scored ranking"]
+    Q --> R
 ```
 
-**Evaluation artifacts**
+## Non-Technical Glossary
 
-| Path | Type | Purpose |
-|------|------|---------|
-| `services/evaluation/recommendation_metrics.py` | Python module | Reusable metrics functions |
-| `notebooks/evaluation_metrics_validation.ipynb` | Jupyter notebook | Metric validation with charts |
-| `notebooks/scpa_ml_readiness_evaluation.ipynb` | Jupyter notebook | Full ML readiness evaluation |
-| `notebooks/training_runs/readiness/` | Directory | PNG figures + JSON metrics |
-| `reports/evaluation_artifacts/` | Directory | Generated evaluation reports |
-| `reports/full_pipeline_artifacts/` | Directory | Full pipeline run outputs |
+| Term | Meaning in SCPA |
+|---|---|
+| Frontend | The website the user clicks. |
+| Gateway | The public backend API that checks login and talks to the database. |
+| Pipeline | The internal service that decides how jobs should be ranked. |
+| Scraper | The service that collects job listings from public sources. |
+| SBERT score | A score for how similar the user's profile text is to the job text. |
+| NCF score | A score based on learned user-job factors and feedback-like labels. |
+| DQN score | A Q-style reranking signal based on job features and reward updates. |
+| Hybrid/final score | The combined score shown as match percentage. |
+| Cold start | A user with no prior interactions. The system trusts profile text more. |
+| Warm/active user | A user with interaction history. The system trusts behavior scores more. |
+| Fallback | A simpler path used when a model, service, or external source is unavailable. |
 
----
+## Current Logical Risks Summary
 
-## 9. Legacy or Unused Components
+The full code review is in `diagram/code_review.md`. The biggest flow-level risks are:
 
-| Component | Location | Status | Notes |
-|-----------|----------|--------|-------|
-| Hybrid service | `services/hybrid/main.py` | Exists but disconnected | Not in docker-compose, not called by pipeline. Pipeline uses `stage_5_aggregate.py` instead. |
-| Hybrid DB tables | `hybrid_weights`, `hybrid_request_log` | Created by migration 003 but unused | No code writes or reads these tables |
-| Full pipeline scripts | `scripts/run_full_pipeline.py`, `scripts/retrain_pipeline.py`, `scripts/demo_pipeline.py` | Legacy | Pipeline now orchestrates via HTTP internally; scripts may be stale |
-| Sample dataset | `data/sample/` | Legacy | Used by notebooks and old scripts; runtime uses live scraper + DB |
-| Training scripts | `services/*/training/train*.py` | Offline only | Used to generate initial weights; not part of Docker runtime |
-| Notebooks | `notebooks/*.ipynb` | Offline only | Training, evaluation, and validation notebooks |
-| Kubernetes configs | `infra/k8s/` | Exists but unused | No evidence of K8s deployment |
-| Nginx config | `infra/nginx.conf` | Exists but unused | No nginx container in compose |
-| Browser E2E scripts | `browser_e2e.py`, `browser_screenshots/` | Temporary debug | Not part of the application |
-| Insert scripts | `insert_scraped.py`, `check_scrape.py`, `check_overflow.py` | Temporary debug | One-off data operations |
-| `services/shared/auth.py` | Shared module | Partially used | Contains auth utilities; gateway has its own auth logic too |
-| PyTorch model classes | `NeuralCF` in `services/ncf/main.py`, `QNetwork` in `services/dqn/main.py` | Defined but not used in production | Runtime uses numpy-based online models |
+1. The gateway learning-path endpoint is rule-based and does not call the DQN service.
+2. The active NCF serving path is matrix factorization, not neural collaborative filtering.
+3. The active DQN serving path is a linear Q-style reranker, not a deep Q-network.
+4. The frontend does not send click/view/save/skip feedback to the pipeline feedback endpoint.
+5. Several docs/tests still describe older or planned behavior instead of active runtime behavior.
 
----
+## Research Baseline Used for This Diagram
 
-## 10. Implementation Notes and Gotchas
+Browser-backed research was collected with Python Playwright using local Chrome and saved to `reports/model_research_playwright.json`.
 
-### What is different from the "planned" architecture
+Primary sources used:
 
-1. **Hybrid service is not used**: The standalone `services/hybrid/main.py` exists but the pipeline uses `stage_5_aggregate.py` for scoring. The hybrid service's circuit breaker and fairness tracker are not in the active data path.
+- Sentence-BERT paper: https://arxiv.org/abs/1908.10084
+- Hugging Face Sentence Transformers docs: https://huggingface.co/docs/hub/sentence-transformers
+- Neural Collaborative Filtering paper: https://arxiv.org/abs/1708.05031
+- DQN Nature paper: https://www.nature.com/articles/nature14236
+- Original Atari DQN arXiv paper: https://arxiv.org/abs/1312.5602
 
-2. **DQN is a linear model, not a deep network**: The `QNetwork` PyTorch class is defined but never instantiated in production. The active `OnlineDQN` uses a simple linear weight vector and SGD.
+## Maintenance Checklist
 
-3. **NCF is numpy-based matrix factorization, not the PyTorch NeuralCF**: Similar to DQN, the `NeuralCF` class exists but the runtime uses `OnlineNCF` with numpy arrays and SGD.
+When this project changes, update this diagram if any of these changes:
 
-4. **SBERT defaults to deterministic fallback**: The transformer model is only loaded when `SBERT_ENABLE_TRANSFORMER=1`. By default, the service uses deterministic token-category scoring without downloading any model weights.
-
-5. **Learning path is hardcoded**: The DQN `/learning-path` endpoint returns pre-defined skill sequences per role. It does not dynamically generate paths based on market data or user progress.
-
-6. **No message queue**: There is no Celery, RabbitMQ, or Kafka. All inter-service communication is synchronous HTTP via httpx.
-
-7. **No real email service**: SMTP configuration exists in `.env.example` but no email sending code exists in the gateway.
-
-8. **No CV/resume parsing**: There is no upload endpoint, no CV table, and no parsing service.
-
-9. **Analytics page shows job listings, not analytics**: The `/analytics` route in the frontend renders the job listing page with filters and pagination. There are no charts, dashboards, or skill-demand analytics.
-
-10. **Continual training is just re-scraping**: The pipeline's `_continual_training_loop()` re-runs the scraper + encoder + upserts to NCF/DQN on a timer. It does not perform model retraining from scratch.
-
----
-
-## 11. File Inventory
-
-### Key source files by service
-
-| Service | Key Files |
-|---------|-----------|
-| Gateway | `services/gateway/main.py` |
-| Scraper | `services/scraper/main.py` |
-| SBERT | `services/sbert/main.py` |
-| NCF | `services/ncf/main.py` |
-| DQN | `services/dqn/main.py` |
-| Pipeline | `services/pipeline/main.py`, `services/pipeline/stages/stage_1_scrape.py` through `stage_5_aggregate.py` |
-| Hybrid (unused) | `services/hybrid/main.py` |
-| DB Models | `db/models.py` |
-| Migrations | `db/migrations/001_initial_schema.py` through `005_add_salary_text.py` |
-| Frontend API | `frontend/src/lib/api.ts` |
-| Frontend Auth | `frontend/src/lib/auth-context.tsx` |
-| Evaluation | `services/evaluation/recommendation_metrics.py` |
-
-### Configuration files
-
-| File | Purpose |
-|------|---------|
-| `docker-compose.yml` | 7-service compose definition |
-| `.env.example` | Environment variable template |
-| `alembic.ini` | Database migration config |
-| `requirements.txt` | Root Python dependencies |
-| `frontend/package.json` | Next.js dependencies |
-| `frontend/next.config.ts` | Next.js config |
-| `frontend/tailwind.config.ts` | Tailwind CSS config |
-
----
-
-*End of architecture documentation. This file was generated by auditing the actual codebase, not from an ideal or planned version of the system.*
+- A new frontend page is added.
+- A gateway endpoint changes response shape.
+- Docker Compose adds/removes a service.
+- `services/pipeline/stages/` changes scoring order or weights.
+- `services/sbert/main.py` changes model loading behavior.
+- `services/ncf/main.py` changes from `OnlineNCF` to real neural serving.
+- `services/dqn/main.py` changes from `OnlineDQN` linear serving to real deep Q-network serving.
+- Frontend starts sending feedback events.
+- Hybrid service becomes part of Docker Compose or active routing.
