@@ -1,0 +1,737 @@
+{
+  "schema_version": 1,
+  "current_phase": "cleanup",
+  "current_task_id": "P0-001",
+  "tasks": [
+    {
+      "id": "INIT-001",
+      "phase": "initializer",
+      "title": "Initialize Codex long-running project state",
+      "priority": "P0",
+      "status": "done",
+      "scope": "medium",
+      "depends_on": [],
+      "files_expected": [
+        "AGENTS.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/FAILURE_LEDGER.md",
+        "docs/agent/ARTIFACT_INDEX.md"
+      ],
+      "files_touched": [
+        "AGENTS.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/FAILURE_LEDGER.md",
+        "docs/agent/ARTIFACT_INDEX.md"
+      ],
+      "validation_commands": [
+        "python -m json.tool docs/agent/TASK_QUEUE.json",
+        "git status --short --branch",
+        "git diff -- AGENTS.md docs/agent"
+      ],
+      "validation_status": "passed",
+      "commit": "pending: docs: initialize codex long-running project state",
+      "notes": "Initializer docs only. JSON parse passed. Stage only these files because the repo was already dirty."
+    },
+    {
+      "id": "P0-001",
+      "phase": "cleanup",
+      "title": "Repository audit",
+      "priority": "P0",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "INIT-001"
+      ],
+      "files_expected": [
+        "docs/agent/CLEANUP_AUDIT.md",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        "git status --short --branch"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Classify files only. Do not delete or move files in this task."
+    },
+    {
+      "id": "P0-002",
+      "phase": "cleanup",
+      "title": "Safe cleanup",
+      "priority": "P0",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P0-001"
+      ],
+      "files_expected": [
+        "testing/archive/",
+        "docs/agent/CLEANUP_AUDIT.md"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        "npm run lint",
+        "npm run build",
+        "docker compose config"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Move only audited safe experimental/demo/unused files. Do not touch runtime imports, Docker, CI, or tests."
+    },
+    {
+      "id": "P0-FE-001",
+      "phase": "frontend",
+      "title": "Frontend hook violation",
+      "priority": "P0",
+      "status": "pending",
+      "scope": "small",
+      "depends_on": [
+        "P0-002"
+      ],
+      "files_expected": [
+        "frontend/src/app/recommendations/page.tsx"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        "npm run lint",
+        "npm run build"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Move markImpressed/useCallback above all early returns or remove the conditional hook pattern."
+    },
+    {
+      "id": "P1-SEC-001",
+      "phase": "security",
+      "title": "Restrict public Docker exposure",
+      "priority": "P1",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P0-FE-001"
+      ],
+      "files_expected": [
+        "docker-compose.yml",
+        ".env.example",
+        "services/shared/"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        "docker compose config"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Expose only gateway/frontend. Add internal service token where needed."
+    },
+    {
+      "id": "P1-SEC-002",
+      "phase": "security",
+      "title": "Add SSRF guard",
+      "priority": "P1",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P1-SEC-001"
+      ],
+      "files_expected": [
+        "services/scraper/main.py",
+        "tests/test_security.py"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Allowlist approved job-board domains and block local, private, link-local, metadata, unsafe redirects, and DNS rebinding."
+    },
+    {
+      "id": "P1-SEC-003",
+      "phase": "security",
+      "title": "Protect pipeline execution",
+      "priority": "P1",
+      "status": "pending",
+      "scope": "small",
+      "depends_on": [
+        "P1-SEC-002"
+      ],
+      "files_expected": [
+        "services/gateway/main.py",
+        "tests/test_auth_endpoints.py",
+        "tests/test_security.py"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Remove public unauthenticated /pipeline/run or restrict it to admin/internal auth."
+    },
+    {
+      "id": "P1-CI-001",
+      "phase": "infra",
+      "title": "Harden CI",
+      "priority": "P1",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P1-SEC-003"
+      ],
+      "files_expected": [
+        ".github/workflows/ci.yml"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        "npm run lint",
+        "npm run build"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Add full backend, migration, frontend lint, and frontend build gates."
+    },
+    {
+      "id": "P1-PERF-001",
+      "phase": "performance",
+      "title": "SBERT embedding cache",
+      "priority": "P1",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P1-CI-001"
+      ],
+      "files_expected": [
+        "services/sbert/main.py",
+        "db/models.py",
+        "db/migrations/"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Cache job embeddings and invalidate when job text changes."
+    },
+    {
+      "id": "P1-PERF-002",
+      "phase": "performance",
+      "title": "Batch scoring",
+      "priority": "P1",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P1-PERF-001"
+      ],
+      "files_expected": [
+        "services/ncf/main.py",
+        "services/dqn/main.py",
+        "services/pipeline/stages/"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Batch NeuMF/NCF and DQN scoring where applicable."
+    },
+    {
+      "id": "P1-PERF-003",
+      "phase": "performance",
+      "title": "Database indexes",
+      "priority": "P1",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P1-PERF-002"
+      ],
+      "files_expected": [
+        "db/models.py",
+        "db/migrations/"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini heads"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Add non-duplicate indexes for hot recommendation paths."
+    },
+    {
+      "id": "P1-OBS-001",
+      "phase": "performance",
+      "title": "Pipeline telemetry",
+      "priority": "P1",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P1-PERF-003"
+      ],
+      "files_expected": [
+        "services/pipeline/main.py",
+        "services/pipeline/stages/"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Track p50/p95 per scrape, SBERT, NCF, DQN, calibrator, and aggregation stage."
+    },
+    {
+      "id": "P2-001",
+      "phase": "security",
+      "title": "JWT validation",
+      "priority": "P2",
+      "status": "pending",
+      "scope": "small",
+      "depends_on": [
+        "P1-OBS-001"
+      ],
+      "files_expected": [
+        "services/shared/auth.py",
+        "services/gateway/main.py",
+        "tests/test_security.py"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Fail fast if JWT secret is missing or shorter than 32 bytes."
+    },
+    {
+      "id": "P2-002",
+      "phase": "security",
+      "title": "CORS hardening",
+      "priority": "P2",
+      "status": "pending",
+      "scope": "small",
+      "depends_on": [
+        "P2-001"
+      ],
+      "files_expected": [
+        "services/gateway/main.py",
+        "docker-compose.yml",
+        ".env.example"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        "docker compose config"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Restrict CORS by environment. No wildcard CORS in production."
+    },
+    {
+      "id": "P2-003",
+      "phase": "backend",
+      "title": "Durable feedback outbox",
+      "priority": "P2",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P2-002"
+      ],
+      "files_expected": [
+        "db/models.py",
+        "db/migrations/",
+        "services/gateway/main.py",
+        "services/pipeline/main.py"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini heads"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Add model_feedback_outbox table and retry worker."
+    },
+    {
+      "id": "P2-004",
+      "phase": "ml",
+      "title": "Reframe DQN",
+      "priority": "P2",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P2-003"
+      ],
+      "files_expected": [
+        "services/dqn/main.py",
+        "services/dqn/training/",
+        "docs/ml/"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "DQN should recommend skill/career milestones with state, action, and reward documented."
+    },
+    {
+      "id": "P2-005",
+      "phase": "ml",
+      "title": "Calibration layer",
+      "priority": "P2",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P2-004"
+      ],
+      "files_expected": [
+        "services/pipeline/",
+        "services/evaluation/",
+        "reports/ml/"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Add learned ranker over SBERT, NCF, DQN, skill gap, recency, salary, and location; keep static baseline."
+    },
+    {
+      "id": "P3-FEAT-001",
+      "phase": "frontend",
+      "title": "Skill taxonomy autocomplete",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P2-005"
+      ],
+      "files_expected": [],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        "npm run lint",
+        "npm run build"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Split backend/frontend subtasks before implementation."
+    },
+    {
+      "id": "P3-FEAT-002",
+      "phase": "frontend",
+      "title": "Profile completeness meter",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P3-FEAT-001"
+      ],
+      "files_expected": [],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        "npm run lint",
+        "npm run build"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Split backend/frontend subtasks before implementation."
+    },
+    {
+      "id": "P3-FEAT-003",
+      "phase": "frontend",
+      "title": "Saved jobs and skip buttons",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P3-FEAT-002"
+      ],
+      "files_expected": [],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        "npm run lint",
+        "npm run build"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Split backend/frontend subtasks before implementation."
+    },
+    {
+      "id": "P3-FEAT-004",
+      "phase": "frontend",
+      "title": "Job alerts",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P3-FEAT-003"
+      ],
+      "files_expected": [],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        "npm run lint",
+        "npm run build"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Split backend/frontend subtasks before implementation."
+    },
+    {
+      "id": "P3-FEAT-005",
+      "phase": "frontend",
+      "title": "Skill-gap detail page",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P3-FEAT-004"
+      ],
+      "files_expected": [],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        "npm run lint",
+        "npm run build"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Split backend/frontend subtasks before implementation."
+    },
+    {
+      "id": "P3-FEAT-006",
+      "phase": "frontend",
+      "title": "Admin model-health dashboard",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P3-FEAT-005"
+      ],
+      "files_expected": [],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        "npm run lint",
+        "npm run build"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Split backend/frontend subtasks before implementation."
+    },
+    {
+      "id": "P3-FEAT-007",
+      "phase": "frontend",
+      "title": "Recommendation reason filters",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P3-FEAT-006"
+      ],
+      "files_expected": [],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        "npm run lint",
+        "npm run build"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Split backend/frontend subtasks before implementation."
+    },
+    {
+      "id": "P4-ADV-001",
+      "phase": "ml",
+      "title": "CV/resume ingestion design and smoke",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P3-FEAT-007"
+      ],
+      "files_expected": [
+        "docs/ml/"
+      ],
+      "files_touched": [],
+      "validation_commands": [],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Design doc first, then smoke implementation."
+    },
+    {
+      "id": "P4-ADV-002",
+      "phase": "ml",
+      "title": "Certificate OCR design and smoke",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P4-ADV-001"
+      ],
+      "files_expected": [
+        "docs/ml/"
+      ],
+      "files_touched": [],
+      "validation_commands": [],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Design doc first, then smoke implementation."
+    },
+    {
+      "id": "P4-ADV-003",
+      "phase": "ml",
+      "title": "Market-aware skill path recommender",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P4-ADV-002"
+      ],
+      "files_expected": [
+        "docs/ml/"
+      ],
+      "files_touched": [],
+      "validation_commands": [],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Design doc first, then smoke implementation."
+    },
+    {
+      "id": "P4-ADV-004",
+      "phase": "ml",
+      "title": "A/B testing and monitoring",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P4-ADV-003"
+      ],
+      "files_expected": [
+        "docs/ml/"
+      ],
+      "files_touched": [],
+      "validation_commands": [],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Design doc first, then smoke implementation."
+    },
+    {
+      "id": "P5-ML-001",
+      "phase": "ml",
+      "title": "ML inventory and training plan",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "medium",
+      "depends_on": [
+        "P4-ADV-004"
+      ],
+      "files_expected": [
+        "docs/ml/ML_INVENTORY.md",
+        "docs/ml/ML_TRAINING_PLAN.md",
+        "docs/ml/ML_EVALUATION_REPORT.md"
+      ],
+      "files_touched": [],
+      "validation_commands": [],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Create ML docs before any training task."
+    },
+    {
+      "id": "P5-ML-002",
+      "phase": "ml",
+      "title": "Evaluate SBERT recommender",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P5-ML-001"
+      ],
+      "files_expected": [
+        "reports/ml/"
+      ],
+      "files_touched": [],
+      "validation_commands": [],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Build Indonesian profile-job pair dataset, fine-tune SentenceTransformer, and compare base vs tuned."
+    },
+    {
+      "id": "P5-ML-003",
+      "phase": "ml",
+      "title": "Evaluate NeuMF recommender",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P5-ML-002"
+      ],
+      "files_expected": [
+        "reports/ml/"
+      ],
+      "files_touched": [],
+      "validation_commands": [],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Stable ID maps, 80/10/10 split, negative sampling, HR@10 and NDCG@10."
+    },
+    {
+      "id": "P5-ML-004",
+      "phase": "ml",
+      "title": "Evaluate DQN skill policy",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P5-ML-003"
+      ],
+      "files_expected": [
+        "reports/ml/"
+      ],
+      "files_touched": [],
+      "validation_commands": [],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Offline skill-gap simulation, random policy comparison, cumulative reward and skill-gap reduction."
+    },
+    {
+      "id": "P5-ML-005",
+      "phase": "ml",
+      "title": "Evaluate recommendation calibrator",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "large",
+      "depends_on": [
+        "P5-ML-004"
+      ],
+      "files_expected": [
+        "reports/ml/"
+      ],
+      "files_touched": [],
+      "validation_commands": [],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Train logistic or LightGBM ranker and compare NDCG against static baseline."
+    }
+  ]
+}
