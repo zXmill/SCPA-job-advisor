@@ -173,46 +173,74 @@
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_ssrf_guard.py -q`
 - Result: fail
 - Summary: Expected TDD red failure. The scraper had no `_resolve_host_addresses`, `_validate_scrape_url`, or `_fetch_safe_url` helpers yet.
-- Related commit hash: pending SSRF security commit.
+- Related commit hash: `be52d4f`.
 
 ## 2026-05-25 20:14 +07
 - Task ID: `P1-SEC-002`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_ssrf_guard.py -q`
 - Result: fail
 - Summary: Initial implementation blocked `id.jobstreet.com`; allowlist needed to include the existing `jobstreet.com` seed host suffix.
-- Related commit hash: pending SSRF security commit.
+- Related commit hash: `be52d4f`.
 
 ## 2026-05-25 20:14 +07
 - Task ID: `P1-SEC-002`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_ssrf_guard.py -q`
 - Result: pass
 - Summary: `9 passed in 0.24s`.
-- Related commit hash: pending SSRF security commit.
+- Related commit hash: `be52d4f`.
 
 ## 2026-05-25 20:15 +07
 - Task ID: `P1-SEC-002`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_red_team_failure_modes.py::test_scraper_handles_zero_partial_duplicate_and_blocked_sources -q`
 - Result: fail
 - Summary: Existing red-team test still expected a `502 fetch failed`; new guard correctly returns `400` before outbound fetch.
-- Related commit hash: pending SSRF security commit.
+- Related commit hash: `be52d4f`.
 
 ## 2026-05-25 20:15 +07
 - Task ID: `P1-SEC-002`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_red_team_failure_modes.py::test_scraper_handles_zero_partial_duplicate_and_blocked_sources -q`
 - Result: pass
 - Summary: `1 passed in 4.76s` after updating the expected localhost-block contract to `400`.
-- Related commit hash: pending SSRF security commit.
+- Related commit hash: `be52d4f`.
 
 ## 2026-05-25 20:17 +07
 - Task ID: `P1-SEC-002`
 - Command: `.\.venv\Scripts\python.exe -m pytest -q`
 - Result: pass
 - Summary: `303 passed, 11 warnings in 92.78s`.
-- Related commit hash: pending SSRF security commit.
+- Related commit hash: `be52d4f`.
 
 ## 2026-05-25 20:17 +07
 - Task ID: `P1-SEC-002`
 - Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
 - Result: pass
 - Summary: Durable task queue parsed successfully after marking P1-SEC-002 done.
-- Related commit hash: pending SSRF security commit.
+- Related commit hash: `be52d4f`.
+
+## 2026-05-25 20:19 +07
+- Task ID: `P1-SEC-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_execution_auth.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. Direct `/pipeline/run` returned 200 without credentials because the route had no auth dependency.
+- Related commit hash: pending pipeline execution security commit.
+
+## 2026-05-25 20:20 +07
+- Task ID: `P1-SEC-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_execution_auth.py -q`
+- Result: pass
+- Summary: `1 passed in 0.03s`.
+- Related commit hash: pending pipeline execution security commit.
+
+## 2026-05-25 20:23 +07
+- Task ID: `P1-SEC-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `304 passed, 11 warnings in 93.32s`.
+- Related commit hash: pending pipeline execution security commit.
+
+## 2026-05-25 20:23 +07
+- Task ID: `P1-SEC-003`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-SEC-003 done.
+- Related commit hash: pending pipeline execution security commit.

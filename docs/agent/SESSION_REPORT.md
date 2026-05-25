@@ -345,3 +345,49 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P1-SEC-002 files and durable state files, inspect the staged diff, and commit `security: add ssrf guard to scraper endpoint`.
+
+## 2026-05-25 20:18 +07 - P1-SEC-003 start
+
+### Active Task
+- `P1-SEC-003` - Protect pipeline execution.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked repo files remain.
+- New task state changes: durable `docs/agent/` files updated to point at `P1-SEC-003`.
+
+### Previous Task Complete
+- `P1-SEC-002` committed as `be52d4f`.
+
+### Validation Still Needed
+- First create a focused route-auth test showing direct `/pipeline/run` is currently reachable without auth.
+- After implementation, run the focused test and full backend pytest.
+
+### Commands Run
+- `git commit -m "security: add ssrf guard to scraper endpoint"`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Inspect gateway auth helpers and tests, write a failing auth-boundary test for direct `/pipeline/run`, then require admin auth on that route.
+
+## 2026-05-25 20:23 +07 - P1-SEC-003 result
+
+### Active Task
+- `P1-SEC-003` is implemented and ready to commit.
+
+### What Changed
+- Added a gateway admin-role check for direct `/pipeline/run`.
+- Missing bearer token now returns `401`; non-admin bearer token returns `403`; admin bearer token can still call the operator route.
+- Added `tests/test_pipeline_execution_auth.py`.
+
+### Validation Results
+- TDD red: direct `/pipeline/run` returned `200` without credentials.
+- Focused route-auth test: `1 passed`.
+- Full backend suite: `304 passed, 11 warnings`.
+
+### Remaining Issues
+- `P1-CI-001` CI hardening is still pending.
+- Existing pytest warnings about short test JWT keys remain.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P1-SEC-003 files and durable state files, inspect the staged diff, and commit `security: protect pipeline execution endpoint`.

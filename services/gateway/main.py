@@ -565,6 +565,11 @@ async def _get_current_user(credentials: HTTPAuthorizationCredentials | None = D
     return payload
 
 
+def _require_admin_role(token_payload: dict[str, Any]) -> None:
+    if str(token_payload.get("role") or "").lower() != "admin":
+        raise HTTPException(status_code=403, detail="Admin role required")
+
+
 async def _require_user(db: AsyncSession, token_payload: dict[str, Any]) -> dict[str, Any]:
     user_id = token_payload.get("sub")
     if not user_id:
@@ -1344,7 +1349,11 @@ async def learning_path(
 # ════════════════════════════════════════════════════════════════
 
 @app.post("/pipeline/run")
-async def run_pipeline_direct(request: PipelineRunRequest) -> dict[str, Any]:
+async def run_pipeline_direct(
+    request: PipelineRunRequest,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+) -> dict[str, Any]:
+    _require_admin_role(token_payload)
     return await _pipeline_post("/pipeline/run", request.model_dump())
 
 

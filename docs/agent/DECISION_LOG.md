@@ -62,3 +62,12 @@
 - Skipped option: Relying only on Pydantic `HttpUrl`.
 - Reason skipped: `HttpUrl` validates shape, not network safety or resolved addresses.
 - Risk and mitigation: DNS lookups can be flaky in tests; isolate address resolution behind a small helper and monkeypatch it in SSRF tests.
+
+## 2026-05-25 20:18 +07 - P1-SEC-003 pipeline execution auth mini plan
+- Decision: Protect the gateway's direct `/pipeline/run` proxy instead of leaving it public.
+- Expected files to touch: `services/gateway/main.py`, focused auth/security tests, and durable `docs/agent/` state files.
+- Validation commands: write a failing route-auth test first, then run the focused route test and full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Chosen boundary: authenticated admin-only access for the direct pipeline execution route; normal user recommendations continue through `/api/recommendations`, which assembles the profile and applies existing user auth.
+- Skipped option: Removing the route outright in this task.
+- Reason skipped: Some local/admin scripts may still rely on direct execution; admin gating narrows exposure while preserving an intentional operator path.
+- Risk and mitigation: Existing tests may call `/pipeline/run` directly. Update only tests that represent the new security contract.

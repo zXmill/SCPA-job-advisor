@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "security",
-  "current_task_id": "P1-SEC-002",
+  "current_task_id": "P1-SEC-003",
   "tasks": [
     {
       "id": "INIT-001",
@@ -217,7 +217,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending: security: add ssrf guard to scraper endpoint",
+      "commit": "be52d4f",
       "notes": "Added scraper URL validation and safe redirect handling. Blocks non-HTTP(S), unapproved hosts, localhost, loopback/private/link-local/non-public IPs, DNS rebinding, and unsafe redirects. Existing localhost red-team contract updated to expect 400."
     },
     {
@@ -225,23 +225,31 @@
       "phase": "security",
       "title": "Protect pipeline execution",
       "priority": "P1",
-      "status": "pending",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P1-SEC-002"
       ],
       "files_expected": [
         "services/gateway/main.py",
-        "tests/test_auth_endpoints.py",
-        "tests/test_security.py"
+        "tests/test_pipeline_execution_auth.py"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/gateway/main.py",
+        "tests/test_pipeline_execution_auth.py",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Remove public unauthenticated /pipeline/run or restrict it to admin/internal auth."
+      "validation_status": "passed",
+      "commit": "pending: security: protect pipeline execution endpoint",
+      "notes": "Direct gateway /pipeline/run now requires a valid admin bearer token. Normal user recommendations remain on /api/recommendations."
     },
     {
       "id": "P1-CI-001",
