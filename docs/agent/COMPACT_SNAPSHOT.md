@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 20:36 +07
+Updated: 2026-05-25 20:42 +07
 
 ## Current Objective
-Commit the completed `P1-PERF-001` SBERT job embedding cache invalidation change, then start `P1-PERF-002`.
+Commit the completed `P1-PERF-002` batch scoring change, then start `P1-PERF-003`.
 
 ## Current Phase
 security
 
 ## Current Task ID
-P1-PERF-001
+P1-PERF-002
 
 ## Latest Commit Hash
-Root: `7ee1e4d` (`ci: add full validation checks`); pending commit `perf: cache sbert job embeddings`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `f167a99` (`perf: cache sbert job embeddings`); pending commit `perf: batch recommendation model scoring`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `7ee1e4d` (`ci: add full validation checks`); pending commit `perf: cache 
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task changes: `services/pipeline/stages/stage_2_encode.py`, `tests/test_sbert_job_embedding_cache.py`, and durable `docs/agent/` state files.
+- Current task changes: `services/dqn/main.py`, `tests/test_dqn_policy_contracts.py`, `tests/test_ncf_neumf_contracts.py`, and durable `docs/agent/` state files.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -52,9 +52,12 @@ Root: `7ee1e4d` (`ci: add full validation checks`); pending commit `perf: cache 
 - `.github/workflows/ci.yml`
 - `services/pipeline/stages/stage_2_encode.py`
 - `tests/test_sbert_job_embedding_cache.py`
+- `services/dqn/main.py`
+- `tests/test_dqn_policy_contracts.py`
+- `tests/test_ncf_neumf_contracts.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. `P1-PERF-001` is implemented and validation passed; commit is pending.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. `P1-PERF-002` is implemented and validation passed; commit is pending.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -97,6 +100,11 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Added and verified TDD red job embedding cache invalidation tests.
 - Implemented text-hash validation for cached job embeddings in the encode stage.
 - Ran P1-PERF-001 focused and full validation commands.
+- P1-PERF-001 commit: `git commit -m "perf: cache sbert job embeddings"`.
+- Inspected NCF/DQN pipeline stages and service endpoints.
+- Added and verified TDD red DQN batch forward test.
+- Implemented batched DQN Q-value scoring and tightened NCF batch contract.
+- Ran P1-PERF-002 focused and full validation commands.
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
@@ -139,6 +147,11 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P1-PERF-001 existing SBERT cache tests passed: `15 passed`.
 - P1-PERF-001 pipeline contract tests passed: `2 passed`.
 - P1-PERF-001 full backend tests passed: `306 passed, 11 warnings`.
+- P1-PERF-001 commit exists as `f167a99`.
+- P1-PERF-002 TDD red confirmed DQN per-job forward calls.
+- P1-PERF-002 DQN policy contracts passed: `3 passed`.
+- P1-PERF-002 NCF NeuMF contracts passed: `4 passed`.
+- P1-PERF-002 full backend tests passed: `307 passed, 11 warnings`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -152,4 +165,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only P1-PERF-001 files plus durable state files, inspect staged diff, and commit `perf: cache sbert job embeddings`.
+Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only P1-PERF-002 files plus durable state files, inspect staged diff, and commit `perf: batch recommendation model scoring`.

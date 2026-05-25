@@ -313,39 +313,74 @@
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_sbert_job_embedding_cache.py -q`
 - Result: fail
 - Summary: Expected TDD red failure. The encode stage had no `_job_text_hash` helper and reused stale job embeddings when only the job text changed.
-- Related commit hash: pending SBERT cache commit.
+- Related commit hash: `f167a99`.
 
 ## 2026-05-25 20:33 +07
 - Task ID: `P1-PERF-001`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_sbert_job_embedding_cache.py -q`
 - Result: pass
 - Summary: `2 passed in 0.04s`.
-- Related commit hash: pending SBERT cache commit.
+- Related commit hash: `f167a99`.
 
 ## 2026-05-25 20:33 +07
 - Task ID: `P1-PERF-001`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_caching.py -q`
 - Result: pass
 - Summary: `15 passed in 0.24s`.
-- Related commit hash: pending SBERT cache commit.
+- Related commit hash: `f167a99`.
 
 ## 2026-05-25 20:33 +07
 - Task ID: `P1-PERF-001`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_contracts.py -q`
 - Result: pass
 - Summary: `2 passed in 0.05s`.
-- Related commit hash: pending SBERT cache commit.
+- Related commit hash: `f167a99`.
 
 ## 2026-05-25 20:36 +07
 - Task ID: `P1-PERF-001`
 - Command: `.\.venv\Scripts\python.exe -m pytest -q`
 - Result: pass
 - Summary: `306 passed, 11 warnings in 91.17s`.
-- Related commit hash: pending SBERT cache commit.
+- Related commit hash: `f167a99`.
 
 ## 2026-05-25 20:36 +07
 - Task ID: `P1-PERF-001`
 - Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
 - Result: pass
 - Summary: Durable task queue parsed successfully after marking P1-PERF-001 done.
-- Related commit hash: pending SBERT cache commit.
+- Related commit hash: `f167a99`.
+
+## 2026-05-25 20:38 +07
+- Task ID: `P1-PERF-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_policy_contracts.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. DQN rank made six policy-network forward calls for three jobs instead of one batched call.
+- Related commit hash: pending batch scoring commit.
+
+## 2026-05-25 20:39 +07
+- Task ID: `P1-PERF-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_policy_contracts.py -q`
+- Result: pass
+- Summary: `3 passed in 3.84s`.
+- Related commit hash: pending batch scoring commit.
+
+## 2026-05-25 20:40 +07
+- Task ID: `P1-PERF-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_ncf_neumf_contracts.py -q`
+- Result: pass
+- Summary: `4 passed in 3.98s`.
+- Related commit hash: pending batch scoring commit.
+
+## 2026-05-25 20:42 +07
+- Task ID: `P1-PERF-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `307 passed, 11 warnings in 91.10s`.
+- Related commit hash: pending batch scoring commit.
+
+## 2026-05-25 20:42 +07
+- Task ID: `P1-PERF-002`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-PERF-002 done.
+- Related commit hash: pending batch scoring commit.

@@ -490,3 +490,49 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P1-PERF-001 files and durable state files, inspect staged diff, and commit `perf: cache sbert job embeddings`.
+
+## 2026-05-25 20:37 +07 - P1-PERF-002 start
+
+### Active Task
+- `P1-PERF-002` - Batch scoring.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked repo files remain.
+- New task state changes: durable `docs/agent/` files updated to reconcile `P1-PERF-001` as commit `f167a99` and mark `P1-PERF-002` in progress.
+
+### Previous Task Complete
+- `P1-PERF-001` committed as `f167a99`.
+
+### Validation Still Needed
+- Inspect current NCF/DQN endpoints and pipeline stage calls.
+- Add focused tests before changing scoring behavior.
+
+### Commands Run
+- `git commit -m "perf: cache sbert job embeddings"`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Inspect `services/pipeline/stages/stage_3_ncf_score.py`, `services/pipeline/stages/stage_4_dqn_rank.py`, `services/ncf/main.py`, and `services/dqn/main.py` for existing batch APIs.
+
+## 2026-05-25 20:42 +07 - P1-PERF-002 result
+
+### Active Task
+- `P1-PERF-002` is implemented and ready to commit.
+
+### What Changed
+- Added DQN `q_values_batch()` and changed `rank()` to score all candidate jobs in one policy-network forward pass.
+- Reused the batched Q-value matrix for action selection, avoiding an additional per-job forward call.
+- Tightened the NCF contract to require one batched NeuMF forward for multi-candidate recommendations.
+
+### Validation Results
+- TDD red: DQN rank made 6 policy-network forward calls for 3 jobs.
+- DQN policy contracts: `3 passed`.
+- NCF NeuMF contracts: `4 passed`.
+- Full backend suite: `307 passed, 11 warnings`.
+
+### Remaining Issues
+- Existing pytest warnings about short test JWT keys remain.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P1-PERF-002 files and durable state files, inspect staged diff, and commit `perf: batch recommendation model scoring`.

@@ -88,3 +88,12 @@
 - Skipped option: Adding a database-backed cache before inspecting existing service state.
 - Reason skipped: The current SBERT service may already have in-memory or Redis cache hooks; reuse local patterns before adding schema or infrastructure.
 - Risk and mitigation: Embedding cache keys must include text content and model/version dimensions so changed job text cannot return stale vectors.
+
+## 2026-05-25 20:37 +07 - P1-PERF-002 batch scoring mini plan
+- Decision: Inspect existing NCF and DQN service endpoints plus pipeline stage calls before implementing batch scoring.
+- Expected files to touch: `services/pipeline/stages/stage_3_ncf_score.py`, `services/pipeline/stages/stage_4_dqn_rank.py`, service endpoints if batch routes are missing, focused tests, and durable `docs/agent/` state files.
+- Validation commands: focused stage/service batch tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: batch NeuMF/NCF scoring and DQN scoring where applicable.
+- Skipped option: Optimizing model internals before confirming whether the pipeline already calls batch endpoints.
+- Reason skipped: The largest latency win may be eliminating per-job HTTP calls, not changing model math.
+- Risk and mitigation: Preserve response shape expected by downstream aggregation while adding batch summaries/counters.

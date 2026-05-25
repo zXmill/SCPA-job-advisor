@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "security",
-  "current_task_id": "P1-PERF-001",
+  "current_task_id": "P1-PERF-002",
   "tasks": [
     {
       "id": "INIT-001",
@@ -311,7 +311,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending: perf: cache sbert job embeddings",
+      "commit": "f167a99",
       "notes": "SBERT service already had Redis text caching. Added pipeline-side job embedding text hashes so cached job embeddings are reused only when job text is unchanged and stale embeddings are recomputed."
     },
     {
@@ -319,7 +319,7 @@
       "phase": "performance",
       "title": "Batch scoring",
       "priority": "P1",
-      "status": "pending",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P1-PERF-001"
@@ -329,13 +329,23 @@
         "services/dqn/main.py",
         "services/pipeline/stages/"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/dqn/main.py",
+        "tests/test_dqn_policy_contracts.py",
+        "tests/test_ncf_neumf_contracts.py",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Batch NeuMF/NCF and DQN scoring where applicable."
+      "validation_status": "passed",
+      "commit": "pending: perf: batch recommendation model scoring",
+      "notes": "NCF already used one batched NeuMF forward; tightened contract. DQN rank now batches policy-network Q-value scoring across jobs and reuses the Q matrix for action selection."
     },
     {
       "id": "P1-PERF-003",
