@@ -201,3 +201,12 @@
 - Skipped option: Removing DQN contribution from job ranking immediately.
 - Reason skipped: Hybrid aggregation and reports already expect a numeric DQN signal; removing it belongs with the learned calibration layer or product UI changes, not this reframing task.
 - Risk and mitigation: Documented the compatibility interpretation in `docs/ml/DQN_SKILL_PATH_RECOMMENDER.md` and validated existing DQN edge cases, pipeline contracts, training smoke, and full backend tests.
+
+## 2026-05-25 21:56 +07 - P2-005 calibration layer mini plan
+- Decision: Start `P2-005` by inspecting current aggregation, recommendation metrics, sample reports, and evaluation helpers before adding a learned ranker.
+- Expected files to touch: `services/pipeline/stages/stage_5_aggregate.py`, a small calibration module under `services/pipeline/` or `services/evaluation/`, focused tests, `reports/ml/` if metrics are generated, and durable `docs/agent/` state files.
+- Validation commands: focused calibration/metrics tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: Add a learned logistic or LightGBM-style calibration layer over SBERT score, NCF score, DQN signal, skill gap, recency, salary, and location while keeping the static baseline.
+- Skipped option: Replacing the existing static aggregate score outright.
+- Reason skipped: The task explicitly requires keeping the static baseline, and existing tests/reports depend on the current hybrid score contract.
+- Risk and mitigation: Begin with deterministic train/evaluate smoke data and compare learned NDCG against the static baseline before claiming improvement.

@@ -959,3 +959,29 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P2-004 files plus durable state files, inspect staged diff, and commit `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:56 +07 - P2-004 commit and P2-005 start
+
+### Active Task
+- `P2-005` - Calibration layer.
+
+### What Changed
+- Committed `P2-004` as `34757e9`.
+- Reconciled durable state to record the P2-004 commit hash.
+- Marked `P2-005` in progress and recorded a mini plan for a learned calibration layer.
+
+### Commands Run
+- `git commit -m "refactor: reframe dqn as skill path recommender"`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Validation Results
+- P2-004 full backend validation remains `324 passed, 1 warning` from the final run before commit.
+- `docs/agent/TASK_QUEUE.json` parsed successfully after marking `P2-005` in progress.
+
+### Remaining Issues
+- `P2-005` implementation has not started yet.
+- Root repo remains dirty with pre-existing `README.md` and broad untracked project files.
+
+### Next Exact Action
+- Validate `docs/agent/TASK_QUEUE.json`, commit this state-only checkpoint, then inspect the current aggregation and metrics code before writing calibration tests.

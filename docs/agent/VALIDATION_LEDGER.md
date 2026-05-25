@@ -839,3 +839,17 @@
 - Result: pass
 - Summary: Final full backend re-run after all P2-004 edits: `324 passed, 1 warning in 94.67s`.
 - Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-004`
+- Command: `git commit -m "refactor: reframe dqn as skill path recommender"`
+- Result: pass
+- Summary: Created commit `34757e9` with DQN skill-path MDP serving/training changes, pipeline metadata preservation, tests, docs, and durable state updates.
+- Related commit hash: `34757e9`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording `P2-004` commit `34757e9` and marking `P2-005` in progress.
+- Related commit hash: pending state checkpoint.

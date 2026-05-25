@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 21:52 +07
+Updated: 2026-05-25 21:56 +07
 
 ## Current Objective
-Commit completed `P2-004` DQN skill-path reframing.
+Start `P2-005` learned calibration layer from a clean durable checkpoint.
 
 ## Current Phase
 ml
 
 ## Current Task ID
-P2-004
+P2-005
 
 ## Latest Commit Hash
-Root: `313f823` (`docs: update long-running agent checkpoint`). Latest product commit: `8ba2004` (`feat: add durable feedback outbox`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `34757e9` (`refactor: reframe dqn as skill path recommender`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `313f823` (`docs: update long-running agent checkpoint`). Latest product c
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task changes: `services/dqn/main.py`, `services/dqn/training/train_dqn.py`, `services/pipeline/stages/stage_4_dqn_rank.py`, `tests/test_dqn_learning_path.py`, `tests/test_dqn_policy_contracts.py`, `tests/test_training_entrypoints.py`, `docs/ml/DQN_SKILL_PATH_RECOMMENDER.md`, and durable `docs/agent/` state files.
+- Current checkpoint changes: durable `docs/agent/` state files recording `P2-004` commit `34757e9` and starting `P2-005`.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -73,7 +73,7 @@ Root: `313f823` (`docs: update long-running agent checkpoint`). Latest product c
 - `tests/test_feedback_outbox.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. P2-003 committed as `8ba2004`. P2-004 state checkpoint committed as `313f823`. `P2-004` is implemented and validated; task commit is pending.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. P2-003 committed as `8ba2004`. P2-004 state checkpoint committed as `313f823`. P2-004 committed as `34757e9`. `P2-005` is in progress as a state-only checkpoint; implementation has not started.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -255,6 +255,8 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P2-004 full backend tests passed: `324 passed, 1 warning`.
 - P2-004 final full backend re-run passed: `324 passed, 1 warning`.
 - P2-004 final `TASK_QUEUE.json` parse passed.
+- P2-004 commit exists as `34757e9`.
+- P2-005 state-start `TASK_QUEUE.json` parse passed.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -270,4 +272,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Parse `docs/agent/TASK_QUEUE.json`, stage only P2-004 files plus durable state files, inspect staged diff, and commit `refactor: reframe dqn as skill path recommender`.
+Parse `docs/agent/TASK_QUEUE.json`, commit this state-only checkpoint, then inspect current aggregation and metrics code before writing P2-005 tests.
