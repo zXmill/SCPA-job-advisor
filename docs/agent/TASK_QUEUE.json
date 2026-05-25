@@ -1345,7 +1345,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending",
+      "commit": "c6afe30",
       "notes": "Design doc written. Smoke implementation includes authenticated POST /api/profile/cv, PDF/TXT extraction, skill extraction from taxonomy, user_skills upsert, and 4 passing tests."
     },
     {
