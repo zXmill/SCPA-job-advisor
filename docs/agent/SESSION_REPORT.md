@@ -1143,3 +1143,55 @@
 
 ### Next Exact Action
 - Validate `docs/agent/TASK_QUEUE.json`, commit this root state checkpoint, then split `P3-FEAT-002` into backend and frontend child tasks.
+
+## 2026-05-25 22:25 +07 - Post-compact recovery note
+
+### Active Task
+- `P3-FEAT-002-BE` is the active task pointer in `TASK_QUEUE.json`. The compact snapshot still references the parent `P3-FEAT-002`, so durable state needs reconciliation before product code.
+
+### Dirty Files
+- Pre-existing: `README.md` modified.
+- Pre-existing: broad untracked project files and directories remain.
+- Current state change: `docs/agent/TASK_QUEUE.json` was modified before compact to point at `P3-FEAT-002-BE`, but child-task records and the compact snapshot are not fully reconciled yet.
+
+### Previous Task Complete
+- Yes. `P3-FEAT-001-BE` is committed as `bf72c99`, `P3-FEAT-001-FE` is committed in the nested frontend repo as `6915df6`, and root checkpoint `f2fb52b` records the completed autocomplete feature.
+
+### Validation Still Needed
+- Reconcile `P3-FEAT-002` into backend/frontend child tasks.
+- Re-parse `docs/agent/TASK_QUEUE.json`.
+- Commit a state-only checkpoint before backend implementation.
+
+### Commands Run
+- Read `AGENTS.md`.
+- Read `docs/agent/PROJECT_STATE.md`.
+- Read `docs/agent/TASK_QUEUE.json`.
+- Read `docs/agent/COMPACT_SNAPSHOT.md`.
+- Read `docs/agent/SESSION_REPORT.md`.
+- Read `docs/agent/DECISION_LOG.md`.
+- Read `docs/agent/VALIDATION_LEDGER.md`.
+- Read `docs/agent/FAILURE_LEDGER.md`.
+- `git status --short --branch`
+- `git log --oneline -10`
+- `Get-Date -Format 'yyyy-MM-dd HH:mm zzz'`
+
+### Next Exact Action
+- Reconcile `P3-FEAT-002` child tasks in `TASK_QUEUE.json`, update decision/session/compact/validation ledgers, parse JSON, and commit `docs: update long-running agent checkpoint`.
+
+## 2026-05-25 22:25 +07 - P3-FEAT-002 split
+
+### Active Task
+- `P3-FEAT-002-BE` - Profile completeness meter backend.
+
+### What Changed
+- Split parent `P3-FEAT-002` into backend and frontend child tasks.
+- Marked `P3-FEAT-002-BE` in progress and left `P3-FEAT-002-FE` pending.
+- Recorded the backend mini plan in `DECISION_LOG.md`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Commit the state-only split checkpoint.
+- Inspect profile completion fields and existing auth/profile tests before writing backend tests.
+
+### Next Exact Action
+- Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then add focused backend tests for the profile completeness summary contract.

@@ -252,3 +252,11 @@
 - Requirement: Create separate backend and frontend child tasks for the profile completeness meter with their own validation and commits.
 - Skipped option: Implementing the meter directly inside the parent task.
 - Reason skipped: The product-feature phase requires separate backend and frontend tasks.
+
+## 2026-05-25 22:25 +07 - P3-FEAT-002-BE backend mini plan
+- Decision: Add a gateway profile completeness summary endpoint before building the frontend meter.
+- Expected files to touch: `services/gateway/main.py`, `tests/test_profile_completeness.py`, and durable `docs/agent/` state files.
+- Validation commands: focused profile completeness tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract: return a percentage, completed item IDs, missing item IDs, and display labels based on existing user fields and `user_skills`.
+- Skipped option: Computing missing fields entirely in the frontend.
+- Reason skipped: The backend owns profile and skill persistence, so the completeness contract should come from the same source of truth.

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "frontend",
-  "current_task_id": "P3-FEAT-002",
+  "current_phase": "backend",
+  "current_task_id": "P3-FEAT-002-BE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -729,7 +729,7 @@
       "phase": "frontend",
       "title": "Profile completeness meter",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "blocked",
       "scope": "medium",
       "depends_on": [
         "P3-FEAT-001"
@@ -746,7 +746,53 @@
       ],
       "validation_status": "not_run",
       "commit": "",
-      "notes": "Active parent task for splitting profile completeness meter into backend/frontend child tasks before implementation."
+      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-002-BE and P3-FEAT-002-FE are done."
+    },
+    {
+      "id": "P3-FEAT-002-BE",
+      "phase": "backend",
+      "title": "Profile completeness meter backend",
+      "priority": "P3",
+      "status": "in_progress",
+      "scope": "small",
+      "depends_on": [
+        "P3-FEAT-001"
+      ],
+      "files_expected": [
+        "services/gateway/main.py",
+        "tests/test_profile_completeness.py"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_profile_completeness.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Add a backend profile completeness summary contract with percentage, completed item IDs, and missing item IDs."
+    },
+    {
+      "id": "P3-FEAT-002-FE",
+      "phase": "frontend",
+      "title": "Profile completeness meter frontend",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "small",
+      "depends_on": [
+        "P3-FEAT-002-BE"
+      ],
+      "files_expected": [
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/profile/page.tsx"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        "npm run lint",
+        "npm run build"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Render backend completeness summary in the profile page after the backend contract is validated."
     },
     {
       "id": "P3-FEAT-003",
