@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "backend",
-  "current_task_id": "P3-FEAT-003-BE",
+  "current_phase": "frontend",
+  "current_task_id": "P3-FEAT-003-FE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -840,7 +840,7 @@
       "phase": "backend",
       "title": "Saved jobs and skip buttons backend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-002"
@@ -849,14 +849,23 @@
         "services/gateway/main.py",
         "tests/test_saved_jobs_skip.py"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/gateway/main.py",
+        "tests/test_saved_jobs_skip.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_saved_jobs_skip.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_saved_jobs_skip.py tests\\test_jobs_upsert.py tests\\test_feedback_outbox.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
+      "validation_status": "passed",
       "commit": "",
-      "notes": "Add authenticated backend contracts for saved jobs and skipped jobs using existing job and interaction storage where possible."
+      "notes": "Added authenticated save, unsave, skip, and list-saved job contracts using user_job_interactions."
     },
     {
       "id": "P3-FEAT-003-FE",

@@ -1280,3 +1280,27 @@
 
 ### Next Exact Action
 - Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then add focused backend tests for saved jobs and skip behavior.
+
+## 2026-05-25 22:44 +07 - P3-FEAT-003-BE result
+
+### Active Task
+- `P3-FEAT-003-BE` is implemented, validated, and ready to commit.
+
+### What Changed
+- Added focused backend tests for save, unsave, saved-list isolation, and skip behavior.
+- Added authenticated `GET /api/jobs/saved`.
+- Added authenticated `POST /api/jobs/{job_id}/save`, `DELETE /api/jobs/{job_id}/save`, and `POST /api/jobs/{job_id}/skip`.
+- Save and skip are mutually exclusive in `user_job_interactions`; skip clears saved state.
+
+### Validation Results
+- TDD red: `tests/test_saved_jobs_skip.py` failed with `404 Not Found` because the routes did not exist.
+- Focused saved/skip tests passed: `4 passed`.
+- Adjacent job/application/feedback regression passed: `11 passed`.
+- Full backend suite passed: `335 passed, 1 warning`.
+
+### Remaining Issues
+- One warning remains in the intentional wrong-secret JWT test.
+- `P3-FEAT-003-FE` frontend controls are still pending.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P3-FEAT-003-BE files plus durable state files, inspect staged diff, and commit `feat: add saved jobs and skip backend`.

@@ -1475,6 +1475,150 @@ async def list_jobs(
     }
 
 
+def _job_payload_from_row(row: Any, *, public_id: str | None = None) -> dict[str, Any]:
+    job = dict(row)
+    job["id"] = public_id or str(job["id"])
+    match_data = _parse_match_data(job.pop("match_data", None))
+    job["source_url"] = match_data.get("source_url")
+    job["skills"] = match_data.get("skills") or []
+    job["company_logo"] = _proxied_company_logo_url(job.get("company_logo"), job.get("company"))
+    return job
+
+
+async def _require_job_uuid(db: AsyncSession, job_id: str) -> uuid.UUID:
+    db_uuid = to_uuid(job_id)
+    row = (
+        await db.execute(
+            text("SELECT id FROM jobs WHERE id = :id"),
+            {"id": db_uuid},
+        )
+    ).mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return db_uuid
+
+
+async def _set_job_interaction_state(
+    db: AsyncSession,
+    *,
+    user_id: Any,
+    job_id: uuid.UUID,
+    saved: bool,
+    dismissed: bool,
+    action_type: str,
+) -> None:
+    await db.execute(
+        text(
+            "INSERT INTO user_job_interactions ("
+            "user_id, job_id, clicked, saved, applied, dismissed, created_at"
+            ") VALUES ("
+            ":uid, :job_id, false, :saved, false, :dismissed, NOW()"
+            ") ON CONFLICT (user_id, job_id) DO UPDATE SET "
+            "saved = EXCLUDED.saved, "
+            "dismissed = EXCLUDED.dismissed"
+        ),
+        {"uid": user_id, "job_id": job_id, "saved": saved, "dismissed": dismissed},
+    )
+    await db.execute(
+        text(
+            "INSERT INTO user_interactions ("
+            "user_id, action_type, target_type, target_id, metadata, created_at"
+            ") VALUES ("
+            ":uid, :action_type, 'job', :job_id, CAST(:metadata AS jsonb), NOW()"
+            ")"
+        ),
+        {
+            "uid": user_id,
+            "action_type": action_type,
+            "job_id": job_id,
+            "metadata": json.dumps({"source": "saved_jobs_api"}),
+        },
+    )
+    await db.commit()
+
+
+@app.get("/api/jobs/saved")
+async def list_saved_jobs(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    rows = (
+        await db.execute(
+            text(
+                "SELECT j.id, j.title, j.company, j.company_logo, j.location, j.type, "
+                "j.min_salary, j.max_salary, j.salary_currency, j.salary_text, "
+                "j.employment_mode, j.description, j.experience_level, j.posted_at, "
+                "j.source, j.is_active, j.match_data "
+                "FROM user_job_interactions uji "
+                "JOIN jobs j ON uji.job_id = j.id "
+                "WHERE uji.user_id = :uid AND uji.saved = true "
+                "ORDER BY uji.created_at DESC, j.posted_at DESC"
+            ),
+            {"uid": user["id"]},
+        )
+    ).mappings().all()
+    jobs = [_job_payload_from_row(row) for row in rows]
+    return {"jobs": jobs, "total": len(jobs)}
+
+
+@app.post("/api/jobs/{job_id}/save")
+async def save_job(
+    job_id: str,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    db_uuid = await _require_job_uuid(db, job_id)
+    await _set_job_interaction_state(
+        db,
+        user_id=user["id"],
+        job_id=db_uuid,
+        saved=True,
+        dismissed=False,
+        action_type="save",
+    )
+    return {"status": "saved", "job_id": job_id}
+
+
+@app.delete("/api/jobs/{job_id}/save")
+async def unsave_job(
+    job_id: str,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    db_uuid = await _require_job_uuid(db, job_id)
+    await _set_job_interaction_state(
+        db,
+        user_id=user["id"],
+        job_id=db_uuid,
+        saved=False,
+        dismissed=False,
+        action_type="unsave",
+    )
+    return {"status": "unsaved", "job_id": job_id}
+
+
+@app.post("/api/jobs/{job_id}/skip")
+async def skip_job(
+    job_id: str,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    db_uuid = await _require_job_uuid(db, job_id)
+    await _set_job_interaction_state(
+        db,
+        user_id=user["id"],
+        job_id=db_uuid,
+        saved=False,
+        dismissed=True,
+        action_type="skip",
+    )
+    return {"status": "skipped", "job_id": job_id}
+
+
 @app.get("/api/jobs/{job_id}")
 async def get_job(job_id: str, db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
     db_uuid = to_uuid(job_id)

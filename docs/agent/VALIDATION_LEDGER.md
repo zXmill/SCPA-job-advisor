@@ -1154,3 +1154,38 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after splitting P3-FEAT-003 into backend/frontend child tasks and marking backend child in progress.
 - Related commit hash: pending state checkpoint.
+
+## 2026-05-25 22:40 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_saved_jobs_skip.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. All saved/skip tests returned `404 Not Found` because the routes did not exist yet.
+- Related commit hash: pending `feat: add saved jobs and skip backend`.
+
+## 2026-05-25 22:42 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_saved_jobs_skip.py -q`
+- Result: pass
+- Summary: Focused saved/skip backend tests passed with `4 passed`.
+- Related commit hash: pending `feat: add saved jobs and skip backend`.
+
+## 2026-05-25 22:42 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_saved_jobs_skip.py tests\test_jobs_upsert.py tests\test_feedback_outbox.py -q`
+- Result: pass
+- Summary: Saved/skip, job upsert/application, and feedback outbox regression tests passed with `11 passed`.
+- Related commit hash: pending `feat: add saved jobs and skip backend`.
+
+## 2026-05-25 22:44 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `335 passed, 1 warning`.
+- Related commit hash: pending `feat: add saved jobs and skip backend`.
+
+## 2026-05-25 22:44 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-003-BE done and pointing the next task at P3-FEAT-003-FE.
+- Related commit hash: pending `feat: add saved jobs and skip backend`.
