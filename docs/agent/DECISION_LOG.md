@@ -260,3 +260,11 @@
 - Contract: return a percentage, completed item IDs, missing item IDs, and display labels based on existing user fields and `user_skills`.
 - Skipped option: Computing missing fields entirely in the frontend.
 - Reason skipped: The backend owns profile and skill persistence, so the completeness contract should come from the same source of truth.
+
+## 2026-05-25 22:34 +07 - P3-FEAT-002-FE frontend mini plan
+- Decision: Render the backend completeness summary in the existing profile page rather than duplicating completeness logic in the browser.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/profile/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository.
+- UI contract: fetch `/api/profile/completeness` for authenticated profile users, show percent, completed/missing counts, and labeled item states near the existing editable profile sections.
+- Skipped option: Reusing only `user.completion_percent`.
+- Reason skipped: The new backend contract exposes actionable missing item IDs and labels for the meter, while `completion_percent` is the older onboarding progress field.

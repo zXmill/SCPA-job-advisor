@@ -777,7 +777,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "",
+      "commit": "c0dd8e6",
       "notes": "Added authenticated /api/profile/completeness with computed percentage, completed/missing item IDs, labeled items, stored_percent, and skill_count."
     },
     {
@@ -785,7 +785,7 @@
       "phase": "frontend",
       "title": "Profile completeness meter frontend",
       "priority": "P3",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-002-BE"
