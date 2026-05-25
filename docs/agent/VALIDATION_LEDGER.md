@@ -1203,3 +1203,52 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after recording P3-FEAT-003-BE commit `297d0ad` and marking P3-FEAT-003-FE in progress.
 - Related commit hash: pending state checkpoint.
+
+## 2026-05-25 22:50 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 16 existing warnings and no errors after adding saved/skip frontend controls.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:51 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully and generated 12 static pages.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:51 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `Invoke-WebRequest -UseBasicParsing http://127.0.0.1:3000/recommendations -TimeoutSec 5`
+- Result: pass
+- Summary: Local frontend dev server responded with HTTP `200` for `/recommendations`.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:51 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `Invoke-WebRequest -UseBasicParsing http://127.0.0.1:3000/profile -TimeoutSec 5`
+- Result: pass
+- Summary: Local frontend dev server responded with HTTP `200` for `/profile`.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:52 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `git -C frontend diff --cached --check`
+- Result: pass
+- Summary: Staged saved/skip frontend diff reported no whitespace errors.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:52 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `git -C frontend commit -m "feat: add saved jobs and skip frontend"`
+- Result: pass
+- Summary: Created nested frontend commit `ffa45b4` with saved/skip API helpers, recommendation controls, and profile saved-job display.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:53 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-003 and P3-FEAT-003-FE done and pointing the next task at P3-FEAT-004.
+- Related commit hash: pending root checkpoint.

@@ -284,3 +284,10 @@
 - UI contract: controls should call the backend save/skip endpoints, keep already-rendered recommendation cards stable, and avoid showing skipped jobs in the current client-side slate after a successful skip.
 - Skipped option: Building a new standalone saved-jobs page in this task.
 - Reason skipped: The existing product surface has recommendations and profile history; adding a new route would expand frontend scope beyond the small child task.
+
+## 2026-05-25 22:52 +07 - P3-FEAT-003-FE frontend implementation decision
+- Decision: Keep saved/skip UI state local to the recommendation slate and use the profile page as the saved-job list surface.
+- Trade-off: This avoids a new route and keeps the child task small, but saved-job management is read-only from profile for now; unsave is available in the API helper for a later UI pass.
+- Skipped option: Blocking recommendation loading when the saved-list request fails.
+- Reason skipped: Recommendations are the primary page purpose; saved-state decoration should not hide recommendations if the saved-list call is temporarily unavailable.
+- Risk and mitigation: User actions still surface errors through an inline alert, and lint/build plus local `/recommendations` and `/profile` smoke checks passed after the change.

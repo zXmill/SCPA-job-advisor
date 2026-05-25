@@ -1322,3 +1322,64 @@
 
 ### Next Exact Action
 - Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then wire save/skip frontend controls to the backend endpoints.
+
+## 2026-05-25 22:48 +07 - Post-compact recovery note
+
+### Active Task
+- `P3-FEAT-003-FE` - Saved jobs and skip buttons frontend.
+
+### Dirty Files
+- Pre-existing: `README.md` modified.
+- Pre-existing: broad untracked project files and directories remain, including the nested `frontend/` repository.
+- Current recovery change: this `SESSION_REPORT.md` note.
+
+### Previous Task Complete
+- Yes. `P3-FEAT-003-BE` is committed as `297d0ad`.
+- The frontend start checkpoint is committed as `96a79ac`.
+
+### Validation Still Needed
+- Inspect current `frontend/src/lib/api.ts`, `frontend/src/app/recommendations/page.tsx`, and `frontend/src/app/profile/page.tsx`.
+- Run `npm run lint` and `npm run build` in `frontend/` after implementation.
+- Run a local HTTP smoke check if a dev server is available.
+
+### Commands Run
+- `Get-Content -Raw AGENTS.md`
+- `Get-Content -Raw docs\agent\PROJECT_STATE.md`
+- `Get-Content -Raw docs\agent\TASK_QUEUE.json`
+- `Get-Content -Raw docs\agent\COMPACT_SNAPSHOT.md`
+- `Get-Content -Raw docs\agent\SESSION_REPORT.md`
+- `Get-Content -Raw docs\agent\DECISION_LOG.md`
+- `Get-Content -Raw docs\agent\VALIDATION_LEDGER.md`
+- `Get-Content -Raw docs\agent\FAILURE_LEDGER.md`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Inspect the frontend API helpers, recommendation card, and profile saved-job surface, then wire save/skip buttons and saved-job display to the backend endpoints.
+
+## 2026-05-25 22:52 +07 - P3-FEAT-003-FE result
+
+### Active Task
+- `P3-FEAT-003-FE` is implemented, validated, and committed in the nested frontend repository.
+
+### What Changed
+- Added typed frontend API helpers for `GET /api/jobs/saved`, `POST /api/jobs/{id}/save`, `DELETE /api/jobs/{id}/save`, and `POST /api/jobs/{id}/skip`.
+- Recommendation cards now render `Simpan` and `Lewati` controls.
+- Saving records backend state and recommendation feedback, then marks the card as saved.
+- Skipping records backend state and recommendation feedback, then removes the job from the current recommendation slate.
+- Profile now fetches and displays saved jobs.
+- Committed the frontend child task in nested `frontend/` as `ffa45b4`.
+
+### Validation Results
+- `npm run lint` in `frontend/`: passed with 16 existing warnings and no errors.
+- `npm run build` in `frontend/`: passed.
+- Local dev server smoke: `GET http://127.0.0.1:3000/recommendations` returned `200`.
+- Local dev server smoke: `GET http://127.0.0.1:3000/profile` returned `200`.
+
+### Remaining Issues
+- Existing frontend warnings remain.
+- No frontend test script exists in `frontend/package.json`; this child task used the configured lint/build validation gates.
+- Root durable state still needs to be committed after recording the nested frontend commit.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "frontend",
-  "current_task_id": "P3-FEAT-003-FE",
+  "current_task_id": "P3-FEAT-004",
   "tasks": [
     {
       "id": "INIT-001",
@@ -816,7 +816,7 @@
       "phase": "frontend",
       "title": "Saved jobs and skip buttons",
       "priority": "P3",
-      "status": "blocked",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P3-FEAT-002"
@@ -827,13 +827,24 @@
         "docs/agent/SESSION_REPORT.md",
         "docs/agent/COMPACT_SNAPSHOT.md"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/gateway/main.py",
+        "tests/test_saved_jobs_skip.py",
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/recommendations/page.tsx",
+        "frontend/src/app/profile/page.tsx",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-003-BE and P3-FEAT-003-FE are done."
+      "validation_status": "passed",
+      "commit": "backend:297d0ad; frontend:ffa45b4",
+      "notes": "Completed as separate backend and frontend child tasks."
     },
     {
       "id": "P3-FEAT-003-BE",
@@ -872,7 +883,7 @@
       "phase": "frontend",
       "title": "Saved jobs and skip buttons frontend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-003-BE"
@@ -882,14 +893,23 @@
         "frontend/src/app/recommendations/page.tsx",
         "frontend/src/app/profile/page.tsx"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/recommendations/page.tsx",
+        "frontend/src/app/profile/page.tsx",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         "npm run lint",
         "npm run build"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Render save and skip controls after backend contracts are validated."
+      "validation_status": "passed",
+      "commit": "frontend:ffa45b4",
+      "notes": "Recommendation cards now call save/skip endpoints, preserve saved state, remove skipped jobs from the current slate, and the profile page lists saved jobs."
     },
     {
       "id": "P3-FEAT-004",
