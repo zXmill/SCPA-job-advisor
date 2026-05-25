@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 21:34 +07
+Updated: 2026-05-25 21:52 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -58,7 +58,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 ## ML Model Inventory
 - SBERT: multilingual SentenceTransformer default `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; local fine-tuned artifact files exist under ignored `services/sbert/weights/fine_tuned_jupyter/`.
 - NCF: online NCF/NeuMF service with JSON and `.pt` artifacts under ignored `services/ncf/weights/` and report artifacts.
-- DQN: online DQN service with replay/policy artifacts under ignored `services/dqn/weights/` and report artifacts.
+- DQN: online skill-path DQN service with replay/policy artifacts under ignored `services/dqn/weights/` and report artifacts. It emits career milestone/skill actions and a compatibility rerank signal.
 - Evaluation and smoke artifacts exist under `reports/` and `notebooks/training_runs/`.
 
 ## Known Working Areas
@@ -66,7 +66,8 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - JWT access and refresh signing secrets now fail fast when missing or shorter than 32 bytes in shared auth and gateway configuration.
 - Gateway CORS origins now default to localhost in development and reject empty or wildcard origins in production.
 - Gateway recommendation feedback now uses a durable database outbox with retry worker support for pipeline forwarding.
-- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `321 passed, 1 warning` after P2-003.
+- DQN learning-path responses now expose an explicit MDP contract: state is user profile, missing skills, and market demand; actions are skill/course/certificate/career milestones; reward is skill-gap reduction plus job-match lift.
+- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `324 passed, 1 warning` after P2-004.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
@@ -80,7 +81,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P2-003` - durable feedback outbox. Commit `8ba2004`.
+`P2-004` - reframe DQN as skill path recommender. Commit pending.
 
 ## Next Task
-`P2-004` - reframe DQN as skill path recommender.
+Commit `P2-004`, then continue `P2-005`: add learned recommendation calibration layer.

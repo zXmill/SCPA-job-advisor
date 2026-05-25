@@ -755,3 +755,87 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after recording `P2-003` commit `8ba2004` and marking `P2-004` in progress.
 - Related commit hash: pending state checkpoint.
+
+## 2026-05-25 21:35 +07
+- Task ID: `P2-004`
+- Command: `git commit -m "docs: update long-running agent checkpoint"`
+- Result: pass
+- Summary: Created state-only checkpoint `313f823` before DQN skill-path implementation.
+- Related commit hash: `313f823`.
+
+## 2026-05-25 21:39 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_learning_path.py tests\test_dqn_policy_contracts.py -q`
+- Result: fail
+- Summary: Expected TDD red failure: 2 failures because DQN learning-path and rank metadata did not expose `policy_objective`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:43 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_policy_contracts.py::test_pipeline_dqn_stage_preserves_skill_path_metadata -q`
+- Result: fail
+- Summary: Expected TDD red failure: pipeline DQN stage did not forward `target_role` into DQN `session_ctx`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:45 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_learning_path.py tests\test_dqn_policy_contracts.py -q`
+- Result: pass
+- Summary: `8 passed in 3.73s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:46 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_training_entrypoints.py::test_dqn_training_cli_writes_checkpoint -q`
+- Result: fail
+- Summary: Expected TDD red failure: DQN training smoke metrics did not include `policy_objective`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:48 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_training_entrypoints.py::test_dqn_training_cli_writes_checkpoint -q`
+- Result: pass
+- Summary: `1 passed in 6.86s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:49 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_contracts.py tests\test_full_pipeline_entrypoint.py -q`
+- Result: pass
+- Summary: `4 passed in 5.75s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:49 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_edge_cases.py::TestDQNEdgeCases -q`
+- Result: pass
+- Summary: `4 passed in 3.83s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:54 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `324 passed, 1 warning in 96.63s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:53 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking `P2-004` done.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:55 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_training_entrypoints.py::test_dqn_training_cli_writes_checkpoint -q`
+- Result: pass
+- Summary: Re-run after training type-hint cleanup: `1 passed in 7.33s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:52 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Final full backend re-run after all P2-004 edits: `324 passed, 1 warning in 94.67s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.

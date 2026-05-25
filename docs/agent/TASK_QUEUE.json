@@ -536,7 +536,7 @@
       "phase": "ml",
       "title": "Reframe DQN",
       "priority": "P2",
-      "status": "in_progress",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P2-003"
@@ -549,15 +549,28 @@
         "tests/test_dqn_policy_contracts.py",
         "docs/ml/"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/dqn/main.py",
+        "services/dqn/training/train_dqn.py",
+        "services/pipeline/stages/stage_4_dqn_rank.py",
+        "tests/test_dqn_learning_path.py",
+        "tests/test_dqn_policy_contracts.py",
+        "tests/test_training_entrypoints.py",
+        "docs/ml/DQN_SKILL_PATH_RECOMMENDER.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_dqn_learning_path.py tests\\test_dqn_policy_contracts.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_pipeline_contracts.py tests\\test_full_pipeline_entrypoint.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Started after P2-003 commit. Reframe DQN toward skill/career milestone actions while preserving existing recommendation contracts until downstream calibration changes."
+      "validation_status": "passed",
+      "commit": "pending refactor: reframe dqn as skill path recommender",
+      "notes": "Added explicit skill-path MDP state/action/reward metadata, skill-gap reward components, pipeline metadata preservation, skill-path training smoke metrics, and docs while preserving DQN job-rerank compatibility."
     },
     {
       "id": "P2-005",

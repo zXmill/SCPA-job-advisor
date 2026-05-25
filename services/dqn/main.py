@@ -167,6 +167,74 @@ ROLE_VOCAB = [
     "Business Analyst",
     "Master of Ceremony",
 ]
+ROLE_SKILL_REQUIREMENTS: dict[str, list[str]] = {
+    "data scientist": ["Python", "Pandas", "Machine Learning", "Statistics", "SQL", "Dashboard"],
+    "backend developer": ["Python", "FastAPI", "PostgreSQL", "Redis", "Docker"],
+    "fullstack developer": ["React", "Next.js", "Node.js", "SQL", "Docker"],
+    "business analyst": ["SQL", "Business Analysis", "Dashboard", "Communication"],
+    "master of ceremony": ["Public Speaking", "English", "Event", "Communication"],
+    "ui/ux designer": ["Figma", "UI Design", "Prototyping", "UX Research"],
+}
+ROLE_MILESTONES: dict[str, list[dict[str, Any]]] = {
+    "data scientist": [
+        {
+            "milestone_id": "ml-modeling",
+            "title": "Train supervised machine learning models",
+            "required_skills": ["Python", "Pandas", "Machine Learning", "Statistics"],
+            "reward": 1.0,
+        },
+        {
+            "milestone_id": "sql-analytics",
+            "title": "Build SQL analytics workflows",
+            "required_skills": ["SQL", "Dashboard"],
+            "reward": 0.8,
+        },
+    ],
+    "backend developer": [
+        {
+            "milestone_id": "fastapi-service",
+            "title": "Build production FastAPI services",
+            "required_skills": ["Python", "FastAPI", "PostgreSQL"],
+            "reward": 1.0,
+        },
+        {
+            "milestone_id": "cache-deploy",
+            "title": "Add Redis caching and Docker deployment",
+            "required_skills": ["Redis", "Docker"],
+            "reward": 0.8,
+        },
+    ],
+    "business analyst": [
+        {
+            "milestone_id": "dashboard-storytelling",
+            "title": "Create dashboard-based business recommendations",
+            "required_skills": ["SQL", "Business Analysis", "Dashboard"],
+            "reward": 1.0,
+        },
+    ],
+    "master of ceremony": [
+        {
+            "milestone_id": "public-speaking-advanced",
+            "title": "Practice advanced public speaking",
+            "required_skills": ["Public Speaking", "English"],
+            "reward": 1.0,
+        },
+        {
+            "milestone_id": "event-protocol",
+            "title": "Learn event protocol and audience management",
+            "required_skills": ["Event", "Communication"],
+            "reward": 0.8,
+        },
+    ],
+    "ui/ux designer": [
+        {
+            "milestone_id": "figma-research",
+            "title": "Run user research and prototype in Figma",
+            "required_skills": ["Figma", "UX Research", "Prototyping"],
+            "reward": 1.0,
+        },
+    ],
+}
 N_ACTIONS = len(SKILL_VOCAB)
 
 
@@ -254,6 +322,9 @@ class LearningPathRequest(BaseModel):
     user_id: int | str
     current_skills: list[str] = Field(default_factory=list)
     target_role: str = "Data Scientist"
+    profile_text: str | None = None
+    market_demand: dict[str, float] = Field(default_factory=dict)
+    max_steps: int = Field(default=8, ge=1, le=12)
 
 
 class RecommendDQNRequest(BaseModel):
@@ -557,26 +628,74 @@ class OnlineDQN:
 
     def rank(self, user_id: str, jobs: list[dict[str, Any]], session_ctx: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         ranked: list[dict[str, Any]] = []
+        session_ctx = session_ctx or {}
+        current_skills = _as_skill_list(session_ctx.get("skills"))
+        target_role = str(session_ctx.get("target_role") or session_ctx.get("program_studi") or "Data Scientist")
+        session_market_demand = (
+            session_ctx.get("market_demand")
+            if isinstance(session_ctx.get("market_demand"), dict)
+            else {}
+        )
         features_batch = [self.featurize(user_id, job, session_ctx) for job in jobs]
         q_matrix = self.q_values_batch(np.asarray(features_batch, dtype=np.float32))
         for job, q_values in zip(jobs, q_matrix):
             q_raw = float(np.max(q_values)) if len(q_values) else 0.0
-            if random.random() < self.epsilon:
-                action_index = random.randrange(N_ACTIONS)
-                policy_source = "epsilon_explore"
-            else:
-                action_index = int(np.argmax(q_values)) if len(q_values) else 0
-                policy_source = "qnetwork_policy"
-            action_label = SKILL_VOCAB[action_index]
+            job_skills = _as_skill_list(job.get("skills") or job.get("tags"))
+            job_market_demand = dict(session_market_demand)
+            for skill in job_skills:
+                job_market_demand.setdefault(skill, 0.7)
+            skill_state = build_skill_path_state(
+                user_id=user_id,
+                current_skills=current_skills,
+                target_role=target_role,
+                market_demand=job_market_demand,
+                profile_text=str(session_ctx.get("profile_text") or ""),
+            )
+            candidate_skills = job_skills or list(skill_state.get("missing_skills") or [])
+            candidate_keys = {_skill_key(skill) for skill in candidate_skills}
+            missing_candidates = [
+                skill
+                for skill in skill_state.get("missing_skills", [])
+                if _skill_key(skill) in candidate_keys
+            ] or list(skill_state.get("missing_skills") or [])
+            skill_steps = [
+                _build_skill_path_step(
+                    index=0,
+                    skill=skill,
+                    state=skill_state,
+                    q_value=float(q_values[_skill_index(skill)]) if len(q_values) > _skill_index(skill) else 0.0,
+                    policy_source="skill_path_policy",
+                )
+                for skill in missing_candidates
+            ]
+            skill_steps.sort(
+                key=lambda step: (
+                    float(step["reward_components"]["total_reward"]),
+                    float(step["market_demand"]),
+                    float(step["priority"]),
+                ),
+                reverse=True,
+            )
+            action_step = skill_steps[0] if skill_steps else _fallback_skill_path_step(skill_state)
+            action_index = action_step["action"] if isinstance(action_step.get("action"), int) else 0
+            action_label = str(action_step.get("action_label") or action_step.get("skill") or SKILL_VOCAB[action_index])
+            policy_source = str(action_step.get("policy_source") or "skill_path_policy")
             prior = 0.55 * float(job.get("sbert_score") or 0.0) + 0.35 * float(job.get("ncf_score") or 0.0)
-            q_value = (0.65 * _sigmoid(q_raw)) + (0.35 * prior)
+            path_reward = float(action_step["reward_components"]["total_reward"]) / 2.0
+            q_value = (0.45 * _sigmoid(q_raw)) + (0.25 * prior) + (0.3 * _clamp01(path_reward))
             ranked.append(
                 {
                     "job": job,
                     "q_value": round(float(q_value), 6),
                     "action": action_index,
                     "action_label": action_label,
+                    "action_type": action_step.get("action_type"),
                     "policy_source": policy_source,
+                    "policy_objective": "skill_path",
+                    "reward_components": action_step["reward_components"],
+                    "skill_gap": action_step["skill_gap"],
+                    "estimated_skill_gap_after": action_step["estimated_skill_gap_after"],
+                    "market_demand": action_step["market_demand"],
                 }
             )
         ranked.sort(key=lambda item: item["q_value"], reverse=True)
@@ -725,6 +844,259 @@ def _skill_key(value: str) -> str:
     return " ".join(str(value or "").strip().lower().replace("-", " ").split())
 
 
+def _clamp01(value: float) -> float:
+    return float(max(0.0, min(1.0, value)))
+
+
+def _normalised_demand_map(market_demand: dict[str, float] | None) -> dict[str, float]:
+    return {
+        _skill_key(skill): _clamp01(float(value))
+        for skill, value in (market_demand or {}).items()
+        if str(skill).strip()
+    }
+
+
+def _skill_index(skill: str) -> int:
+    key = _skill_key(skill)
+    for index, label in enumerate(SKILL_VOCAB):
+        if _skill_key(label) == key:
+            return index
+    return 0
+
+
+def _role_key(target_role: str) -> str:
+    key = _skill_key(target_role)
+    if key in ROLE_SKILL_REQUIREMENTS:
+        return key
+    for known in ROLE_SKILL_REQUIREMENTS:
+        if key in known or known in key:
+            return known
+    return "data scientist"
+
+
+def _role_required_skills(target_role: str) -> list[str]:
+    return list(ROLE_SKILL_REQUIREMENTS.get(_role_key(target_role), ROLE_SKILL_REQUIREMENTS["data scientist"]))
+
+
+def _milestone_for_skill(target_role: str, skill: str) -> dict[str, Any] | None:
+    skill_key = _skill_key(skill)
+    for milestone in ROLE_MILESTONES.get(_role_key(target_role), []):
+        required = {_skill_key(item) for item in milestone.get("required_skills", [])}
+        if skill_key in required:
+            return milestone
+    return None
+
+
+def _market_demand_for_skill(
+    skill: str,
+    target_role: str,
+    market_demand: dict[str, float] | None,
+) -> float:
+    demand = _normalised_demand_map(market_demand)
+    skill_key = _skill_key(skill)
+    if skill_key in demand:
+        return demand[skill_key]
+    milestone = _milestone_for_skill(target_role, skill)
+    if milestone:
+        return _clamp01(0.45 + (0.35 * float(milestone.get("reward", 0.0))))
+    return 0.5
+
+
+def _as_skill_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, tuple | set):
+        return [str(item).strip() for item in value if str(item).strip()]
+    text = str(value).strip()
+    return [text] if text else []
+
+
+def build_skill_path_state(
+    *,
+    user_id: int | str,
+    current_skills: list[str],
+    target_role: str,
+    market_demand: dict[str, float] | None = None,
+    profile_text: str | None = None,
+) -> dict[str, Any]:
+    mastered = {_skill_key(skill) for skill in current_skills}
+    required_skills = _role_required_skills(target_role)
+    missing_skills = [skill for skill in required_skills if _skill_key(skill) not in mastered]
+    demand_by_skill = {
+        skill: _market_demand_for_skill(skill, target_role, market_demand)
+        for skill in required_skills
+    }
+    return {
+        "user_profile": {
+            "user_id": str(user_id),
+            "target_role": target_role,
+            "current_skills": list(current_skills),
+            "profile_text": profile_text,
+        },
+        "required_skills": required_skills,
+        "missing_skills": missing_skills,
+        "market_demand": demand_by_skill,
+        "skill_gap": round(len(missing_skills) / max(1, len(required_skills)), 6),
+    }
+
+
+def _skill_path_reward_components(skill: str, state: dict[str, Any]) -> dict[str, float]:
+    missing_skills = list(state.get("missing_skills") or [])
+    required_skills = list(state.get("required_skills") or [])
+    is_missing = _skill_key(skill) in {_skill_key(item) for item in missing_skills}
+    skill_gap_reduction = (1.0 / max(1, len(missing_skills))) if is_missing else 0.0
+    job_match_lift = _clamp01(float((state.get("market_demand") or {}).get(skill, 0.0)))
+    total_reward = skill_gap_reduction + job_match_lift
+    estimated_gap_after = (
+        max(0.0, (len(missing_skills) - (1 if is_missing else 0)) / max(1, len(required_skills)))
+    )
+    return {
+        "skill_gap_reduction": round(skill_gap_reduction, 6),
+        "job_match_lift": round(job_match_lift, 6),
+        "total_reward": round(total_reward, 6),
+        "estimated_skill_gap_after": round(estimated_gap_after, 6),
+    }
+
+
+def _action_type_for_skill(target_role: str, skill: str) -> str:
+    milestone = _milestone_for_skill(target_role, skill)
+    if milestone:
+        return "career_milestone"
+    if _skill_key(skill) in {"aws", "docker", "kubernetes", "postgresql", "fastapi"}:
+        return "certificate"
+    return "skill"
+
+
+def _build_skill_path_step(
+    *,
+    index: int,
+    skill: str,
+    state: dict[str, Any],
+    q_value: float,
+    policy_source: str,
+) -> dict[str, Any]:
+    target_role = str((state.get("user_profile") or {}).get("target_role") or "Data Scientist")
+    components = _skill_path_reward_components(skill, state)
+    action_index = _skill_index(skill)
+    q_priority = _sigmoid(q_value)
+    reward_priority = _clamp01(components["total_reward"] / 2.0)
+    priority = _clamp01((0.85 * reward_priority) + (0.15 * q_priority))
+    milestone = _milestone_for_skill(target_role, skill) or {}
+    title = milestone.get("title") or f"Build {skill.title()} competency"
+    return {
+        "step_id": f"skill-{index + 1}",
+        "skill": skill,
+        "title": title,
+        "action_type": _action_type_for_skill(target_role, skill),
+        "priority": round(priority, 6),
+        "q_value": round(float(q_value), 6),
+        "action": action_index,
+        "action_label": skill,
+        "policy_source": policy_source,
+        "policy_objective": "skill_path",
+        "market_demand": round(float((state.get("market_demand") or {}).get(skill, 0.0)), 6),
+        "reward_components": {
+            key: value
+            for key, value in components.items()
+            if key != "estimated_skill_gap_after"
+        },
+        "skill_gap": round(float(state.get("skill_gap") or 0.0), 6),
+        "estimated_skill_gap_after": components["estimated_skill_gap_after"],
+        "missing_skills_before": list(state.get("missing_skills") or []),
+        "milestone_id": milestone.get("milestone_id"),
+        "required_skills": list(milestone.get("required_skills") or [skill]),
+    }
+
+
+def _fallback_skill_path_step(state: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "step_id": "skill-1",
+        "skill": "portfolio",
+        "title": "Maintain a portfolio of role-relevant work",
+        "action_type": "career_milestone",
+        "priority": 0.0,
+        "q_value": 0.0,
+        "action": None,
+        "action_label": "portfolio",
+        "policy_source": "mastery_maintenance",
+        "policy_objective": "skill_path",
+        "market_demand": 0.0,
+        "reward_components": {
+            "skill_gap_reduction": 0.0,
+            "job_match_lift": 0.0,
+            "total_reward": 0.0,
+        },
+        "skill_gap": round(float(state.get("skill_gap") or 0.0), 6),
+        "estimated_skill_gap_after": round(float(state.get("skill_gap") or 0.0), 6),
+        "missing_skills_before": list(state.get("missing_skills") or []),
+        "milestone_id": None,
+        "required_skills": [],
+    }
+
+
+def _rank_skill_path_steps(
+    dqn_agent: OnlineDQN,
+    *,
+    user_id: int | str,
+    state: dict[str, Any],
+    candidate_skills: list[str] | None = None,
+    max_steps: int = 8,
+) -> list[dict[str, Any]]:
+    missing_skills = list(state.get("missing_skills") or [])
+    if candidate_skills:
+        candidate_keys = {_skill_key(skill) for skill in candidate_skills}
+        missing_skills = [skill for skill in missing_skills if _skill_key(skill) in candidate_keys]
+    if not missing_skills:
+        return [_fallback_skill_path_step(state)]
+
+    profile = state.get("user_profile") or {}
+    target_role = str(profile.get("target_role") or "Data Scientist")
+    current_skills = list(profile.get("current_skills") or [])
+    features_batch = [
+        dqn_agent.featurize(
+            str(user_id),
+            {
+                "id": f"skill:{_skill_key(skill)}",
+                "title": f"{target_role} {skill}",
+                "description": " ".join([target_role, skill, *current_skills]),
+                "sbert_score": float((state.get("market_demand") or {}).get(skill, 0.5)),
+                "ncf_score": 0.5,
+            },
+            {"interaction_count": len(current_skills), "skills": current_skills},
+        )
+        for skill in missing_skills
+    ]
+    q_matrix = dqn_agent.q_values_batch(np.asarray(features_batch, dtype=np.float32))
+    candidates: list[dict[str, Any]] = []
+    for skill, q_values in zip(missing_skills, q_matrix):
+        action_index = _skill_index(skill)
+        q_raw = float(q_values[action_index]) if len(q_values) > action_index else 0.0
+        step = _build_skill_path_step(
+            index=0,
+            skill=skill,
+            state=state,
+            q_value=q_raw,
+            policy_source="skill_path_policy",
+        )
+        components = step["reward_components"]
+        step["_sort"] = (
+            float(components["total_reward"]),
+            float(step["market_demand"]),
+            float(step["priority"]),
+            skill.lower(),
+        )
+        candidates.append(step)
+    candidates.sort(key=lambda item: item["_sort"], reverse=True)
+    steps = []
+    for index, step in enumerate(candidates[:max_steps]):
+        step = {key: value for key, value in step.items() if key != "_sort"}
+        step["step_id"] = f"skill-{index + 1}"
+        steps.append(step)
+    return steps
+
+
 @app.get("/health")
 async def health() -> dict[str, Any]:
     return {
@@ -755,49 +1127,19 @@ async def rank(request: RankRequest) -> dict[str, Any]:
 
 @app.post("/learning-path")
 async def learning_path(request: LearningPathRequest) -> dict[str, Any]:
-    mastered = {_skill_key(skill) for skill in request.current_skills}
-    selected_skills: list[tuple[str, float, int, str]] = []
-    current_skills = list(request.current_skills)
-
-    max_steps = min(N_ACTIONS - len(mastered), 8)
-    for _ in range(max_steps):
-        pseudo_job = {
-            "id": f"learning:{request.target_role}",
-            "title": request.target_role,
-            "description": " ".join(current_skills),
-            "sbert_score": 0.5,
-            "ncf_score": 0.5,
-        }
-        state = agent.featurize(
-            str(request.user_id),
-            pseudo_job,
-            {"interaction_count": len(current_skills)},
-        )
-        action_index, skill, policy_source = agent._resolve_action_masked(state, mastered)
-
-        if action_index == 0 and _skill_key(skill) in mastered:
-            break
-
-        mastered.add(_skill_key(skill))
-        current_skills.append(skill)
-        q_val = float(agent.q_values(state)[action_index])
-        selected_skills.append((skill, q_val, action_index, policy_source))
-
-    if not selected_skills:
-        selected_skills = [("portfolio", 0.0, None, "mastery_maintenance")]
-
-    steps = [
-        {
-            "step_id": f"skill-{index + 1}",
-            "skill": skill,
-            "title": f"Build {skill.title()} competency",
-            "priority": round(_sigmoid(q_val), 6),
-            "q_value": round(float(q_val), 6),
-            "action": action,
-            "policy_source": policy_source,
-        }
-        for index, (skill, q_val, action, policy_source) in enumerate(selected_skills)
-    ]
+    state = build_skill_path_state(
+        user_id=request.user_id,
+        current_skills=request.current_skills,
+        target_role=request.target_role,
+        market_demand=request.market_demand,
+        profile_text=request.profile_text,
+    )
+    steps = _rank_skill_path_steps(
+        agent,
+        user_id=request.user_id,
+        state=state,
+        max_steps=request.max_steps,
+    )
 
     return {
         "user_id": str(request.user_id),
@@ -805,7 +1147,13 @@ async def learning_path(request: LearningPathRequest) -> dict[str, Any]:
         "total_steps": len(steps),
         "learning_path": steps,
         "model_version": MODEL_VERSION,
-        "policy_source": "sequential_dqn",
+        "policy_source": "skill_path_policy",
+        "policy_objective": "skill_path",
+        "mdp": {
+            "state": state,
+            "action_space": "next_skill_course_certificate_or_career_milestone",
+            "reward": "skill_gap_reduction + job_match_lift",
+        },
     }
 
 

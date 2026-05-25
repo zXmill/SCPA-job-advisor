@@ -192,3 +192,12 @@
 - Skipped option: Replacing the existing DQN job-rerank API in one large breaking change.
 - Reason skipped: The pipeline and frontend currently consume a DQN job-score/rerank signal; the first implementation should add skill-path semantics while preserving compatibility until the calibrator and product surfaces can consume the new signal directly.
 - Risk and mitigation: Keep the public route contract backward-compatible where possible, document the MDP in `docs/ml/`, and add tests that prove skill milestone actions are generated from user skills, missing skills, and market demand.
+
+## 2026-05-25 21:52 +07 - P2-004 DQN skill-path design
+- Decision: Keep `/rank` as a compatibility scoring endpoint, but make the selected DQN action and metadata a skill-path policy action rather than a job-posting action.
+- MDP: state is `user_profile + missing_skills + market_demand`; action is `next_skill_course_certificate_or_career_milestone`; reward is `skill_gap_reduction + job_match_lift`.
+- Pipeline compatibility: stage 4 still emits `dqn_score`, but it now preserves `dqn_policy_objective`, `dqn_action_type`, reward components, skill gap, and market demand metadata.
+- Training compatibility: the lightweight training smoke now trains on mastered-skill flags, missing-skill flags, market-demand features, and target-role features, while still writing the existing `dqn_model.pt` checkpoint.
+- Skipped option: Removing DQN contribution from job ranking immediately.
+- Reason skipped: Hybrid aggregation and reports already expect a numeric DQN signal; removing it belongs with the learned calibration layer or product UI changes, not this reframing task.
+- Risk and mitigation: Documented the compatibility interpretation in `docs/ml/DQN_SKILL_PATH_RECOMMENDER.md` and validated existing DQN edge cases, pipeline contracts, training smoke, and full backend tests.

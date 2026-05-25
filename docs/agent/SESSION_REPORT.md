@@ -913,15 +913,49 @@
 - `git diff --cached --stat`
 - `git status --short --branch`
 - `git commit -m "feat: add durable feedback outbox"`
+- `git commit -m "docs: update long-running agent checkpoint"`
 
 ### Validation Results
 - `P2-003` validation remained: focused outbox/model tests passed, Alembic upgrade/downgrade/re-upgrade passed, and full backend pytest passed with `321 passed, 1 warning`.
 - Staged diff check passed before the P2-003 commit.
 - `docs/agent/TASK_QUEUE.json` parsed successfully after marking `P2-004` in progress.
+- State-only checkpoint committed as `313f823`.
 
 ### Remaining Issues
 - Root repo remains dirty with pre-existing `README.md` and broad untracked project files.
 - `P2-004` implementation has not started yet.
 
 ### Next Exact Action
-- Validate `docs/agent/TASK_QUEUE.json`, commit this state-only checkpoint, then inspect DQN service/training/pipeline contracts before writing P2-004 tests.
+- Inspect DQN service/training/pipeline contracts, then write focused P2-004 tests before implementation.
+
+## 2026-05-25 21:52 +07 - P2-004 result
+
+### Active Task
+- `P2-004` is implemented, validated, and ready to commit.
+
+### What Changed
+- Added explicit skill-path MDP state to DQN learning-path responses: user profile, missing target-role skills, and market demand.
+- Reframed DQN actions as next skill, course, certificate, or career milestone actions with reward components for skill-gap reduction and job-match lift.
+- Kept `/rank` backward-compatible while adding skill-path metadata and preserving batched policy-network scoring.
+- Updated pipeline DQN stage metadata forwarding so downstream aggregation retains skill-path action details.
+- Updated the DQN training smoke to generate skill-path states and emit the MDP contract in metrics.
+- Added `docs/ml/DQN_SKILL_PATH_RECOMMENDER.md`.
+
+### Validation Results
+- TDD red: focused DQN learning-path/policy tests failed on missing `policy_objective`.
+- TDD red: pipeline DQN stage test failed on missing `target_role` forwarding.
+- TDD red: DQN training smoke test failed on missing `policy_objective` in metrics.
+- Focused DQN learning-path and policy contracts passed: `8 passed`.
+- Pipeline contract regression passed: `4 passed`.
+- DQN training smoke passed: `1 passed`.
+- DQN edge cases passed: `4 passed`.
+- Full backend suite passed: `324 passed, 1 warning`.
+- Final full backend re-run after all edits passed: `324 passed, 1 warning`.
+- `docs/agent/TASK_QUEUE.json` parsed successfully after marking `P2-004` done.
+
+### Remaining Issues
+- `P2-005` learned calibration layer is still pending.
+- One warning remains in the wrong-secret test because it intentionally signs a forged token with a short attacker-controlled secret.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P2-004 files plus durable state files, inspect staged diff, and commit `refactor: reframe dqn as skill path recommender`.
