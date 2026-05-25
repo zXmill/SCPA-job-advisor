@@ -256,7 +256,7 @@
       "phase": "infra",
       "title": "Harden CI",
       "priority": "P1",
-      "status": "in_progress",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P1-SEC-003"
@@ -264,15 +264,23 @@
       "files_expected": [
         ".github/workflows/ci.yml"
       ],
-      "files_touched": [],
+      "files_touched": [
+        ".github/workflows/ci.yml",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest -q",
         "npm run lint",
         "npm run build"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Add full backend, migration, frontend lint, and frontend build gates."
+      "validation_status": "passed",
+      "commit": "pending: ci: add full validation checks",
+      "notes": "Workflow now runs backend dependency install, pip check, import/compile verification, test DB prep, Alembic upgrade head, full pytest, frontend npm ci, lint, and build."
     },
     {
       "id": "P1-PERF-001",

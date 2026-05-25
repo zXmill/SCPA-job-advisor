@@ -1,9 +1,9 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 20:24 +07
+Updated: 2026-05-25 20:30 +07
 
 ## Current Objective
-Create survival checkpoint after the security commits, then implement `P1-CI-001` CI hardening.
+Commit the completed `P1-CI-001` CI hardening, then start `P1-PERF-001`.
 
 ## Current Phase
 security
@@ -12,7 +12,7 @@ security
 P1-CI-001
 
 ## Latest Commit Hash
-Root: `8c4f9b1` (`security: protect pipeline execution endpoint`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `c89bd82` (`docs: update long-running agent checkpoint`); pending commit `ci: add full validation checks`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `8c4f9b1` (`security: protect pipeline execution endpoint`). Frontend nest
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current checkpoint changes: durable `docs/agent/` files updated to reconcile `P1-SEC-003` and start `P1-CI-001`.
+- Current task changes: `.github/workflows/ci.yml` and durable `docs/agent/` state files.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -49,9 +49,10 @@ Root: `8c4f9b1` (`security: protect pipeline execution endpoint`). Frontend nest
 - `tests/test_ssrf_guard.py`
 - `tests/test_red_team_failure_modes.py`
 - `tests/test_pipeline_execution_auth.py`
+- `.github/workflows/ci.yml`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. `P1-CI-001` is marked in progress; no CI files have been edited yet.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. `P1-CI-001` is implemented and validation passed; commit is pending.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -85,6 +86,10 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Implemented admin-only direct pipeline route guard.
 - Ran P1-SEC-003 focused and full validation commands.
 - P1-SEC-003 commit: `git commit -m "security: protect pipeline execution endpoint"`.
+- Survival checkpoint commit: `git commit -m "docs: update long-running agent checkpoint"`.
+- Read current `.github/workflows/ci.yml`, dependency files, frontend package scripts, and Alembic config.
+- Updated CI backend/frontend gates.
+- Ran P1-CI-001 validation commands.
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
@@ -116,11 +121,16 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P1-SEC-003 focused route-auth test passed: `1 passed`.
 - P1-SEC-003 full backend tests passed: `304 passed, 11 warnings`.
 - P1-SEC-003 commit exists as `8c4f9b1`.
+- P1-CI-001 workflow YAML parsed successfully.
+- P1-CI-001 `pip check`, Alembic heads, and import/compile checks passed.
+- P1-CI-001 full backend tests passed: `304 passed, 11 warnings`.
+- P1-CI-001 frontend lint passed with 18 warnings.
+- P1-CI-001 frontend build passed.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
 - Frontend hook-order lint failure was fixed in `frontend/src/app/recommendations/page.tsx`; frontend warnings remain.
-- CI does not run full project gates.
+- Existing frontend lint warnings remain.
 
 ## Do-Not-Change Constraints
 - Do not stage or revert pre-existing dirty files unless a task explicitly owns them.
@@ -129,4 +139,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.
+Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only `.github/workflows/ci.yml` plus durable state files, inspect staged diff, and commit `ci: add full validation checks`.

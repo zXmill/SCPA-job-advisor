@@ -415,3 +415,29 @@
 
 ### Next Exact Action
 - Validate task queue JSON, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.
+
+## 2026-05-25 20:30 +07 - P1-CI-001 result
+
+### Active Task
+- `P1-CI-001` is implemented and ready to commit.
+
+### What Changed
+- Reworked `.github/workflows/ci.yml` into backend and frontend verification jobs.
+- Backend CI now installs dependencies, runs `pip check`, import/compile verification, test DB bootstrap, Alembic `upgrade head`, and full `pytest -q`.
+- Frontend CI now runs `npm ci`, `npm run lint`, and `npm run build` with Node 22.
+
+### Validation Results
+- Workflow YAML parsed successfully.
+- `pip check`: passed.
+- `alembic heads`: passed, `008_feature_extension_foundation (head)`.
+- `scripts/verify_project.py --only import compile`: passed.
+- Full backend suite: `304 passed, 11 warnings`.
+- Frontend lint: passed with 18 warnings.
+- Frontend build: passed.
+
+### Remaining Issues
+- Existing pytest warnings about short test JWT keys remain.
+- Existing frontend lint warnings remain.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only `.github/workflows/ci.yml` and durable state files, inspect staged diff, and commit `ci: add full validation checks`.

@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 20:24 +07
+Updated: 2026-05-25 20:30 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -68,7 +68,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 
 ## Known Broken Areas
 - Frontend lint still reports warnings, but the blocking hook-order error in `frontend/src/app/recommendations/page.tsx` has been fixed and validated locally.
-- CI runs a selected pytest subset and does not currently gate frontend lint/build.
+- Existing frontend lint warnings remain but do not fail lint.
 - JWT/CORS defaults are too permissive outside Compose.
 - Feedback forwarding can report queued without a durable retry outbox.
 - No fresh import validation was run during this initializer, so known broken imports remain unknown.
@@ -79,7 +79,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P1-SEC-003` - restricted direct gateway `/pipeline/run` to admin bearer tokens. Root commit `8c4f9b1`.
+`P1-CI-001` - hardened CI to run backend install, migration, full pytest, frontend lint, and frontend build gates. Commit pending.
 
 ## Next Task
-Continue `P1-CI-001`: harden CI validation checks.
+Start `P1-PERF-001`: add SBERT embedding cache.
