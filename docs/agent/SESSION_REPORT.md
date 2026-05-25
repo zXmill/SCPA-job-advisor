@@ -1304,3 +1304,21 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P3-FEAT-003-BE files plus durable state files, inspect staged diff, and commit `feat: add saved jobs and skip backend`.
+
+## 2026-05-25 22:45 +07 - P3-FEAT-003-FE start
+
+### Active Task
+- `P3-FEAT-003-FE` - Saved jobs and skip buttons frontend.
+
+### What Changed
+- Committed `P3-FEAT-003-BE` as `297d0ad`.
+- Marked the frontend child task in progress.
+- Recorded a frontend mini plan in `DECISION_LOG.md`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Commit this state-only checkpoint before editing frontend files.
+- Inspect recommendation cards and profile page saved-job surfaces before implementation.
+
+### Next Exact Action
+- Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then wire save/skip frontend controls to the backend endpoints.

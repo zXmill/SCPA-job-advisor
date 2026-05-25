@@ -864,7 +864,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "",
+      "commit": "297d0ad",
       "notes": "Added authenticated save, unsave, skip, and list-saved job contracts using user_job_interactions."
     },
     {
@@ -872,7 +872,7 @@
       "phase": "frontend",
       "title": "Saved jobs and skip buttons frontend",
       "priority": "P3",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-003-BE"

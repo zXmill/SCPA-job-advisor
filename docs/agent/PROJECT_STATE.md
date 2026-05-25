@@ -89,7 +89,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P3-FEAT-003-BE` - saved jobs and skip buttons backend. Commit pending.
+`P3-FEAT-003-BE` - saved jobs and skip buttons backend. Commit `297d0ad`.
 
 ## Next Task
-`P3-FEAT-003-FE` - saved jobs and skip buttons frontend.
+`P3-FEAT-003-FE` - saved jobs and skip buttons frontend is in progress.

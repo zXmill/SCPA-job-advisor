@@ -276,3 +276,11 @@
 - Contract target: authenticated endpoints should let users save jobs, list saved jobs, unsave jobs, and mark jobs as skipped without exposing another user's state.
 - Skipped option: Implementing save/skip as frontend-only local state.
 - Reason skipped: Save and skip are user actions that must persist and feed recommendation feedback/history.
+
+## 2026-05-25 22:45 +07 - P3-FEAT-003-FE frontend mini plan
+- Decision: Add save and skip controls to the recommendation surface first, with saved jobs visible from the existing profile page.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/recommendations/page.tsx`, `frontend/src/app/profile/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository.
+- UI contract: controls should call the backend save/skip endpoints, keep already-rendered recommendation cards stable, and avoid showing skipped jobs in the current client-side slate after a successful skip.
+- Skipped option: Building a new standalone saved-jobs page in this task.
+- Reason skipped: The existing product surface has recommendations and profile history; adding a new route would expand frontend scope beyond the small child task.
