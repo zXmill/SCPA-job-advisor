@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 21:32 +07
+Updated: 2026-05-25 21:34 +07
 
 ## Current Objective
-Commit completed `P2-003` durable feedback outbox.
+Start `P2-004` DQN skill-path reframing from a clean durable checkpoint.
 
 ## Current Phase
-security
+ml
 
 ## Current Task ID
-P2-003
+P2-004
 
 ## Latest Commit Hash
-Root: `04b0b91` (`security: restrict cors origins`). `P2-003` is implemented and awaiting commit `feat: add durable feedback outbox`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `8ba2004` (`feat: add durable feedback outbox`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,8 +20,7 @@ Root: `04b0b91` (`security: restrict cors origins`). `P2-003` is implemented and
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task changes: `db/models.py`, `db/migrations/010_feedback_outbox.py`, `db/tests/test_models.py`, `tests/conftest.py`, `tests/test_feedback_outbox.py`, `services/gateway/main.py`, and durable `docs/agent/` state files for `P2-003`.
-- Recovery update: `docs/agent/SESSION_REPORT.md`, `docs/agent/VALIDATION_LEDGER.md`, and this snapshot were updated after compact recovery.
+- Current checkpoint changes: durable `docs/agent/` state files recording `P2-003` commit `8ba2004` and starting `P2-004`.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -69,7 +68,7 @@ Root: `04b0b91` (`security: restrict cors origins`). `P2-003` is implemented and
 - `tests/test_feedback_outbox.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. `P2-003` is implemented and validated; task commit is pending.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. P2-003 committed as `8ba2004`. `P2-004` is in progress as a state-only checkpoint; implementation has not started.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -149,6 +148,9 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Post-compact recovery reads for all durable memory files.
 - Post-compact `git status --short --branch` and `git log --oneline -10`.
 - Re-ran `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json` after the recovery note.
+- Staged only P2-003 files and durable state files.
+- Ran `git diff --cached --name-only`, `git diff --cached --check`, and `git diff --cached --stat`.
+- P2-003 commit: `git commit -m "feat: add durable feedback outbox"` (`8ba2004`).
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
@@ -230,6 +232,9 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P2-003 Alembic upgrade, one-step downgrade to `009_reco_hot_indexes`, and re-upgrade passed.
 - P2-003 full backend tests passed: `321 passed, 1 warning`.
 - Post-compact `TASK_QUEUE.json` parse passed.
+- P2-003 staged diff check passed before commit.
+- P2-003 commit exists as `8ba2004`.
+- P2-004 state-start `TASK_QUEUE.json` parse passed.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -245,4 +250,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Parse `docs/agent/TASK_QUEUE.json`, stage only P2-003 files plus durable state files, inspect staged diff, and commit `feat: add durable feedback outbox`.
+Parse `docs/agent/TASK_QUEUE.json`, commit this state-only checkpoint, then inspect DQN service/training/pipeline contracts before writing P2-004 tests.

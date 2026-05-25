@@ -183,3 +183,12 @@
 - Skipped option: Only creating an outbox row when immediate forwarding fails.
 - Reason skipped: A transactional outbox should record the intended external delivery before attempting it, so a crash after local commit does not lose feedback.
 - Risk and mitigation: This is at-least-once delivery; model services should tolerate duplicate feedback. The outbox stores attempt count and delivered timestamp for audit and replay control.
+
+## 2026-05-25 21:34 +07 - P2-004 DQN skill-path reframing mini plan
+- Decision: Start `P2-004` by inspecting the current DQN service, DQN training files, pipeline DQN stage, and existing DQN tests before changing model semantics.
+- Expected files to touch: `services/dqn/main.py`, `services/dqn/training/`, `services/pipeline/stages/stage_4_dqn_rank.py`, `tests/test_dqn_learning_path.py`, `tests/test_dqn_policy_contracts.py`, `docs/ml/`, and durable `docs/agent/` state files.
+- Validation commands: focused DQN learning-path/policy tests first, pipeline contract tests after preserving response shape, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: DQN actions should represent next skill, course, certificate, or career milestone decisions with rewards based on skill-gap reduction and job-match lift, not direct job-posting recommendations.
+- Skipped option: Replacing the existing DQN job-rerank API in one large breaking change.
+- Reason skipped: The pipeline and frontend currently consume a DQN job-score/rerank signal; the first implementation should add skill-path semantics while preserving compatibility until the calibrator and product surfaces can consume the new signal directly.
+- Risk and mitigation: Keep the public route contract backward-compatible where possible, document the MDP in `docs/ml/`, and add tests that prove skill milestone actions are generated from user skills, missing skills, and market demand.

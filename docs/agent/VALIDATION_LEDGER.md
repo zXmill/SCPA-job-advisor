@@ -741,3 +741,17 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after the post-compact recovery note.
 - Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:33 +07
+- Task ID: `P2-003`
+- Command: `git commit -m "feat: add durable feedback outbox"`
+- Result: pass
+- Summary: Created commit `8ba2004` with the durable feedback outbox migration, gateway delivery/retry code, tests, and durable state updates.
+- Related commit hash: `8ba2004`.
+
+## 2026-05-25 21:34 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording `P2-003` commit `8ba2004` and marking `P2-004` in progress.
+- Related commit hash: pending state checkpoint.

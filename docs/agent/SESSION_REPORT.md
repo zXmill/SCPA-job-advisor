@@ -894,3 +894,34 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P2-003 files plus durable state files, inspect staged diff, and commit `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:34 +07 - P2-003 commit and P2-004 start
+
+### Active Task
+- `P2-004` - Reframe DQN.
+
+### What Changed
+- Committed `P2-003` as `8ba2004` with the durable feedback outbox implementation, migration, tests, and durable state updates.
+- Reconciled durable state to record the P2-003 commit hash.
+- Marked `P2-004` in progress and recorded a mini plan for DQN skill-path reframing before implementation.
+
+### Commands Run
+- `git status --short --branch`
+- `git log --oneline -10`
+- `git diff --cached --name-only`
+- `git diff --cached --check`
+- `git diff --cached --stat`
+- `git status --short --branch`
+- `git commit -m "feat: add durable feedback outbox"`
+
+### Validation Results
+- `P2-003` validation remained: focused outbox/model tests passed, Alembic upgrade/downgrade/re-upgrade passed, and full backend pytest passed with `321 passed, 1 warning`.
+- Staged diff check passed before the P2-003 commit.
+- `docs/agent/TASK_QUEUE.json` parsed successfully after marking `P2-004` in progress.
+
+### Remaining Issues
+- Root repo remains dirty with pre-existing `README.md` and broad untracked project files.
+- `P2-004` implementation has not started yet.
+
+### Next Exact Action
+- Validate `docs/agent/TASK_QUEUE.json`, commit this state-only checkpoint, then inspect DQN service/training/pipeline contracts before writing P2-004 tests.
