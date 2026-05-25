@@ -102,6 +102,7 @@ def _table_names() -> list[str]:
         "dqn_replay_archive",
         "dqn_session_logs",
         "job_alerts",
+        "skill_gap_snapshots",
         "user_job_interactions",
         "user_interactions",
         "applications",

@@ -1406,3 +1406,38 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after splitting P3-FEAT-005 into backend/frontend child tasks and marking P3-FEAT-005-BE in progress.
 - Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:27 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_skill_gap_detail.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. The existing route returned lowercase-only minimal data, did not persist a snapshot, and returned `200` for a missing job.
+- Related commit hash: pending `feat: add skill-gap detail backend`.
+
+## 2026-05-25 23:30 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_skill_gap_detail.py -q`
+- Result: pass
+- Summary: Focused skill-gap detail tests passed with `3 passed`.
+- Related commit hash: pending `feat: add skill-gap detail backend`.
+
+## 2026-05-25 23:31 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_skill_gap_detail.py tests\test_saved_jobs_skip.py tests\test_profile_completeness.py -q`
+- Result: pass
+- Summary: Adjacent skill-gap, saved-job, and profile completeness regression tests passed with `10 passed`.
+- Related commit hash: pending `feat: add skill-gap detail backend`.
+
+## 2026-05-25 23:33 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `345 passed, 1 warning`.
+- Related commit hash: pending `feat: add skill-gap detail backend`.
+
+## 2026-05-25 23:35 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-005-BE validation passed and ready to commit.
+- Related commit hash: pending `feat: add skill-gap detail backend`.

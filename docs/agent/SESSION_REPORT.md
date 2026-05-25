@@ -1513,3 +1513,28 @@
 
 ### Next Exact Action
 - Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then write focused backend tests for the existing skill-gap route.
+
+## 2026-05-25 23:34 +07 - P3-FEAT-005-BE result
+
+### Active Task
+- `P3-FEAT-005-BE` is implemented, validated, and ready to commit.
+
+### What Changed
+- Added focused backend tests for authenticated skill-gap detail behavior.
+- Hardened `GET /api/jobs/{job_id}/skill-gap` to return job title, company, required skills, matched skills, missing skills, match percent, and explanation metadata.
+- Missing jobs now return `404` with `Job not found`.
+- Viewed skill-gap details are persisted to `skill_gap_snapshots`.
+- Added `skill_gap_snapshots` to the per-test truncate list.
+
+### Validation Results
+- TDD red: `tests/test_skill_gap_detail.py` failed because the existing route returned lowercase-only minimal data and returned `200` for missing jobs.
+- Focused skill-gap tests passed: `3 passed`.
+- Adjacent profile/saved-job regression passed: `10 passed`.
+- Full backend suite passed: `345 passed, 1 warning`.
+
+### Remaining Issues
+- One warning remains in the intentional wrong-secret JWT test.
+- Frontend skill-gap detail integration is still pending.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P3-FEAT-005-BE files plus durable state files, inspect staged diff, and commit `feat: add skill-gap detail backend`.

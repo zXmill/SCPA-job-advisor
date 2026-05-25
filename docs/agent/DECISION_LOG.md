@@ -323,3 +323,11 @@
 - Expected frontend files to touch later: `frontend/src/lib/api.ts` and `frontend/src/app/jobs/[id]/page.tsx`, with `npm run lint` and `npm run build` validation.
 - Skipped option: Building the frontend page directly against the current untested route.
 - Reason skipped: The route exists but lacks focused backend coverage, so frontend work should not lock in an under-specified contract.
+
+## 2026-05-25 23:34 +07 - P3-FEAT-005-BE backend implementation decision
+- Decision: Harden the existing `GET /api/jobs/{job_id}/skill-gap` route instead of adding a parallel endpoint.
+- Contract: return job title/company, required skills, matched skills, missing skills, match percent, and explanation metadata; return `404` when the job does not exist.
+- Persistence: write each viewed skill-gap detail to `skill_gap_snapshots` because the table already exists for historical skill-gap outputs shown to a user.
+- Skipped option: Computing skill gaps from free-text descriptions in this task.
+- Reason skipped: Existing job records already carry structured `match_data.skills`; NLP extraction would expand scope and risk beyond the detail-page contract.
+- Risk and mitigation: Added focused route tests, included `skill_gap_snapshots` in test cleanup, ran adjacent profile/saved-job regressions, and ran full backend pytest.

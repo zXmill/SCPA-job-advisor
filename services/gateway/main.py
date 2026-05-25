@@ -990,25 +990,66 @@ async def _user_skills(db: AsyncSession, user_id: Any) -> set[str]:
     return {str(r["skill"]).lower().strip() for r in rows if r.get("skill")}
 
 
+def _normalized_skill_name(skill: Any) -> str:
+    return str(skill or "").strip().lower()
+
+
+def _display_skill_list(skills: Any) -> list[str]:
+    if not isinstance(skills, list):
+        return []
+
+    deduped: dict[str, str] = {}
+    for skill in skills:
+        display = str(skill or "").strip()
+        key = _normalized_skill_name(display)
+        if display and key not in deduped:
+            deduped[key] = display
+    return sorted(deduped.values(), key=lambda item: item.lower())
+
+
 async def _job_skill_gap(
     db: AsyncSession, user_skills: set[str], job_id: str
 ) -> dict[str, Any]:
     db_uuid = to_uuid(job_id)
     row = (
         await db.execute(
-            text("SELECT match_data FROM jobs WHERE id = :id"),
+            text("SELECT title, company, match_data FROM jobs WHERE id = :id"),
             {"id": db_uuid},
         )
     ).mappings().first()
-    match_data = _parse_match_data((row or {}).get("match_data"))
-    job_skills = {str(s).lower().strip() for s in match_data.get("skills", [])}
-    matched = sorted(job_skills & user_skills)
-    missing = sorted(job_skills - user_skills)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    match_data = _parse_match_data(row.get("match_data"))
+    required_skills = _display_skill_list(match_data.get("skills", []))
+    user_skill_keys = {_normalized_skill_name(skill) for skill in user_skills}
+    matched = [
+        skill
+        for skill in required_skills
+        if _normalized_skill_name(skill) in user_skill_keys
+    ]
+    missing = [
+        skill
+        for skill in required_skills
+        if _normalized_skill_name(skill) not in user_skill_keys
+    ]
+    explanation = {
+        "matched_count": len(matched),
+        "missing_count": len(missing),
+        "required_count": len(required_skills),
+        "summary": f"{len(matched)} of {len(required_skills)} required skills matched.",
+    }
     return {
         "job_id": job_id,
+        "job_title": row.get("title"),
+        "company": row.get("company"),
+        "required_skills": required_skills,
         "matched_skills": matched,
         "missing_skills": missing,
-        "skill_match_percent": round(100.0 * len(matched) / max(len(job_skills), 1), 1),
+        "skill_match_percent": round(
+            100.0 * len(matched) / max(len(required_skills), 1), 1
+        ),
+        "explanation": explanation,
     }
 
 
@@ -2217,4 +2258,31 @@ async def job_skill_gap(
     user = await _require_user(db, token_payload)
     user_skills = await _user_skills(db, user["id"])
     gap = await _job_skill_gap(db, user_skills, job_id)
+    await db.execute(
+        text(
+            """
+            INSERT INTO skill_gap_snapshots (
+                user_id, job_id, missing_skills, matched_skills, explanation
+            )
+            VALUES (
+                :user_id,
+                :job_id,
+                :missing_skills,
+                :matched_skills,
+                CAST(:explanation AS jsonb)
+            )
+            """
+        ).bindparams(
+            bindparam("missing_skills", type_=ARRAY(SqlText())),
+            bindparam("matched_skills", type_=ARRAY(SqlText())),
+        ),
+        {
+            "user_id": user["id"],
+            "job_id": job_id,
+            "missing_skills": gap["missing_skills"],
+            "matched_skills": gap["matched_skills"],
+            "explanation": json.dumps(gap["explanation"]),
+        },
+    )
+    await db.commit()
     return gap

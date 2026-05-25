@@ -1054,23 +1054,35 @@
       "phase": "backend",
       "title": "Skill-gap detail backend contract",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-004"
       ],
       "files_expected": [
         "services/gateway/main.py",
-        "tests/test_skill_gap_detail.py"
+        "tests/test_skill_gap_detail.py",
+        "tests/conftest.py"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/gateway/main.py",
+        "tests/test_skill_gap_detail.py",
+        "tests/conftest.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_skill_gap_detail.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_skill_gap_detail.py tests\\test_saved_jobs_skip.py tests\\test_profile_completeness.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Harden the existing authenticated job skill-gap endpoint into a page-ready, tested contract before frontend integration."
+      "validation_status": "passed",
+      "commit": "pending feat: add skill-gap detail backend",
+      "notes": "Existing skill-gap route now has a page-ready contract, 404 behavior for missing jobs, display-case matched/missing skills, explanation metadata, and persisted snapshots."
     },
     {
       "id": "P3-FEAT-005-FE",
