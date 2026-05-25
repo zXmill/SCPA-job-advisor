@@ -1256,7 +1256,7 @@
       "phase": "backend",
       "title": "Recommendation reason filters backend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-006"
@@ -1265,14 +1265,24 @@
         "services/gateway/main.py",
         "tests/test_recommendation_reason_filters.py"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/gateway/main.py",
+        "tests/test_recommendation_reason_filters.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_recommendation_reason_filters.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_recommendation_reason_filters.py tests\\test_feedback_outbox.py tests\\test_saved_jobs_skip.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Expose explicit reason-filter scores in the recommendation response for semantic, interaction, career-signal, recency, and location controls."
+      "validation_status": "passed",
+      "commit": "pending `feat: add recommendation reason filter backend`",
+      "notes": "Recommendation responses expose reason_filter_scores and labels for semantic fit, interaction fit, career signal, location fit, and recency. Focused, adjacent, and full backend validation passed."
     },
     {
       "id": "P3-FEAT-007-FE",

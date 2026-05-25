@@ -145,6 +145,14 @@ INDONESIA_JOB_TERMS = {
     "sumatra",
     "sulawesi",
 }
+REASON_FILTER_LABELS = {
+    "semantic_fit": "Highest SBERT semantic match",
+    "interaction_fit": "Highest NCF interaction fit",
+    "career_signal": "Highest DQN career-path signal",
+    "location_fit": "Closest profile location",
+    "recency": "Newest jobs",
+}
+REASON_FILTER_RECENCY_WINDOW_DAYS = 30.0
 
 # ── Database ──
 def _async_db_url(url: str) -> str:
@@ -1126,6 +1134,84 @@ def _employer_fit_score(user: dict[str, Any], job: dict[str, Any]) -> dict[str, 
     }
 
 
+def _clamped_reason_score(value: Any) -> float:
+    try:
+        numeric = float(value or 0.0)
+    except (TypeError, ValueError):
+        numeric = 0.0
+    return round(max(0.0, min(1.0, numeric)), 3)
+
+
+def _parse_reason_datetime(value: Any) -> datetime | None:
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str) and value.strip():
+        raw = value.strip()
+        if raw.endswith("Z"):
+            raw = f"{raw[:-1]}+00:00"
+        try:
+            parsed = datetime.fromisoformat(raw)
+        except ValueError:
+            return None
+    else:
+        return None
+
+    if parsed.tzinfo is not None:
+        return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+    return parsed
+
+
+def _recency_reason_score(posted_at: Any) -> float:
+    parsed = _parse_reason_datetime(posted_at)
+    if parsed is None:
+        return 0.0
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    age_days = max((now - parsed).total_seconds() / 86_400, 0.0)
+    recency = 1.0 - min(age_days, REASON_FILTER_RECENCY_WINDOW_DAYS) / REASON_FILTER_RECENCY_WINDOW_DAYS
+    return round(max(0.0, min(1.0, recency)), 3)
+
+
+def _profile_location_terms(profile: dict[str, Any]) -> list[str]:
+    values: list[str] = []
+    for key in ("location", "preferred_location"):
+        value = profile.get(key)
+        if isinstance(value, str) and value.strip():
+            values.append(value.strip())
+    preferred_locations = profile.get("preferred_locations")
+    if isinstance(preferred_locations, list):
+        values.extend(str(value).strip() for value in preferred_locations if str(value).strip())
+    return values
+
+
+def _location_reason_score(profile: dict[str, Any], job: dict[str, Any]) -> float:
+    job_location = str(job.get("location") or "").strip().casefold()
+    if not job_location:
+        return 0.0
+    for location in _profile_location_terms(profile):
+        normalized = location.casefold()
+        if normalized and (normalized in job_location or job_location in normalized):
+            return 1.0
+    return 0.0
+
+
+def _recommendation_reason_filter_scores(
+    profile: dict[str, Any],
+    item: dict[str, Any],
+    job: dict[str, Any],
+    *,
+    sbert_score: float,
+    ncf_score: float,
+    dqn_score: float,
+) -> dict[str, float]:
+    return {
+        "semantic_fit": _clamped_reason_score(sbert_score),
+        "interaction_fit": _clamped_reason_score(ncf_score),
+        "career_signal": _clamped_reason_score(dqn_score),
+        "location_fit": _location_reason_score(profile, job),
+        "recency": _recency_reason_score(item.get("posted_at") or job.get("posted_at")),
+    }
+
+
 async def _interaction_count_for_user(db: AsyncSession, user_id: Any) -> int:
     try:
         row = (
@@ -2100,6 +2186,7 @@ async def run_pipeline(
     payload = request.model_dump()
     payload["user_id"] = uid
     payload["profile"] = request.profile or await _pipeline_profile_for_user(db, user)
+    profile_for_reasons = payload["profile"] if isinstance(payload["profile"], dict) else {}
     payload["interaction_count"] = (
         request.interaction_count
         if request.interaction_count > 0
@@ -2158,6 +2245,15 @@ async def run_pipeline(
                 "skill_path_signal": dqn_score,
                 "skill_gap": item.get("skill_gap") or item.get("missing_skills") or [],
             },
+            "reason_filter_scores": _recommendation_reason_filter_scores(
+                profile_for_reasons,
+                item,
+                job,
+                sbert_score=sbert_score,
+                ncf_score=ncf_score,
+                dqn_score=dqn_score,
+            ),
+            "reason_filter_labels": dict(REASON_FILTER_LABELS),
             "employer_fit": employer_fit,
         })
 

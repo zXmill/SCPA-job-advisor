@@ -1709,3 +1709,27 @@
 
 ### Next Exact Action
 - Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then write focused backend tests for the recommendation reason-filter response contract.
+
+## 2026-05-25 23:57 +07 - P3-FEAT-007-BE result
+
+### Active Task
+- `P3-FEAT-007-BE` is implemented and validated. Commit is pending.
+
+### What Changed
+- Added focused recommendation reason-filter backend tests.
+- Gateway recommendations now include `reason_filter_scores`.
+- Gateway recommendations now include `reason_filter_labels` for frontend control names.
+- Reason-filter scores cover semantic fit, interaction fit, career signal, location fit, and recency.
+
+### Validation Results
+- TDD red: `tests/test_recommendation_reason_filters.py` failed with missing `reason_filter_scores`.
+- Focused recommendation reason-filter test passed: `1 passed`.
+- Adjacent recommendation feedback/saved-job regression passed: `7 passed`.
+- Full backend suite passed: `348 passed, 1 warning`.
+
+### Remaining Issues
+- One warning remains in the intentional wrong-secret JWT test.
+- Frontend reason-filter controls are still pending.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P3-FEAT-007-BE files plus durable state files, inspect staged diff, and commit `feat: add recommendation reason filter backend`.

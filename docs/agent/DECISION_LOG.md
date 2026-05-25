@@ -388,3 +388,11 @@
 - Expected frontend files to touch later: `frontend/src/lib/api.ts` and `frontend/src/app/recommendations/page.tsx`, with `npm run lint` and `npm run build` validation.
 - Skipped option: Implementing filters only as client-side aliases over existing score fields.
 - Reason skipped: Naming the backend reason-filter contract makes the UI durable if internal score names change later.
+
+## 2026-05-25 23:57 +07 - P3-FEAT-007-BE backend implementation decision
+- Decision: Add `reason_filter_scores` and `reason_filter_labels` to each gateway recommendation item instead of adding a separate filtering endpoint.
+- Contract: scores include `semantic_fit`, `interaction_fit`, `career_signal`, `location_fit`, and `recency`; labels explain how each frontend control should be named.
+- Trade-off: Recency is computed as a bounded 30-day score rather than as a raw timestamp, which keeps all filter values on a comparable 0-1 scale.
+- Skipped option: Mutating pipeline aggregate output for this UI concern.
+- Reason skipped: The gateway already adapts the pipeline response for frontend contracts, so this keeps pipeline stage outputs stable.
+- Risk and mitigation: Added focused route coverage through `/api/recommendations`, then ran adjacent recommendation feedback/saved-job regressions and full backend pytest.

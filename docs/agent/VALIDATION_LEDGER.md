@@ -1616,3 +1616,38 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after splitting P3-FEAT-007 into backend/frontend child tasks and marking P3-FEAT-007-BE in progress.
 - Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:53 +07
+- Task ID: `P3-FEAT-007-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_recommendation_reason_filters.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. The recommendation response did not include `reason_filter_scores`.
+- Related commit hash: pending `feat: add recommendation reason filter backend`.
+
+## 2026-05-25 23:54 +07
+- Task ID: `P3-FEAT-007-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_recommendation_reason_filters.py -q`
+- Result: pass
+- Summary: Focused recommendation reason-filter backend test passed with `1 passed`.
+- Related commit hash: pending `feat: add recommendation reason filter backend`.
+
+## 2026-05-25 23:54 +07
+- Task ID: `P3-FEAT-007-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_recommendation_reason_filters.py tests\test_feedback_outbox.py tests\test_saved_jobs_skip.py -q`
+- Result: pass
+- Summary: Adjacent recommendation feedback and saved/skip regression tests passed with `7 passed`.
+- Related commit hash: pending `feat: add recommendation reason filter backend`.
+
+## 2026-05-25 23:56 +07
+- Task ID: `P3-FEAT-007-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `348 passed, 1 warning`.
+- Related commit hash: pending `feat: add recommendation reason filter backend`.
+
+## 2026-05-25 23:57 +07
+- Task ID: `P3-FEAT-007-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-007-BE done with validation passed and commit pending.
+- Related commit hash: pending `feat: add recommendation reason filter backend`.
