@@ -1690,3 +1690,22 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.
+
+## 2026-05-25 23:50 +07 - P3-FEAT-007 split
+
+### Active Task
+- `P3-FEAT-007-BE` - Recommendation reason filters backend.
+
+### What Changed
+- Split parent `P3-FEAT-007` into backend and frontend child tasks.
+- Marked `P3-FEAT-007-BE` in progress and left `P3-FEAT-007-FE` pending.
+- Confirmed the current recommendation response already includes raw SBERT, NCF, DQN, job location, and posted date fields, but lacks explicit reason-filter scores.
+- Recorded the backend mini plan in `DECISION_LOG.md`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Commit this state-only split checkpoint.
+- Add focused backend tests for explicit reason-filter scores before implementation.
+
+### Next Exact Action
+- Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then write focused backend tests for the recommendation reason-filter response contract.

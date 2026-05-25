@@ -379,3 +379,12 @@
 - Skipped option: Fetching the admin endpoint for every user and handling `403` in the UI.
 - Reason skipped: Non-admin users should not spend a request on an admin-only operational panel.
 - Risk and mitigation: Validated with frontend lint, production build, local `/analytics` HTTP smoke, and nested staged diff check. Browser visual inspection was not available because tool discovery exposed no Browser tool and Node REPL had no Playwright module.
+
+## 2026-05-25 23:50 +07 - P3-FEAT-007 split and backend mini plan
+- Decision: Split recommendation reason filters into `P3-FEAT-007-BE` and `P3-FEAT-007-FE`, with a small backend response contract first.
+- Expected backend files to touch: `services/gateway/main.py`, `tests/test_recommendation_reason_filters.py`, and durable `docs/agent/` state files.
+- Backend validation commands: focused recommendation reason-filter tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract target: each recommendation should include explicit reason-filter scores for semantic fit, interaction fit, career-signal fit, recency, and location so frontend controls do not infer score meaning from raw model fields.
+- Expected frontend files to touch later: `frontend/src/lib/api.ts` and `frontend/src/app/recommendations/page.tsx`, with `npm run lint` and `npm run build` validation.
+- Skipped option: Implementing filters only as client-side aliases over existing score fields.
+- Reason skipped: Naming the backend reason-filter contract makes the UI durable if internal score names change later.

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "frontend",
-  "current_task_id": "P3-FEAT-007",
+  "current_phase": "backend",
+  "current_task_id": "P3-FEAT-007-BE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1226,21 +1226,76 @@
       "phase": "frontend",
       "title": "Recommendation reason filters",
       "priority": "P3",
-      "status": "pending",
+      "status": "blocked",
       "scope": "medium",
       "depends_on": [
         "P3-FEAT-006"
       ],
-      "files_expected": [],
+      "files_expected": [
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md"
+      ],
+      "files_touched": [
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-007-BE and P3-FEAT-007-FE are done."
+    },
+    {
+      "id": "P3-FEAT-007-BE",
+      "phase": "backend",
+      "title": "Recommendation reason filters backend",
+      "priority": "P3",
+      "status": "in_progress",
+      "scope": "small",
+      "depends_on": [
+        "P3-FEAT-006"
+      ],
+      "files_expected": [
+        "services/gateway/main.py",
+        "tests/test_recommendation_reason_filters.py"
+      ],
       "files_touched": [],
       "validation_commands": [
-        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_recommendation_reason_filters.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Expose explicit reason-filter scores in the recommendation response for semantic, interaction, career-signal, recency, and location controls."
+    },
+    {
+      "id": "P3-FEAT-007-FE",
+      "phase": "frontend",
+      "title": "Recommendation reason filters frontend",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "small",
+      "depends_on": [
+        "P3-FEAT-007-BE"
+      ],
+      "files_expected": [
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/recommendations/page.tsx"
+      ],
+      "files_touched": [],
+      "validation_commands": [
         "npm run lint",
         "npm run build"
       ],
       "validation_status": "not_run",
       "commit": "",
-      "notes": "Split backend/frontend subtasks before implementation."
+      "notes": "Add user-facing reason filter controls on recommendations after the backend response contract is validated."
     },
     {
       "id": "P4-ADV-001",

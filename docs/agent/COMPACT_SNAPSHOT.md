@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 23:47 +07
+Updated: 2026-05-25 23:50 +07
 
 ## Current Objective
-Checkpoint completed `P3-FEAT-006`, then start `P3-FEAT-007` recommendation reason filters.
+Checkpoint the `P3-FEAT-007` split, then implement backend reason-filter scores for recommendations.
 
 ## Current Phase
-frontend
+backend
 
 ## Current Task ID
-P3-FEAT-007
+P3-FEAT-007-BE
 
 ## Latest Commit Hash
-Root: `46fbb6e` (`docs: update long-running agent checkpoint`). Backend model-health commit: `fcd28b7`. Nested frontend repo: `9090cd0` (`feat: add admin model-health frontend`).
+Root: `bdd318e` (`docs: update long-running agent checkpoint`). Nested frontend repo: `9090cd0` (`feat: add admin model-health frontend`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,8 +20,8 @@ Root: `46fbb6e` (`docs: update long-running agent checkpoint`). Backend model-he
 ## Dirty Files
 - Pre-existing root: `README.md` modified.
 - Pre-existing root: many untracked project files/directories, including `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and root artifacts.
-- Pre-existing nested frontend: `.gitignore`, deleted `AGENTS.md`/`CLAUDE.md`, config/package/layout/style/page changes, and many untracked app/component/lib assets remain.
-- Current root state checkpoint: durable files under `docs/agent/`.
+- Pre-existing nested frontend dirty/untracked files remain unrelated to the active task.
+- Current state checkpoint: durable files under `docs/agent/`.
 
 ## Files Changed This Session
 - `services/gateway/main.py`
@@ -36,34 +36,24 @@ Root: `46fbb6e` (`docs: update long-running agent checkpoint`). Backend model-he
 - `docs/agent/VALIDATION_LEDGER.md`
 
 ## Current Implementation Status
-- `P3-FEAT-006-BE` is complete in root commit `fcd28b7`.
-- `P3-FEAT-006-FE` is complete in nested frontend commit `9090cd0`.
-- `P3-FEAT-006` parent is done in `TASK_QUEUE.json`.
-- `P3-FEAT-007` is the next task and still needs backend/frontend split before implementation.
+- `P3-FEAT-006` is complete and recorded.
+- `P3-FEAT-007` is split into `P3-FEAT-007-BE` and `P3-FEAT-007-FE`.
+- `P3-FEAT-007-BE` is active; no backend code has been edited for it yet.
+- Backend target: add explicit reason-filter scores to each gateway recommendation response for semantic fit, interaction fit, career-signal fit, recency, and location.
 
 ## Commands Already Run
-- Post-compact recovery read: `AGENTS.md`, all required `/docs/agent/` state files.
-- Recovery git checks: `git status --short --branch`, `git log --oneline -10`.
-- Memory quick pass over `C:\Users\ACER\.codex\memories\MEMORY.md` for SCPA environment context.
-- Backend TDD red, focused pass, adjacent pass, and full backend pass for `P3-FEAT-006-BE`.
-- Backend commit: `git commit -m "feat: add admin model-health backend"` -> `fcd28b7`.
-- State checkpoint commit after backend: `git commit -m "docs: update long-running agent checkpoint"` -> `46fbb6e`.
-- Frontend validation for `P3-FEAT-006-FE`: `npm run lint`, `npm run build`, local `/analytics` HTTP smoke, and nested `git diff --cached --check`.
-- Frontend commit: `git -C frontend commit -m "feat: add admin model-health frontend"` -> `9090cd0`.
+- Root and nested git status/log checks after P3-FEAT-006.
+- Recommendation route/UI inspection with `rg`, `Get-Content`, and reference-report lookup.
+- `docs/agent/TASK_QUEUE.json` update to split P3-FEAT-007.
 
 ## Validation Results
-- Backend focused admin model-health tests passed: `2 passed`.
-- Backend adjacent admin auth/pipeline telemetry regression passed: `4 passed`.
-- Full backend suite passed: `347 passed, 1 warning`.
-- Frontend lint passed with 16 existing warnings and no errors.
-- Frontend build passed.
-- Local `/analytics` HTTP smoke returned `200`.
-- Nested frontend staged diff check passed.
+- Previous P3-FEAT-006 backend and frontend validations passed.
+- `TASK_QUEUE.json` still needs a fresh parse after the P3-FEAT-007 split.
 
 ## Known Errors
 - One existing warning remains in the intentional wrong-secret JWT test.
 - Existing frontend lint warnings remain but are not blocking.
-- Browser visual inspection was not available because tool discovery exposed no Browser tool and Node REPL had no Playwright module.
+- Browser visual inspection was not available for P3-FEAT-006 because tool discovery exposed no Browser tool and Node REPL had no Playwright module.
 
 ## Do-Not-Change Constraints
 - Do not stage or revert pre-existing root `README.md` changes or broad untracked project files unless a task explicitly owns them.
@@ -73,4 +63,4 @@ Root: `46fbb6e` (`docs: update long-running agent checkpoint`). Backend model-he
 - Do not claim completion or move to the next task without fresh validation.
 
 ## Next Exact Action
-Validate `docs/agent/TASK_QUEUE.json`, stage only current durable state files, inspect staged diff, commit `docs: update long-running agent checkpoint`, then split `P3-FEAT-007` into backend/frontend child tasks.
+Validate `docs/agent/TASK_QUEUE.json`, stage only current durable state files, inspect staged diff, commit `docs: update long-running agent checkpoint`, then add focused tests in `tests/test_recommendation_reason_filters.py`.
