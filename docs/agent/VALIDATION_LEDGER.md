@@ -594,3 +594,17 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after marking `P2-001` done.
 - Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:06 +07
+- Task ID: `P2-001`
+- Command: `git commit -m "security: validate jwt secret configuration"`
+- Result: pass
+- Summary: Created commit `dc5cc2c` with JWT secret validation code, focused tests, and durable state updates.
+- Related commit hash: `dc5cc2c`.
+
+## 2026-05-25 21:06 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording `P2-001` commit `dc5cc2c` and marking `P2-002` in progress.
+- Related commit hash: pending survival checkpoint commit.

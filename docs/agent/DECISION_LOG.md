@@ -149,3 +149,12 @@
 - Skipped option: Deferring validation until token creation or verification.
 - Reason skipped: Runtime issuance-time failures do not catch a weak deployment configuration early enough.
 - Risk and mitigation: Test modules now force deterministic 32-byte-or-longer JWT secrets in `tests/conftest.py`; focused and full pytest validation passed after the change.
+
+## 2026-05-25 21:06 +07 - Survival checkpoint and P2-002 CORS hardening mini plan
+- Decision: Create a state-only checkpoint after the third post-checkpoint commit, then start `P2-002`.
+- Expected files to touch next: `services/gateway/main.py`, `.env.example`, `docker-compose.yml` if environment wiring changes, focused CORS tests, and durable `docs/agent/` state files.
+- Validation commands: focused CORS tests first, then `.\.venv\Scripts\python.exe -m pytest -q` and `docker compose config` with required environment variables.
+- Requirement: Restrict CORS by environment and prevent wildcard CORS in production.
+- Skipped option: Hard-coding one production origin immediately.
+- Reason skipped: The repo already has `CORS_ALLOW_ORIGINS` and `CORS_ALLOWED_ORIGINS` environment surfaces; inspect current parsing and Compose wiring before choosing the smallest compatible contract.
+- Risk and mitigation: Preserve local development ergonomics for `localhost` while adding a production fail-fast or safe default for wildcard origins.

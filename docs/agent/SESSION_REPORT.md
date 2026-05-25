@@ -754,3 +754,27 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P2-001 files plus durable state files, inspect staged diff, and commit `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:06 +07 - Survival checkpoint after P2-001
+
+### Active Task
+- `P2-002` - CORS hardening.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked project files remain.
+- New checkpoint state changes: durable `docs/agent/` files updated to record `P2-001` commit `dc5cc2c` and mark `P2-002` in progress.
+
+### Previous Task Complete
+- Yes. `P2-001` committed as `dc5cc2c`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Commit this state-only checkpoint before editing CORS behavior.
+
+### Commands Run
+- `git commit -m "security: validate jwt secret configuration"`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Validate task queue JSON, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.

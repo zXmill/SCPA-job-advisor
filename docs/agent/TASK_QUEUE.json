@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "security",
-  "current_task_id": "P2-001",
+  "current_task_id": "P2-002",
   "tasks": [
     {
       "id": "INIT-001",
@@ -448,7 +448,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending security: validate jwt secret configuration",
+      "commit": "dc5cc2c",
       "notes": "Added shared JWT secret validation, enforced >=32-byte access/refresh secrets during shared auth and gateway import, and updated tests to use valid deterministic secrets."
     },
     {
@@ -456,7 +456,7 @@
       "phase": "security",
       "title": "CORS hardening",
       "priority": "P2",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "small",
       "depends_on": [
         "P2-001"
@@ -466,14 +466,21 @@
         "docker-compose.yml",
         ".env.example"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest -q",
         "docker compose config"
       ],
       "validation_status": "not_run",
       "commit": "",
-      "notes": "Restrict CORS by environment. No wildcard CORS in production."
+      "notes": "Restrict CORS by environment. No wildcard CORS in production. Started after survival checkpoint; implementation not yet begun."
     },
     {
       "id": "P2-003",

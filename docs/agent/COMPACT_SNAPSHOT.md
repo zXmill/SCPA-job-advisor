@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 21:05 +07
+Updated: 2026-05-25 21:06 +07
 
 ## Current Objective
-Commit completed `P2-001` JWT secret validation, then create the required survival checkpoint.
+Create the required survival checkpoint after `P2-001`, then start `P2-002` CORS hardening.
 
 ## Current Phase
 security
 
 ## Current Task ID
-P2-001
+P2-002
 
 ## Latest Commit Hash
-Root: `0b2e3e5` (`observability: add recommendation pipeline telemetry`). `P2-001` is implemented and awaiting commit `security: validate jwt secret configuration`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `dc5cc2c` (`security: validate jwt secret configuration`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `0b2e3e5` (`observability: add recommendation pipeline telemetry`). `P2-00
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task changes: `services/shared/auth.py`, `services/gateway/main.py`, `tests/test_security.py`, `tests/conftest.py`, and durable `docs/agent/` state files for `P2-001`.
+- Current task changes: durable `docs/agent/` state files to record `P2-001` commit `dc5cc2c` and mark `P2-002` in progress. CORS implementation has not started yet.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -65,7 +65,7 @@ Root: `0b2e3e5` (`observability: add recommendation pipeline telemetry`). `P2-00
 - `tests/conftest.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. `P2-001` is implemented and validated; task commit is pending.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint is pending.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -129,6 +129,8 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Added and verified TDD red JWT secret validation tests.
 - Implemented shared/gateway JWT secret validation.
 - Ran P2-001 focused, route-auth, DB-backed retry, combined regression, and full backend validation commands.
+- P2-001 commit: `git commit -m "security: validate jwt secret configuration"`.
+- Started state-only survival checkpoint and marked `P2-002` in progress.
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
@@ -195,6 +197,7 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P2-001 focused JWT tests passed: `20 passed`.
 - P2-001 combined auth/security regression passed: `68 passed, 1 warning`.
 - P2-001 full backend tests passed: `313 passed, 1 warning`.
+- P2-001 commit exists as `dc5cc2c`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -210,4 +213,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Parse `docs/agent/TASK_QUEUE.json`, stage only P2-001 files plus durable state files, inspect staged diff, and commit `security: validate jwt secret configuration`.
+Parse `docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.
