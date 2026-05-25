@@ -23,6 +23,7 @@ from db.models import (
     HybridRequestLog,
     HybridWeights,
     Job,
+    JobAlert,
     JobRequiredSkill,
     JobSource,
     JobType,
@@ -114,6 +115,7 @@ class TestTableNames:
             (HybridWeights, "hybrid_weights"),
             (HybridRequestLog, "hybrid_request_log"),
             (ModelFeedbackOutbox, "model_feedback_outbox"),
+            (JobAlert, "job_alerts"),
             (Skill, "skills"),
             (JobRequiredSkill, "job_required_skills"),
             (CertificationSkill, "certification_skills"),
@@ -138,6 +140,7 @@ class TestTableNames:
             "hybrid_weights",
             "hybrid_request_log",
             "model_feedback_outbox",
+            "job_alerts",
             "skills",
             "job_required_skills",
             "certification_skills",
@@ -325,6 +328,12 @@ class TestIndexes:
         assert "idx_model_feedback_outbox_status_next" in indexes
         assert "idx_model_feedback_outbox_user_time" in indexes
         assert "idx_model_feedback_outbox_job_time" in indexes
+
+    def test_job_alert_indexes(self) -> None:
+        indexes = self._get_index_names("job_alerts")
+        assert "idx_job_alerts_user_active" in indexes
+        assert "idx_job_alerts_user_created" in indexes
+        assert "idx_job_alerts_frequency_active" in indexes
 
     def test_total_index_count(self) -> None:
         """Verify we have at least 15 custom indexes across all tables."""

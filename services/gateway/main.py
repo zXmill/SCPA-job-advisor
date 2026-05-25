@@ -269,6 +269,23 @@ class ApplicationCreateRequest(BaseModel):
     job_ids: list[str]
 
 
+class JobAlertCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
+    query: str | None = Field(default=None, max_length=200)
+    location: str | None = Field(default=None, max_length=120)
+    min_match_percent: int = Field(default=60, ge=0, le=100)
+    frequency: str = Field(default="daily", min_length=1, max_length=20)
+
+
+class JobAlertUpdateRequest(BaseModel):
+    name: str | None = Field(default=None, max_length=120)
+    query: str | None = Field(default=None, max_length=200)
+    location: str | None = Field(default=None, max_length=120)
+    min_match_percent: int | None = Field(default=None, ge=0, le=100)
+    frequency: str | None = Field(default=None, min_length=1, max_length=20)
+    active: bool | None = None
+
+
 class RecommendationFeedbackRequest(BaseModel):
     job_id: str = Field(..., min_length=1)
     recommendation_id: str | None = Field(default=None, min_length=1)
@@ -1485,6 +1502,77 @@ def _job_payload_from_row(row: Any, *, public_id: str | None = None) -> dict[str
     return job
 
 
+JOB_ALERT_FREQUENCIES = {"daily", "weekly"}
+JOB_ALERT_COLUMNS = (
+    "id, name, query, location, min_match_percent, frequency, active, "
+    "criteria, created_at, updated_at"
+)
+
+
+def _clean_optional_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    cleaned = value.strip()
+    return cleaned or None
+
+
+def _normalize_alert_frequency(value: str | None) -> str:
+    frequency = (value or "daily").strip().lower()
+    if frequency not in JOB_ALERT_FREQUENCIES:
+        raise HTTPException(status_code=400, detail="Unsupported job alert frequency")
+    return frequency
+
+
+def _alert_criteria(
+    *,
+    query: str | None,
+    location: str | None,
+    min_match_percent: int,
+) -> dict[str, Any]:
+    return {
+        "query": query,
+        "location": location,
+        "min_match_percent": min_match_percent,
+    }
+
+
+def _job_alert_payload(row: Any) -> dict[str, Any]:
+    alert = dict(row)
+    created_at = alert.get("created_at")
+    updated_at = alert.get("updated_at")
+    if isinstance(created_at, datetime):
+        alert["created_at"] = created_at.isoformat()
+    if isinstance(updated_at, datetime):
+        alert["updated_at"] = updated_at.isoformat()
+    alert["criteria"] = alert.get("criteria") or _alert_criteria(
+        query=alert.get("query"),
+        location=alert.get("location"),
+        min_match_percent=alert.get("min_match_percent") or 60,
+    )
+    return alert
+
+
+async def _require_job_alert(
+    db: AsyncSession,
+    *,
+    user_id: Any,
+    alert_id: int,
+) -> dict[str, Any]:
+    row = (
+        await db.execute(
+            text(
+                "SELECT id, user_id, name, query, location, min_match_percent, "
+                "frequency, active, criteria, created_at, updated_at "
+                "FROM job_alerts WHERE id = :alert_id AND user_id = :uid"
+            ),
+            {"alert_id": alert_id, "uid": user_id},
+        )
+    ).mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Job alert not found")
+    return dict(row)
+
+
 async def _require_job_uuid(db: AsyncSession, job_id: str) -> uuid.UUID:
     db_uuid = to_uuid(job_id)
     row = (
@@ -1535,6 +1623,159 @@ async def _set_job_interaction_state(
         },
     )
     await db.commit()
+
+
+@app.get("/api/job-alerts")
+async def list_job_alerts(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    rows = (
+        await db.execute(
+            text(
+                f"SELECT {JOB_ALERT_COLUMNS} "
+                "FROM job_alerts "
+                "WHERE user_id = :uid AND active = true "
+                "ORDER BY created_at DESC, id DESC"
+            ),
+            {"uid": user["id"]},
+        )
+    ).mappings().all()
+    alerts = [_job_alert_payload(row) for row in rows]
+    return {"alerts": alerts, "total": len(alerts)}
+
+
+@app.post("/api/job-alerts")
+async def create_job_alert(
+    payload: JobAlertCreateRequest,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    name = _clean_optional_text(payload.name)
+    if not name:
+        raise HTTPException(status_code=400, detail="Job alert name is required")
+    query = _clean_optional_text(payload.query)
+    location = _clean_optional_text(payload.location)
+    frequency = _normalize_alert_frequency(payload.frequency)
+    criteria = _alert_criteria(
+        query=query,
+        location=location,
+        min_match_percent=payload.min_match_percent,
+    )
+    row = (
+        await db.execute(
+            text(
+                "INSERT INTO job_alerts ("
+                "user_id, name, query, location, min_match_percent, frequency, "
+                "active, criteria, created_at, updated_at"
+                ") VALUES ("
+                ":uid, :name, :query, :location, :min_match_percent, :frequency, "
+                "true, CAST(:criteria AS jsonb), NOW(), NOW()"
+                f") RETURNING {JOB_ALERT_COLUMNS}"
+            ),
+            {
+                "uid": user["id"],
+                "name": name,
+                "query": query,
+                "location": location,
+                "min_match_percent": payload.min_match_percent,
+                "frequency": frequency,
+                "criteria": json.dumps(criteria),
+            },
+        )
+    ).mappings().one()
+    await db.commit()
+    return _job_alert_payload(row)
+
+
+@app.put("/api/job-alerts/{alert_id}")
+async def update_job_alert(
+    alert_id: int,
+    payload: JobAlertUpdateRequest,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    current = await _require_job_alert(db, user_id=user["id"], alert_id=alert_id)
+    name = (
+        _clean_optional_text(payload.name)
+        if payload.name is not None
+        else current["name"]
+    )
+    if not name:
+        raise HTTPException(status_code=400, detail="Job alert name is required")
+    query = (
+        _clean_optional_text(payload.query)
+        if payload.query is not None
+        else current["query"]
+    )
+    location = (
+        _clean_optional_text(payload.location)
+        if payload.location is not None
+        else current["location"]
+    )
+    min_match_percent = (
+        payload.min_match_percent
+        if payload.min_match_percent is not None
+        else current["min_match_percent"]
+    )
+    frequency = _normalize_alert_frequency(payload.frequency or current["frequency"])
+    active = payload.active if payload.active is not None else current["active"]
+    criteria = _alert_criteria(
+        query=query,
+        location=location,
+        min_match_percent=min_match_percent,
+    )
+    row = (
+        await db.execute(
+            text(
+                "UPDATE job_alerts SET "
+                "name = :name, query = :query, location = :location, "
+                "min_match_percent = :min_match_percent, frequency = :frequency, "
+                "active = :active, criteria = CAST(:criteria AS jsonb), "
+                "updated_at = NOW() "
+                "WHERE id = :alert_id AND user_id = :uid "
+                f"RETURNING {JOB_ALERT_COLUMNS}"
+            ),
+            {
+                "alert_id": alert_id,
+                "uid": user["id"],
+                "name": name,
+                "query": query,
+                "location": location,
+                "min_match_percent": min_match_percent,
+                "frequency": frequency,
+                "active": active,
+                "criteria": json.dumps(criteria),
+            },
+        )
+    ).mappings().one()
+    await db.commit()
+    return _job_alert_payload(row)
+
+
+@app.delete("/api/job-alerts/{alert_id}")
+async def disable_job_alert(
+    alert_id: int,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    row = (
+        await db.execute(
+            text(
+                "UPDATE job_alerts SET active = false, updated_at = NOW() "
+                "WHERE id = :alert_id AND user_id = :uid RETURNING id"
+            ),
+            {"alert_id": alert_id, "uid": user["id"]},
+        )
+    ).mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Job alert not found")
+    await db.commit()
+    return {"status": "disabled", "alert_id": alert_id}
 
 
 @app.get("/api/jobs/saved")

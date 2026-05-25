@@ -231,6 +231,9 @@ class User(Base):
     interactions: Mapped[List["UserInteraction"]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="selectin"
     )
+    job_alerts: Mapped[List["JobAlert"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan", lazy="selectin"
+    )
     served_slates: Mapped[List["ServedSlate"]] = relationship(
         back_populates="user", lazy="selectin"
     )
@@ -744,6 +747,49 @@ class UserJobInteraction(Base):
         Index("idx_user_job_interactions_user", "user_id", created_at.desc()),
         Index("idx_user_job_interactions_job", "job_id"),
         UniqueConstraint("user_id", "job_id", name="uq_user_job_interaction"),
+    )
+
+
+class JobAlert(Base):
+    """Durable user job-alert preference."""
+
+    __tablename__ = "job_alerts"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    query: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    location: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    min_match_percent: Mapped[int] = mapped_column(
+        Integer, server_default=text("60"), nullable=False
+    )
+    frequency: Mapped[str] = mapped_column(
+        String(20), server_default=text("'daily'"), nullable=False
+    )
+    active: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("true"), nullable=False
+    )
+    criteria: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, server_default=text("'{}'::jsonb"), nullable=False
+    )
+    last_notified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("NOW()"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("NOW()"), nullable=False
+    )
+
+    user: Mapped["User"] = relationship(back_populates="job_alerts")
+
+    __table_args__ = (
+        Index("idx_job_alerts_user_active", "user_id", "active"),
+        Index("idx_job_alerts_user_created", "user_id", created_at.desc()),
+        Index("idx_job_alerts_frequency_active", "frequency", "active"),
     )
 
 

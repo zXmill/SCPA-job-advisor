@@ -101,6 +101,7 @@ def _table_names() -> list[str]:
         "model_feedback_outbox",
         "dqn_replay_archive",
         "dqn_session_logs",
+        "job_alerts",
         "user_job_interactions",
         "user_interactions",
         "applications",
