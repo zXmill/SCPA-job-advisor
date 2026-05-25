@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "frontend",
-  "current_task_id": "P3-FEAT-002-FE",
+  "current_task_id": "P3-FEAT-003",
   "tasks": [
     {
       "id": "INIT-001",
@@ -729,7 +729,7 @@
       "phase": "frontend",
       "title": "Profile completeness meter",
       "priority": "P3",
-      "status": "blocked",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P3-FEAT-001"
@@ -745,8 +745,8 @@
         ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
       ],
       "validation_status": "not_run",
-      "commit": "",
-      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-002-BE and P3-FEAT-002-FE are done."
+      "commit": "backend:c0dd8e6; frontend:68deb7e",
+      "notes": "Completed as separate backend and frontend child tasks."
     },
     {
       "id": "P3-FEAT-002-BE",
@@ -785,7 +785,7 @@
       "phase": "frontend",
       "title": "Profile completeness meter frontend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-002-BE"
@@ -794,14 +794,22 @@
         "frontend/src/lib/api.ts",
         "frontend/src/app/profile/page.tsx"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/profile/page.tsx",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         "npm run lint",
         "npm run build"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Render backend completeness summary in the profile page after the backend contract is validated."
+      "validation_status": "passed",
+      "commit": "frontend:68deb7e",
+      "notes": "Profile page now fetches backend completeness, renders computed percent and labeled item states, and refreshes completeness after saving profile edits."
     },
     {
       "id": "P3-FEAT-003",

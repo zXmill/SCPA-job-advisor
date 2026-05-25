@@ -72,8 +72,9 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Gateway skill taxonomy autocomplete now supports excluding already-selected canonical skills and aliases.
 - Frontend profile skill editing now uses backend skill taxonomy autocomplete and excludes selected skills.
 - Gateway profile completeness summary is available at authenticated `GET /api/profile/completeness`.
+- Frontend profile page now renders backend-computed profile completeness percent and item states.
 - Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `331 passed, 1 warning` after P3-FEAT-002-BE.
-- Latest frontend validation after P3-FEAT-001-FE: `npm run lint` passed with existing warnings and `npm run build` passed.
+- Latest frontend validation after P3-FEAT-002-FE: `npm run lint` passed with existing warnings and `npm run build` passed.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
@@ -87,7 +88,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P3-FEAT-002-BE` - profile completeness meter backend. Commit `c0dd8e6`.
+`P3-FEAT-002` - profile completeness meter. Backend commit `c0dd8e6`; frontend nested commit `68deb7e`.
 
 ## Next Task
-`P3-FEAT-002-FE` - profile completeness meter frontend is in progress.
+`P3-FEAT-003` - saved jobs and skip buttons; split backend/frontend subtasks before implementation.
