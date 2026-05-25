@@ -53,3 +53,12 @@
 - Skipped option: Adding token middleware to every model and scraper service in this task.
 - Reason skipped: Removing host port publishing already moves scraper/SBERT/NCF/DQN/PostgreSQL behind the Docker network; a gateway-to-pipeline token directly protects the public-to-internal orchestration boundary without expanding this task across many service files.
 - Risk and mitigation: Compose may fail if the token is required but missing. Document `INTERNAL_SERVICE_TOKEN` in `.env.example` and set a test value explicitly during validation instead of committing a real secret.
+
+## 2026-05-25 20:10 +07 - P1-SEC-002 SSRF guard mini plan
+- Decision: Add an explicit SSRF validation layer for scraper URL fetches before any outbound request.
+- Expected files to touch: `services/scraper/main.py`, `tests/test_ssrf_guard.py`, and durable `docs/agent/` state files.
+- Validation commands: failing focused SSRF tests first, then `.\.venv\Scripts\python.exe -m pytest tests\test_ssrf_guard.py -q`, and full `.\.venv\Scripts\python.exe -m pytest -q` after implementation.
+- Guard requirements: allow only approved job-board hosts; reject localhost, loopback, private IP ranges, link-local addresses, metadata IPs, non-HTTP(S) schemes, unsafe redirects, and DNS rebinding attempts.
+- Skipped option: Relying only on Pydantic `HttpUrl`.
+- Reason skipped: `HttpUrl` validates shape, not network safety or resolved addresses.
+- Risk and mitigation: DNS lookups can be flaky in tests; isolate address resolution behind a small helper and monkeypatch it in SSRF tests.

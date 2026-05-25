@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "security",
-  "current_task_id": "P1-SEC-001",
+  "current_task_id": "P1-SEC-002",
   "tasks": [
     {
       "id": "INIT-001",
@@ -184,7 +184,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending: security: restrict internal docker service exposure",
+      "commit": "1392e58",
       "notes": "Removed host ports from PostgreSQL, scraper, SBERT, NCF, DQN, and pipeline. Added required INTERNAL_SERVICE_TOKEN in Compose for gateway/pipeline, gateway token forwarding, pipeline non-health route token checks, and focused tests."
     },
     {
@@ -192,22 +192,33 @@
       "phase": "security",
       "title": "Add SSRF guard",
       "priority": "P1",
-      "status": "pending",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P1-SEC-001"
       ],
       "files_expected": [
         "services/scraper/main.py",
-        "tests/test_security.py"
+        "tests/test_ssrf_guard.py"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/scraper/main.py",
+        "tests/test_ssrf_guard.py",
+        "tests/test_red_team_failure_modes.py",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/FAILURE_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Allowlist approved job-board domains and block local, private, link-local, metadata, unsafe redirects, and DNS rebinding."
+      "validation_status": "passed",
+      "commit": "pending: security: add ssrf guard to scraper endpoint",
+      "notes": "Added scraper URL validation and safe redirect handling. Blocks non-HTTP(S), unapproved hosts, localhost, loopback/private/link-local/non-public IPs, DNS rebinding, and unsafe redirects. Existing localhost red-team contract updated to expect 400."
     },
     {
       "id": "P1-SEC-003",

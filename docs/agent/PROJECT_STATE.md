@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 20:08 +07
+Updated: 2026-05-25 20:17 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -68,7 +68,6 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 
 ## Known Broken Areas
 - Frontend lint still reports warnings, but the blocking hook-order error in `frontend/src/app/recommendations/page.tsx` has been fixed and validated locally.
-- Scraper `/scrape/url` accepts arbitrary URLs and needs SSRF protection.
 - Gateway `/pipeline/run` is unauthenticated and bypasses protected recommendation/profile handling.
 - CI runs a selected pytest subset and does not currently gate frontend lint/build.
 - JWT/CORS defaults are too permissive outside Compose.
@@ -81,7 +80,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P1-SEC-001` - restricted internal Docker exposure and added a gateway-to-pipeline internal service token boundary. Commit pending.
+`P1-SEC-002` - added SSRF protection to scraper URL fetches. Commit pending.
 
 ## Next Task
-After committing `P1-SEC-001`, start `P1-SEC-002`: add SSRF protection to scraper URL endpoints.
+After committing `P1-SEC-002`, start `P1-SEC-003`: protect gateway direct `/pipeline/run`.

@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 20:08 +07
+Updated: 2026-05-25 20:17 +07
 
 ## Current Objective
-Commit the completed `P1-SEC-001` Docker exposure and internal token boundary change, then start `P1-SEC-002`.
+Commit the completed `P1-SEC-002` SSRF guard, then start `P1-SEC-003`.
 
 ## Current Phase
 security
 
 ## Current Task ID
-P1-SEC-001
+P1-SEC-002
 
 ## Latest Commit Hash
-Root: `7b6ce82` (`chore: perform safe repository cleanup`); pending commit `security: restrict internal docker service exposure`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `1392e58` (`security: restrict internal docker service exposure`); pending commit `security: add ssrf guard to scraper endpoint`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `7b6ce82` (`chore: perform safe repository cleanup`); pending commit `secu
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task changes: `docker-compose.yml`, `.env.example`, `services/gateway/main.py`, `services/pipeline/main.py`, `tests/test_internal_service_auth.py`, and durable `docs/agent/` state files.
+- Current task changes: `services/scraper/main.py`, `tests/test_ssrf_guard.py`, `tests/test_red_team_failure_modes.py`, and durable `docs/agent/` state files.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -45,9 +45,12 @@ Root: `7b6ce82` (`chore: perform safe repository cleanup`); pending commit `secu
 - `services/gateway/main.py`
 - `services/pipeline/main.py`
 - `tests/test_internal_service_auth.py`
+- `services/scraper/main.py`
+- `tests/test_ssrf_guard.py`
+- `tests/test_red_team_failure_modes.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. `P1-SEC-001` is implemented and validation passed; commit is pending.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. `P1-SEC-002` is implemented and validation passed; commit is pending.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -69,6 +72,12 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Read current Docker Compose, env template, gateway pipeline helper paths, pipeline routes, tests, and reference report Docker exposure section.
 - Implemented Docker exposure and internal token changes.
 - Ran P1-SEC-001 validation commands listed below.
+- P1-SEC-001 commit: `git commit -m "security: restrict internal docker service exposure"`.
+- Read relevant `security-review`, `superpowers:test-driven-development`, and `data-scraper-agent` skill instructions.
+- Inspected scraper URL endpoint and fetch paths.
+- Added and verified TDD red SSRF tests.
+- Implemented scraper URL validation and safe redirect handling.
+- Ran P1-SEC-002 focused and full validation commands.
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
@@ -90,11 +99,15 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P1-SEC-001 full backend tests passed: `294 passed, 11 warnings`.
 - P1-SEC-001 `docker compose config --quiet` passed with a throwaway process-local `INTERNAL_SERVICE_TOKEN`.
 - Rendered Compose config shows only gateway has a host port: `8000->8000`.
+- P1-SEC-001 commit exists as `1392e58`.
+- P1-SEC-002 TDD red confirmed missing SSRF helpers.
+- P1-SEC-002 focused SSRF tests passed: `9 passed`.
+- P1-SEC-002 existing scraper red-team test passed: `1 passed`.
+- P1-SEC-002 full backend tests passed: `303 passed, 11 warnings`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
 - Frontend hook-order lint failure was fixed in `frontend/src/app/recommendations/page.tsx`; frontend warnings remain.
-- Scraper URL endpoint lacks SSRF guard.
 - Gateway direct `/pipeline/run` is unauthenticated.
 - CI does not run full project gates.
 
@@ -105,4 +118,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only P1-SEC-001 files plus durable state files, inspect staged diff, and commit `security: restrict internal docker service exposure`.
+Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only P1-SEC-002 files plus durable state files, inspect staged diff, and commit `security: add ssrf guard to scraper endpoint`.

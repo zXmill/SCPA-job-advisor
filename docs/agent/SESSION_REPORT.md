@@ -295,3 +295,53 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P1-SEC-001 files and durable state files, inspect the staged diff, and commit `security: restrict internal docker service exposure`.
+
+## 2026-05-25 20:10 +07 - P1-SEC-002 start
+
+### Active Task
+- `P1-SEC-002` - Add SSRF guard.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked repo files remain.
+- New task state changes: durable `docs/agent/` files updated to point at `P1-SEC-002`.
+
+### Previous Task Complete
+- `P1-SEC-001` committed as `1392e58`.
+
+### Validation Still Needed
+- First create focused SSRF regression tests and confirm they fail before implementation.
+- After implementation, run focused SSRF tests and full backend pytest.
+
+### Commands Run
+- `git commit -m "security: restrict internal docker service exposure"`
+- `git status --short --branch`
+- `git log --oneline -10`
+- Read relevant `security-review`, `superpowers:test-driven-development`, and `data-scraper-agent` skill instructions.
+
+### Next Exact Action
+- Inspect scraper URL fetch path, write failing SSRF tests in `tests/test_ssrf_guard.py`, run the focused tests to confirm the expected failure, then implement the guard.
+
+## 2026-05-25 20:17 +07 - P1-SEC-002 result
+
+### Active Task
+- `P1-SEC-002` is implemented and ready to commit.
+
+### What Changed
+- Added a scraper URL guard that validates scheme, allowlisted job-board host suffixes, resolved IP addresses, and every redirect target.
+- Blocked localhost, loopback/private/link-local/non-public addresses, metadata IP style targets, unapproved hosts, non-HTTP(S) URLs, DNS rebinding, and unsafe redirects before outbound fetches.
+- Reused the safe fetch helper for `/scrape/url`, configured seed fetches, and detail-page enrichment.
+- Added `tests/test_ssrf_guard.py`.
+- Updated the existing scraper red-team localhost assertion to expect a `400` guard response instead of a downstream `502`.
+
+### Validation Results
+- TDD red: `tests/test_ssrf_guard.py` failed because guard helpers did not exist yet.
+- Focused SSRF suite: `9 passed`.
+- Existing scraper red-team test: `1 passed`.
+- Full backend suite: `303 passed, 11 warnings`.
+
+### Remaining Issues
+- `P1-SEC-003` gateway direct `/pipeline/run` auth hardening is still pending.
+- Existing pytest warnings about short test JWT keys remain.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P1-SEC-002 files and durable state files, inspect the staged diff, and commit `security: add ssrf guard to scraper endpoint`.
