@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "backend",
-  "current_task_id": "P3-FEAT-002-BE",
+  "current_phase": "frontend",
+  "current_task_id": "P3-FEAT-002-FE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -753,7 +753,7 @@
       "phase": "backend",
       "title": "Profile completeness meter backend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-001"
@@ -762,14 +762,23 @@
         "services/gateway/main.py",
         "tests/test_profile_completeness.py"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/gateway/main.py",
+        "tests/test_profile_completeness.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_profile_completeness.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_profile_completeness.py tests\\test_auth_endpoints.py::TestProfileUpdate tests\\test_auth_endpoints.py::TestOnboardingFillout tests\\test_auth_endpoints.py::TestMe::test_me_returns_profile_with_skills -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
+      "validation_status": "passed",
       "commit": "",
-      "notes": "Add a backend profile completeness summary contract with percentage, completed item IDs, and missing item IDs."
+      "notes": "Added authenticated /api/profile/completeness with computed percentage, completed/missing item IDs, labeled items, stored_percent, and skill_count."
     },
     {
       "id": "P3-FEAT-002-FE",

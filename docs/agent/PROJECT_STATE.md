@@ -71,7 +71,8 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Stage 5 aggregation now applies a learned logistic calibration layer while preserving `static_baseline_score` and ablation metadata.
 - Gateway skill taxonomy autocomplete now supports excluding already-selected canonical skills and aliases.
 - Frontend profile skill editing now uses backend skill taxonomy autocomplete and excludes selected skills.
-- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `328 passed, 1 warning` after P3-FEAT-001-BE.
+- Gateway profile completeness summary is available at authenticated `GET /api/profile/completeness`.
+- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `331 passed, 1 warning` after P3-FEAT-002-BE.
 - Latest frontend validation after P3-FEAT-001-FE: `npm run lint` passed with existing warnings and `npm run build` passed.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
@@ -86,7 +87,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P3-FEAT-001` - skill taxonomy autocomplete. Backend commit `bf72c99`; frontend nested commit `6915df6`.
+`P3-FEAT-002-BE` - profile completeness meter backend. Commit pending.
 
 ## Next Task
-`P3-FEAT-002` - profile completeness meter; split backend/frontend subtasks before implementation.
+`P3-FEAT-002-FE` - profile completeness meter frontend.

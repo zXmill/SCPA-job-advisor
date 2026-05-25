@@ -248,6 +248,14 @@ class SkillSearchResponse(BaseModel):
     skills: list[SkillSearchItem]
 
 
+PROFILE_COMPLETENESS_ITEMS = (
+    {"id": "name", "label": "Nama lengkap"},
+    {"id": "program_studi", "label": "Program studi"},
+    {"id": "university", "label": "Universitas"},
+    {"id": "skills", "label": "Keahlian"},
+)
+
+
 class PipelineRunRequest(BaseModel):
     user_id: int | str | None = None
     refresh_jobs: bool = False
@@ -882,14 +890,53 @@ async def _canonicalize_profile_skills(
     return canonical
 
 
-async def _pipeline_profile_for_user(db: AsyncSession, user: dict[str, Any]) -> dict[str, Any]:
-    skill_rows = (
+async def _profile_skill_names(db: AsyncSession, user_id: Any) -> list[str]:
+    rows = (
         await db.execute(
             text("SELECT skill FROM user_skills WHERE user_id = :uid ORDER BY skill"),
-            {"uid": user["id"]},
+            {"uid": user_id},
         )
     ).mappings().all()
-    skills = [str(row["skill"]) for row in skill_rows if row.get("skill")]
+    return [str(row["skill"]) for row in rows if row.get("skill")]
+
+
+def _has_profile_value(value: Any) -> bool:
+    return bool(str(value or "").strip())
+
+
+def _profile_completeness_summary(
+    user: dict[str, Any], skill_names: list[str]
+) -> dict[str, Any]:
+    skill_count = len([skill for skill in skill_names if _has_profile_value(skill)])
+    completed_by_id = {
+        "name": _has_profile_value(user.get("name")),
+        "program_studi": _has_profile_value(user.get("program_studi")),
+        "university": _has_profile_value(user.get("university")),
+        "skills": skill_count > 0,
+    }
+    items = [
+        {
+            "id": item["id"],
+            "label": item["label"],
+            "completed": bool(completed_by_id[item["id"]]),
+        }
+        for item in PROFILE_COMPLETENESS_ITEMS
+    ]
+    completed_item_ids = [item["id"] for item in items if item["completed"]]
+    missing_item_ids = [item["id"] for item in items if not item["completed"]]
+    percent = round(100 * len(completed_item_ids) / len(items)) if items else 0
+    return {
+        "percent": percent,
+        "completed_item_ids": completed_item_ids,
+        "missing_item_ids": missing_item_ids,
+        "items": items,
+        "skill_count": skill_count,
+        "stored_percent": int(user.get("completion_percent") or 0),
+    }
+
+
+async def _pipeline_profile_for_user(db: AsyncSession, user: dict[str, Any]) -> dict[str, Any]:
+    skills = await _profile_skill_names(db, user["id"])
     return {
         "name": user.get("name"),
         "program_studi": user.get("program_studi"),
@@ -1226,6 +1273,16 @@ async def me(
 # ════════════════════════════════════════════════════════════════
 # Profile
 # ════════════════════════════════════════════════════════════════
+
+@app.get("/api/profile/completeness")
+async def profile_completeness(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    skill_names = await _profile_skill_names(db, user["id"])
+    return _profile_completeness_summary(user, skill_names)
+
 
 @app.put("/api/profile")
 async def update_profile(

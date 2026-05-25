@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 22:25 +07
+Updated: 2026-05-25 22:32 +07
 
 ## Current Objective
-Start `P3-FEAT-002-BE` profile completeness meter backend contract.
+Commit `P3-FEAT-002-BE` profile completeness meter backend contract, then start frontend integration.
 
 ## Current Phase
-backend
+frontend
 
 ## Current Task ID
-P3-FEAT-002-BE
+P3-FEAT-002-FE
 
 ## Latest Commit Hash
-Root: `f2fb52b` (`docs: update long-running agent checkpoint`). Frontend nested repo: `6915df6` (`feat: add skill taxonomy autocomplete frontend`).
+Root: `221beb1` (`docs: update long-running agent checkpoint`). Frontend nested repo: `6915df6` (`feat: add skill taxonomy autocomplete frontend`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `f2fb52b` (`docs: update long-running agent checkpoint`). Frontend nested 
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task state changes: durable `docs/agent/` files splitting `P3-FEAT-002` into backend/frontend child tasks and marking `P3-FEAT-002-BE` in progress.
+- Current task changes: `services/gateway/main.py`, `tests/test_profile_completeness.py`, and durable `docs/agent/` files for P3-FEAT-002-BE completion.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -71,9 +71,10 @@ Root: `f2fb52b` (`docs: update long-running agent checkpoint`). Frontend nested 
 - `tests/test_cors_config.py`
 - `db/migrations/010_feedback_outbox.py`
 - `tests/test_feedback_outbox.py`
+- `tests/test_profile_completeness.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. P2-003 committed as `8ba2004`. P2-004 state checkpoint committed as `313f823`. P2-004 committed as `34757e9`. P2-005 state checkpoint committed as `a80547b`; P2-005 committed as `ba45824`. P3-FEAT-001-BE committed as `bf72c99`; P3-FEAT-001-FE committed in nested `frontend/` as `6915df6`; root checkpoint committed as `f2fb52b`. P3-FEAT-002-BE planning is active.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. P2-003 committed as `8ba2004`. P2-004 state checkpoint committed as `313f823`. P2-004 committed as `34757e9`. P2-005 state checkpoint committed as `a80547b`; P2-005 committed as `ba45824`. P3-FEAT-001-BE committed as `bf72c99`; P3-FEAT-001-FE committed in nested `frontend/` as `6915df6`; root checkpoint committed as `f2fb52b`; split checkpoint committed as `221beb1`. P3-FEAT-002-BE is implemented and validated, pending commit.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -276,6 +277,10 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P3-FEAT-001-FE `npm run lint` passed with existing warnings only.
 - P3-FEAT-001-FE `npm run build` passed.
 - P3-FEAT-001-FE committed in nested frontend repo as `6915df6`.
+- P3-FEAT-002-BE TDD red confirmed `/api/profile/completeness` was missing.
+- P3-FEAT-002-BE focused tests passed: `3 passed`.
+- P3-FEAT-002-BE profile/auth regression passed: `17 passed`.
+- P3-FEAT-002-BE full backend tests passed: `331 passed, 1 warning`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -291,4 +296,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Validate `docs/agent/TASK_QUEUE.json`, commit this split checkpoint, then inspect existing profile fields/tests and add focused backend profile completeness tests.
+Validate `docs/agent/TASK_QUEUE.json`, stage only P3-FEAT-002-BE files and durable state files, inspect staged diff, and commit `feat: add profile completeness meter backend`.
