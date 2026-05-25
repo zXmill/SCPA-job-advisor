@@ -1430,3 +1430,67 @@
 
 ### Next Exact Action
 - Validate `docs/agent/TASK_QUEUE.json`, commit the root state checkpoint, then inspect profile page/API helper patterns before adding frontend job-alert controls.
+
+## 2026-05-25 23:12 +07 - Post-compact recovery note
+
+### Active Task
+- `P3-FEAT-004-FE` - Job alerts frontend.
+
+### Dirty Files
+- Pre-existing root dirty state remains: `README.md` modified and broad untracked project files/directories.
+- Nested `frontend/` repo remains dirty with broad pre-existing modifications/untracked files.
+- Expected active task edits are in `frontend/src/lib/api.ts` and `frontend/src/app/profile/page.tsx`.
+- Current recovery change: this `SESSION_REPORT.md` note.
+
+### Previous Task Complete
+- Yes. `P3-FEAT-004-BE` is committed as `25b50ac`.
+- Root durable checkpoint after starting the frontend child task is committed as `c196c70`.
+
+### Validation Still Needed
+- Inspect the current frontend diff for job-alert API/profile changes.
+- Run `npm run lint` and `npm run build` in `frontend/`.
+- Run a local profile-page HTTP smoke check if the dev server is available.
+
+### Commands Run
+- Read `AGENTS.md`.
+- Read `docs/agent/PROJECT_STATE.md`.
+- Read `docs/agent/TASK_QUEUE.json`.
+- Read `docs/agent/COMPACT_SNAPSHOT.md`.
+- Read `docs/agent/SESSION_REPORT.md`.
+- Read `docs/agent/DECISION_LOG.md`.
+- Read `docs/agent/VALIDATION_LEDGER.md`.
+- Read `docs/agent/FAILURE_LEDGER.md`.
+- `git status --short --branch`
+- `git log --oneline -10`
+- `git -C frontend status --short --branch`
+- `git -C frontend log --oneline -5`
+
+### Next Exact Action
+- Inspect `frontend/src/lib/api.ts` and `frontend/src/app/profile/page.tsx`, then run frontend lint/build and fix any validation issues.
+
+## 2026-05-25 23:18 +07 - P3-FEAT-004-FE result
+
+### Active Task
+- `P3-FEAT-004-FE` is implemented, validated, and committed in the nested frontend repository.
+
+### What Changed
+- Added typed frontend API helpers for `GET /api/job-alerts`, `POST /api/job-alerts`, `PUT /api/job-alerts/{id}`, and `DELETE /api/job-alerts/{id}`.
+- Profile page now fetches job alerts with the existing profile data.
+- Profile page renders a job-alert form for name, query, location, frequency, and minimum match percentage.
+- Users can create alerts and disable active alerts from the profile page.
+- Added accessible names for the alert form controls.
+- Committed the frontend child task in nested `frontend/` as `9196506`.
+
+### Validation Results
+- `npm run lint` in `frontend/`: passed with 16 existing warnings and no errors.
+- `npm run build` in `frontend/`: passed.
+- Local dev server smoke: `GET http://127.0.0.1:3000/profile` returned `200`.
+- `git -C frontend diff --cached --check`: passed before commit.
+
+### Remaining Issues
+- Existing frontend warnings remain.
+- No frontend test script exists in `frontend/package.json`; this child task used the configured lint/build gates plus local HTTP smoke.
+- Root durable state still needs to be committed after recording the nested frontend commit.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.

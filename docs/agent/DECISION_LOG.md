@@ -307,3 +307,10 @@
 - UI contract: users should be able to create a simple alert from profile preferences, see their active alerts, and disable an alert without leaving the profile page.
 - Skipped option: Adding email/push delivery settings in this frontend task.
 - Reason skipped: The backend task created alert preferences only; notification delivery belongs to a later scheduling/notification task.
+
+## 2026-05-25 23:18 +07 - P3-FEAT-004-FE frontend implementation decision
+- Decision: Keep job-alert creation and active-alert management on the existing profile page.
+- Trade-off: This keeps the feature discoverable next to profile preferences and saved jobs, but does not add a standalone alert-management page yet.
+- Skipped option: Implementing notification channel settings or delivery previews.
+- Reason skipped: The current backend contract persists alert preferences only; scheduled delivery belongs to a later notification task.
+- Risk and mitigation: Added typed API helpers, kept the profile UI scoped to create/list/disable, added accessible names for form controls, and validated with frontend lint, build, and `/profile` smoke.

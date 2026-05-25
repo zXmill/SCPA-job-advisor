@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 23:05 +07
+Updated: 2026-05-25 23:18 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -51,9 +51,9 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 
 ## Database And Migrations
 - Alembic config: `alembic.ini`, script location `db/alembic`, version locations `db/migrations`.
-- Detected migration files: `001_initial_schema.py` through `010_feedback_outbox.py`.
+- Detected migration files: `001_initial_schema.py` through `011_job_alerts.py`.
 - Duplicate/legacy Alembic version folder exists at `db/alembic/versions/004_add_company_logo.py`.
-- Current Alembic head after P2-003 is `010_feedback_outbox`. Local upgrade, one-step downgrade to `009_reco_hot_indexes`, and re-upgrade passed on 2026-05-25.
+- Current Alembic head after P3-FEAT-004-BE is `011_job_alerts`. Local upgrade, one-step downgrade to `010_feedback_outbox`, and re-upgrade passed on 2026-05-25.
 
 ## ML Model Inventory
 - SBERT: multilingual SentenceTransformer default `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; local fine-tuned artifact files exist under ignored `services/sbert/weights/fine_tuned_jupyter/`.
@@ -77,8 +77,9 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Frontend recommendation cards now expose save and skip actions backed by the saved/skip API, and skipped jobs are removed from the current recommendation slate.
 - Frontend profile page now lists saved jobs from `GET /api/jobs/saved`.
 - Gateway job alerts are available through authenticated create, list, update, and disable endpoints backed by the new `job_alerts` table.
+- Frontend profile page now fetches job alerts, creates simple daily/weekly alerts, lists active alerts, and disables alerts through the backend API.
 - Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `342 passed, 1 warning` after P3-FEAT-004-BE.
-- Latest frontend validation after P3-FEAT-003-FE: `npm run lint` passed with 16 existing warnings, `npm run build` passed, and local HTTP smoke returned `200` for `/recommendations` and `/profile`.
+- Latest frontend validation after P3-FEAT-004-FE: `npm run lint` passed with 16 existing warnings, `npm run build` passed, and local HTTP smoke returned `200` for `/profile`.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
@@ -92,7 +93,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P3-FEAT-004-BE` - job alerts backend. Commit `25b50ac`.
+`P3-FEAT-004-FE` - job alerts frontend. Frontend commit `9196506`.
 
 ## Next Task
-`P3-FEAT-004-FE` - job alerts frontend. Add profile-page alert creation/listing against the backend API.
+`P3-FEAT-005` - skill-gap detail page. Split into backend/frontend child tasks before implementation.
