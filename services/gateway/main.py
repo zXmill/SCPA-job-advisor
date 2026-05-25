@@ -25,6 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from pydantic import BaseModel, Field
+from services.shared.auth import validate_jwt_secret
 from sqlalchemy import Text as SqlText
 from sqlalchemy import bindparam, text
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -43,10 +44,13 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
 logger = logging.getLogger("scpa.gateway")
 
 # ── Configuration ──
-JWT_SECRET = os.getenv("JWT_SECRET", "")
+JWT_SECRET = validate_jwt_secret(os.getenv("JWT_SECRET", ""), "JWT_SECRET")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS", "24"))
-JWT_REFRESH_SECRET = os.getenv("JWT_REFRESH_SECRET", JWT_SECRET)
+JWT_REFRESH_SECRET = validate_jwt_secret(
+    os.getenv("JWT_REFRESH_SECRET", JWT_SECRET),
+    "JWT_REFRESH_SECRET",
+)
 PIPELINE_URL = os.getenv("PIPELINE_URL", os.getenv("PIPELINE_SERVICE_URL", "http://pipeline:8005")).rstrip("/")
 INTERNAL_SERVICE_TOKEN = os.getenv("INTERNAL_SERVICE_TOKEN", "").strip()
 INTERNAL_SERVICE_TOKEN_HEADER = "X-Internal-Service-Token"

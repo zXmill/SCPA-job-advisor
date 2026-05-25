@@ -132,3 +132,20 @@
 - Skipped option: Renaming existing `timings_ms` keys.
 - Reason skipped: Existing clients may depend on `encode`, `ncf_score`, `dqn_rank`, and `aggregate`; telemetry aliases are additive.
 - Risk and mitigation: Added a response-contract test and reran existing pipeline contracts plus full pytest.
+
+## 2026-05-25 21:07 +07 - P2-001 JWT validation mini plan
+- Decision: Validate JWT secret configuration at auth module initialization so weak or missing secrets fail before tokens are issued.
+- Expected files to touch: `services/shared/auth.py`, focused security tests, and durable `docs/agent/` state files.
+- Validation commands: focused JWT/security tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: fail fast if `JWT_SECRET` is missing or shorter than 32 bytes; preserve testability through explicit test overrides.
+- Skipped option: Only warning on weak secrets.
+- Reason skipped: The task explicitly requires fail-fast behavior.
+- Risk and mitigation: Existing tests intentionally use short secrets; update tests to use a valid default where they are not testing rejection and add focused checks for missing/short configuration.
+
+## 2026-05-25 21:05 +07 - P2-001 JWT validation design
+- Decision: Centralize JWT signing-secret validation in `services/shared/auth.py` and reuse it from the gateway's module-level configuration.
+- Access and refresh secrets: Both must be configured and at least 32 bytes because both sign bearer credentials.
+- Fail-fast point: Shared auth validates environment-derived defaults at import time, while `TokenManager` validates explicit constructor overrides immediately.
+- Skipped option: Deferring validation until token creation or verification.
+- Reason skipped: Runtime issuance-time failures do not catch a weak deployment configuration early enough.
+- Risk and mitigation: Test modules now force deterministic 32-byte-or-longer JWT secrets in `tests/conftest.py`; focused and full pytest validation passed after the change.

@@ -481,46 +481,116 @@
 - Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
 - Result: pass
 - Summary: Durable task queue parsed successfully after reconciling `P1-PERF-003` and marking `P1-OBS-001` in progress.
-- Related commit hash: pending `observability: add recommendation pipeline telemetry`.
+- Related commit hash: `0b2e3e5`.
 
 ## 2026-05-25 21:00 +07
 - Task ID: `P1-OBS-001`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_telemetry.py -q`
 - Result: fail
 - Summary: Expected TDD red failure. Pipeline responses did not include `stages["telemetry"]`.
-- Related commit hash: pending `observability: add recommendation pipeline telemetry`.
+- Related commit hash: `0b2e3e5`.
 
 ## 2026-05-25 21:02 +07
 - Task ID: `P1-OBS-001`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_telemetry.py -q`
 - Result: pass
 - Summary: `1 passed in 0.07s`.
-- Related commit hash: pending `observability: add recommendation pipeline telemetry`.
+- Related commit hash: `0b2e3e5`.
 
 ## 2026-05-25 21:03 +07
 - Task ID: `P1-OBS-001`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_contracts.py tests\test_full_pipeline_entrypoint.py -q`
 - Result: pass
 - Summary: `4 passed in 5.22s`.
-- Related commit hash: pending `observability: add recommendation pipeline telemetry`.
+- Related commit hash: `0b2e3e5`.
 
 ## 2026-05-25 21:03 +07
 - Task ID: `P1-OBS-001`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_internal_service_auth.py -q`
 - Result: pass
 - Summary: `3 passed in 0.07s`.
-- Related commit hash: pending `observability: add recommendation pipeline telemetry`.
+- Related commit hash: `0b2e3e5`.
 
 ## 2026-05-25 21:05 +07
 - Task ID: `P1-OBS-001`
 - Command: `.\.venv\Scripts\python.exe -m pytest -q`
 - Result: pass
 - Summary: `309 passed, 11 warnings in 91.07s`.
-- Related commit hash: pending `observability: add recommendation pipeline telemetry`.
+- Related commit hash: `0b2e3e5`.
 
 ## 2026-05-25 21:05 +07
 - Task ID: `P1-OBS-001`
 - Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
 - Result: pass
 - Summary: Durable task queue parsed successfully after marking `P1-OBS-001` done.
-- Related commit hash: pending `observability: add recommendation pipeline telemetry`.
+- Related commit hash: `0b2e3e5`.
+
+## 2026-05-25 21:07 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after reconciling `P1-OBS-001` and marking `P2-001` in progress.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_security.py -q`
+- Result: fail
+- Summary: Expected TDD red failure: 4 failures because `validate_jwt_secret` was missing and `TokenManager` did not reject short access/refresh secrets during initialization.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_security.py -q`
+- Result: pass
+- Summary: `20 passed in 0.08s`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_auth_endpoints.py -q`
+- Result: pass
+- Summary: `39 passed, 1 warning` for the intentional forged-token short secret.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_execution_auth.py tests\test_internal_service_auth.py -q`
+- Result: pass
+- Summary: `4 passed in 0.09s`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_jobs_upsert.py -q`
+- Result: fail
+- Summary: Parallel run hit a shared PostgreSQL test database bootstrap race while creating enum type `userrole`; recorded in `FAILURE_LEDGER.md`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_jobs_upsert.py -q`
+- Result: pass
+- Summary: Sequential retry passed with `5 passed in 1.69s`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_security.py tests\test_auth_endpoints.py tests\test_pipeline_execution_auth.py tests\test_internal_service_auth.py tests\test_jobs_upsert.py -q`
+- Result: pass
+- Summary: `68 passed, 1 warning in 59.90s`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `313 passed, 1 warning in 90.63s`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking `P2-001` done.
+- Related commit hash: pending `security: validate jwt secret configuration`.

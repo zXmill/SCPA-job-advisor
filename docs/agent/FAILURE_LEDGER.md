@@ -26,3 +26,12 @@
 - Final fix if solved: Shortened the revision id and filename to `009_reco_hot_indexes`; `alembic upgrade head`, one-step downgrade, and re-upgrade passed.
 - Related files: `db/migrations/009_reco_hot_indexes.py`.
 - Do not repeat notes: Keep Alembic `revision` values at or below 32 characters in this project.
+
+## 2026-05-25 21:05 +07 - Parallel pytest database bootstrap race
+- Error message: `asyncpg.exceptions.UniqueViolationError: duplicate key value violates unique constraint "pg_type_typname_nsp_index"` while creating PostgreSQL enum type `userrole`.
+- Command that caused it: `.\.venv\Scripts\python.exe -m pytest tests\test_jobs_upsert.py -q`, run in parallel with other pytest commands.
+- Root cause: Multiple pytest processes bootstrapped the same shared `db_scpa_test` database at the same time. One process was creating enum types while another still had the type namespace in use.
+- Fix attempted: Retry DB-backed pytest sequentially after the parallel auth-route checks finish.
+- Final fix if solved: Sequential retry passed with `5 passed`.
+- Related files: `tests/conftest.py`, `tests/test_jobs_upsert.py`.
+- Do not repeat notes: Do not run DB-backed pytest commands in parallel against the same local test database unless each process uses a separate `SCPA_TEST_DB`.

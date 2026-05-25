@@ -668,3 +668,89 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P1-OBS-001 files plus durable state files, inspect staged diff, and commit `observability: add recommendation pipeline telemetry`.
+
+## 2026-05-25 21:07 +07 - P2-001 start
+
+### Active Task
+- `P2-001` - JWT validation.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked project files remain.
+- New task state changes: durable `docs/agent/` files updated to reconcile `P1-OBS-001` as commit `0b2e3e5` and mark `P2-001` in progress.
+
+### Previous Task Complete
+- `P1-OBS-001` committed as `0b2e3e5`.
+
+### Validation Still Needed
+- Inspect current JWT helper module and tests.
+- Add focused tests for missing and short `JWT_SECRET`.
+- Run focused JWT/security tests and full backend pytest.
+
+### Commands Run
+- `git commit -m "observability: add recommendation pipeline telemetry"`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Inspect `services/shared/auth.py`, `services/gateway/main.py`, and current JWT tests before editing auth behavior.
+
+## 2026-05-25 21:05 +07 - Post-compact recovery note
+
+### Active Task
+- `P2-001` - JWT validation.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked project files remain.
+- Current task state changes: durable `docs/agent/` files for the `P2-001` start remain modified.
+- No JWT implementation files have been changed yet in this resumed context.
+
+### Previous Task Complete
+- Yes. `P1-OBS-001` is complete and committed as `0b2e3e5`.
+
+### Validation Still Needed
+- Inspect current JWT helper and gateway secret usage.
+- Add focused failing tests for missing and short JWT secrets.
+- Run focused JWT/security tests and full backend pytest after implementation.
+
+### Commands Run
+- `Get-Content -Raw AGENTS.md`
+- `Get-Content -Raw docs\agent\PROJECT_STATE.md`
+- `Get-Content -Raw docs\agent\TASK_QUEUE.json`
+- `Get-Content -Raw docs\agent\COMPACT_SNAPSHOT.md`
+- `Get-Content -Raw docs\agent\SESSION_REPORT.md`
+- `Get-Content -Raw docs\agent\DECISION_LOG.md`
+- `Get-Content -Raw docs\agent\VALIDATION_LEDGER.md`
+- `Get-Content -Raw docs\agent\FAILURE_LEDGER.md`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Inspect `services/shared/auth.py`, `services/gateway/main.py`, and JWT-related tests, then add the smallest focused fail-fast secret validation tests.
+
+## 2026-05-25 21:05 +07 - P2-001 result
+
+### Active Task
+- `P2-001` is implemented, validated, and ready to commit.
+
+### What Changed
+- Added `validate_jwt_secret()` in `services/shared/auth.py` with a 32-byte minimum and missing-secret rejection.
+- Shared auth now validates environment defaults at import time and validates explicit `TokenManager` access/refresh secrets during initialization.
+- Gateway JWT configuration now uses the same validation for `JWT_SECRET` and `JWT_REFRESH_SECRET`.
+- Updated JWT tests to cover missing/short secrets and to use deterministic valid access/refresh secrets.
+- Updated test bootstrap to force valid deterministic JWT secrets before importing the gateway.
+
+### Validation Results
+- TDD red: `tests\test_security.py` failed with 4 expected failures because `validate_jwt_secret` did not exist and short secrets were accepted during `TokenManager` initialization.
+- Focused JWT suite: `20 passed`.
+- Auth endpoint regression: `39 passed, 1 warning`.
+- Pipeline/internal auth regression: `4 passed`.
+- DB-backed job auth/upsert regression initially hit a parallel test database bootstrap race; sequential retry passed with `5 passed`.
+- Combined auth/security regression: `68 passed, 1 warning`.
+- Full backend suite: `313 passed, 1 warning`.
+
+### Remaining Issues
+- `P2-002` CORS hardening is still pending.
+- One warning remains in the wrong-secret test because it intentionally signs a forged token with a short attacker-controlled secret.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P2-001 files plus durable state files, inspect staged diff, and commit `security: validate jwt secret configuration`.

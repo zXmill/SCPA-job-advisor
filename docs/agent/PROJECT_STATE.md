@@ -63,13 +63,14 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 
 ## Known Working Areas
 - Repository contains extensive pytest coverage and local report evidence of backend health.
-- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `308 passed, 11 warnings` after P1-PERF-003.
+- JWT access and refresh signing secrets now fail fast when missing or shorter than 32 bytes in shared auth and gateway configuration.
+- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `313 passed, 1 warning` after P2-001.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
 - Frontend lint still reports warnings, but the blocking hook-order error in `frontend/src/app/recommendations/page.tsx` has been fixed and validated locally.
 - Existing frontend lint warnings remain but do not fail lint.
-- JWT/CORS defaults are too permissive outside Compose.
+- CORS defaults are too permissive outside Compose.
 - Feedback forwarding can report queued without a durable retry outbox.
 - No fresh import validation was run during this initializer, so known broken imports remain unknown.
 
@@ -79,7 +80,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P1-OBS-001` - added rolling p50/p95 recommendation pipeline telemetry. Commit pending.
+`P2-001` - validated JWT secret configuration. Commit pending.
 
 ## Next Task
-Start `P2-001`: validate JWT secret configuration.
+Commit `P2-001`, then create the required survival checkpoint and start `P2-002`: CORS hardening.

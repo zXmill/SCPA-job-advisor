@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "performance",
-  "current_task_id": "P1-OBS-001",
+  "current_phase": "security",
+  "current_task_id": "P2-001",
   "tasks": [
     {
       "id": "INIT-001",
@@ -411,7 +411,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending: observability: add recommendation pipeline telemetry",
+      "commit": "0b2e3e5",
       "notes": "Added rolling p50/p95 stage telemetry for scrape, SBERT, NCF, DQN, static calibrator placeholder, and aggregation."
     },
     {
@@ -419,7 +419,7 @@
       "phase": "security",
       "title": "JWT validation",
       "priority": "P2",
-      "status": "pending",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P1-OBS-001"
@@ -429,13 +429,27 @@
         "services/gateway/main.py",
         "tests/test_security.py"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/shared/auth.py",
+        "services/gateway/main.py",
+        "tests/test_security.py",
+        "tests/conftest.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/FAILURE_LEDGER.md"
+      ],
       "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_security.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_security.py tests\\test_auth_endpoints.py tests\\test_pipeline_execution_auth.py tests\\test_internal_service_auth.py tests\\test_jobs_upsert.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Fail fast if JWT secret is missing or shorter than 32 bytes."
+      "validation_status": "passed",
+      "commit": "pending security: validate jwt secret configuration",
+      "notes": "Added shared JWT secret validation, enforced >=32-byte access/refresh secrets during shared auth and gateway import, and updated tests to use valid deterministic secrets."
     },
     {
       "id": "P2-002",
