@@ -1266,3 +1266,94 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after splitting P3-FEAT-004 into backend/frontend child tasks and marking backend child in progress.
 - Related commit hash: pending state checkpoint.
+
+## 2026-05-25 22:58 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_job_alerts.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. Job-alert API requests returned `404 Not Found` because `/api/job-alerts` routes did not exist yet.
+- Related commit hash: pending `feat: add job alerts backend`.
+
+## 2026-05-25 23:00 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_job_alerts.py -q`
+- Result: pass
+- Summary: Focused job-alert backend tests passed with `5 passed`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:00 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest db\tests\test_models.py::TestTableNames::test_table_name db\tests\test_models.py::TestTableNames::test_all_tables_in_metadata db\tests\test_models.py::TestIndexes::test_job_alert_indexes -q`
+- Result: pass
+- Summary: Job-alert model table and index metadata checks passed with `18 passed`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:00 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads`
+- Result: pass
+- Summary: Alembic reported `011_job_alerts (head)`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:01 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Applied migration `010_feedback_outbox -> 011_job_alerts`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:01 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current`
+- Result: pass
+- Summary: Local database current revision is `011_job_alerts (head)`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:02 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini downgrade 010_feedback_outbox`
+- Result: pass
+- Summary: One-step downgrade dropped `job_alerts` successfully.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:02 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Re-applied `011_job_alerts` successfully after the downgrade check.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:02 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_job_alerts.py tests\test_saved_jobs_skip.py db\tests\test_models.py::TestTableNames db\tests\test_models.py::TestIndexes -q`
+- Result: pass
+- Summary: Focused job-alert, saved-job, and model regression tests passed with `36 passed`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:04 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `342 passed, 1 warning`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:05 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `git diff --cached --check`
+- Result: pass
+- Summary: Staged job-alert backend diff reported no whitespace errors.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:05 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `git commit -m "feat: add job alerts backend"`
+- Result: pass
+- Summary: Created commit `25b50ac` with job-alert schema, migration, gateway routes, tests, and test schema cleanup.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:06 +07
+- Task ID: `P3-FEAT-004-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording P3-FEAT-004-BE commit `25b50ac` and marking P3-FEAT-004-FE in progress.
+- Related commit hash: pending root checkpoint.

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "backend",
-  "current_task_id": "P3-FEAT-004-BE",
+  "current_phase": "frontend",
+  "current_task_id": "P3-FEAT-004-FE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -946,7 +946,7 @@
       "phase": "backend",
       "title": "Job alerts backend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-003"
@@ -957,23 +957,35 @@
         "services/gateway/main.py",
         "tests/test_job_alerts.py"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "db/models.py",
+        "db/migrations/011_job_alerts.py",
+        "db/tests/test_models.py",
+        "services/gateway/main.py",
+        "tests/conftest.py",
+        "tests/test_job_alerts.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_job_alerts.py -q",
         ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini heads",
         ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini upgrade head",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Create authenticated job-alert persistence and listing contracts before frontend integration."
+      "validation_status": "passed",
+      "commit": "25b50ac",
+      "notes": "Added job_alerts ORM/migration and authenticated create/list/update/disable API contracts with user isolation."
     },
     {
       "id": "P3-FEAT-004-FE",
       "phase": "frontend",
       "title": "Job alerts frontend",
       "priority": "P3",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-004-BE"

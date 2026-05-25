@@ -299,3 +299,11 @@
 - Contract target: authenticated users can create, list, update, and disable job alerts based on search/profile criteria without exposing another user's alerts.
 - Skipped option: Implementing browser-only alert preferences.
 - Reason skipped: Alerts need durable user state and will likely drive future notification or scheduled matching work.
+
+## 2026-05-25 23:05 +07 - P3-FEAT-004-FE frontend mini plan
+- Decision: Add job-alert API helpers and expose alert creation/listing in the existing profile page after the backend contract is validated.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/profile/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository, plus local HTTP smoke if the dev server is available.
+- UI contract: users should be able to create a simple alert from profile preferences, see their active alerts, and disable an alert without leaving the profile page.
+- Skipped option: Adding email/push delivery settings in this frontend task.
+- Reason skipped: The backend task created alert preferences only; notification delivery belongs to a later scheduling/notification task.

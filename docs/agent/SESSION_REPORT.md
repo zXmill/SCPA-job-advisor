@@ -1401,3 +1401,32 @@
 
 ### Next Exact Action
 - Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then add focused backend tests for authenticated job-alert persistence and isolation.
+
+## 2026-05-25 23:05 +07 - P3-FEAT-004-BE result and P3-FEAT-004-FE start
+
+### Active Task
+- `P3-FEAT-004-FE` - Job alerts frontend.
+
+### What Changed
+- Added focused backend tests for job-alert auth, user isolation, create/list, update, disable, and frequency validation.
+- Added `job_alerts` ORM metadata and Alembic migration `011_job_alerts`.
+- Added authenticated gateway routes for `GET /api/job-alerts`, `POST /api/job-alerts`, `PUT /api/job-alerts/{alert_id}`, and `DELETE /api/job-alerts/{alert_id}`.
+- Updated test schema cleanup and model metadata assertions for the new table.
+- Committed backend child task as `25b50ac`.
+- Marked `P3-FEAT-004-FE` in progress and recorded the frontend mini plan.
+
+### Validation Results
+- TDD red: `tests/test_job_alerts.py` failed with `404 Not Found` because job-alert routes did not exist.
+- Focused job-alert tests passed: `5 passed`.
+- Model/table/index regression passed: `18 passed`.
+- Alembic head reported `011_job_alerts`.
+- Alembic upgrade head, downgrade to `010_feedback_outbox`, and re-upgrade head passed.
+- Focused job-alert/saved-job/model regression passed: `36 passed`.
+- Full backend suite passed: `342 passed, 1 warning`.
+
+### Remaining Issues
+- One warning remains in the intentional wrong-secret JWT test.
+- Frontend job-alert integration is pending.
+
+### Next Exact Action
+- Validate `docs/agent/TASK_QUEUE.json`, commit the root state checkpoint, then inspect profile page/API helper patterns before adding frontend job-alert controls.
