@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 19:58 +07
+Updated: 2026-05-25 20:22 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -67,7 +67,7 @@ Current `docker-compose.yml` publishes PostgreSQL, gateway, scraper, SBERT, NCF,
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
-- Frontend lint is reported failing because `frontend/src/app/recommendations/page.tsx` calls a hook after an early return.
+- Frontend lint still reports warnings, but the blocking hook-order error in `frontend/src/app/recommendations/page.tsx` has been fixed and validated locally.
 - Internal Docker services are exposed to host ports.
 - Scraper `/scrape/url` accepts arbitrary URLs and needs SSRF protection.
 - Gateway `/pipeline/run` is unauthenticated and bypasses protected recommendation/profile handling.
@@ -79,9 +79,10 @@ Current `docker-compose.yml` publishes PostgreSQL, gateway, scraper, SBERT, NCF,
 ## Current Blockers
 - Dirty git state existed before this initializer: `README.md` modified and many project files untracked. Do not stage unrelated files.
 - Most live project files remain untracked in git. Cleanup must not treat untracked files as unused.
+- `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P0-001` - repository cleanup audit created with conservative classifications and no file moves/deletes.
+`P0-FE-001` - frontend hook-order violation fixed in nested frontend commit `6e76e92` and validated with lint/build.
 
 ## Next Task
-Start `P0-002`: safe cleanup. Recommended first pass is limited to manual/debug archive candidates from `docs/agent/CLEANUP_AUDIT.md`.
+Return to `P0-002`: rerun safe-cleanup validation after the frontend hook-fix commit.

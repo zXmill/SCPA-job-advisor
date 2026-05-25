@@ -72,7 +72,7 @@
         "git status --short --branch"
       ],
       "validation_status": "passed",
-      "commit": "pending: docs: add cleanup audit",
+      "commit": "b2b4f55",
       "notes": "Read-only cleanup audit completed. Do not equate untracked with unused; most live source files are untracked in this repo."
     },
     {
@@ -80,47 +80,71 @@
       "phase": "cleanup",
       "title": "Safe cleanup",
       "priority": "P0",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "large",
       "depends_on": [
         "P0-001"
       ],
       "files_expected": [
-        "testing/archive/",
-        "docs/agent/CLEANUP_AUDIT.md"
+        "testing/archive/manual-debug/",
+        "docs/agent/CLEANUP_AUDIT.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/FAILURE_LEDGER.md"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "testing/archive/manual-debug/browser_e2e.py",
+        "testing/archive/manual-debug/check_overflow.py",
+        "testing/archive/manual-debug/check_scrape.py",
+        "testing/archive/manual-debug/insert_scraped.py",
+        "testing/archive/manual-debug/scrape_1000.json",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest -q",
         "npm run lint",
         "npm run build",
         "docker compose config"
       ],
-      "validation_status": "not_run",
+      "validation_status": "failed",
       "commit": "",
-      "notes": "Move only audited safe experimental/demo/unused files. Do not touch runtime imports, Docker, CI, or tests."
+      "notes": "Moved root manual debug files locally. Backend tests passed. Frontend lint blocker was fixed in P0-FE-001; rerun full P0-002 validation next."
     },
     {
       "id": "P0-FE-001",
       "phase": "frontend",
       "title": "Frontend hook violation",
       "priority": "P0",
-      "status": "pending",
+      "status": "done",
       "scope": "small",
       "depends_on": [
-        "P0-002"
+        "P0-001"
       ],
       "files_expected": [
         "frontend/src/app/recommendations/page.tsx"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "frontend/src/app/recommendations/page.tsx",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/FAILURE_LEDGER.md"
+      ],
       "validation_commands": [
         "npm run lint",
         "npm run build"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Move markImpressed/useCallback above all early returns or remove the conditional hook pattern."
+      "validation_status": "passed",
+      "commit": "frontend:6e76e92",
+      "notes": "Promoted ahead of P0-002 completion because P0-002 validation was blocked by this pre-existing lint failure. Moved markImpressed/useCallback above the auth early return."
     },
     {
       "id": "P1-SEC-001",

@@ -131,3 +131,87 @@
 
 ### Next Exact Action
 - Stage only `docs/agent/CLEANUP_AUDIT.md` and modified `docs/agent/` state files, inspect staged diff, and commit `docs: add cleanup audit`.
+
+## 2026-05-25 20:02 +07 - P0-002 start
+
+### Active Task
+- `P0-002` - Safe cleanup.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked project files remain.
+- Planned task changes: move selected root manual debug artifacts into `testing/archive/manual-debug/`; update durable state.
+
+### Previous Task Complete
+- `P0-001` committed as `b2b4f55`.
+
+### Validation Still Needed
+- `.\.venv\Scripts\python.exe -m pytest -q`
+- `npm run lint` in `frontend/`
+- `npm run build` in `frontend/`
+- `docker compose config --quiet`
+- `python -m json.tool docs/agent/TASK_QUEUE.json`
+- `git status --short --branch`
+
+### Next Exact Action
+- Verify archive paths and move only `browser_e2e.py`, `check_overflow.py`, `check_scrape.py`, `insert_scraped.py`, and `scrape_1000.json`.
+
+## 2026-05-25 20:12 +07 - P0-002 blocked by lint
+
+### Active Task
+- `P0-FE-001` - Frontend hook violation.
+
+### What Changed
+- Moved root manual debug artifacts to `testing/archive/manual-debug/`.
+- P0-002 validation started.
+
+### Validation Results
+- Backend: `.\.venv\Scripts\python.exe -m pytest -q` passed with `291 passed, 11 warnings`.
+- Frontend lint: `npm run lint` failed with one `react-hooks/rules-of-hooks` error at `frontend/src/app/recommendations/page.tsx:329` and 18 warnings.
+
+### Remaining Issues
+- P0-002 cannot be completed until the frontend lint blocker is fixed and validation is rerun.
+
+### Next Exact Action
+- Fix `P0-FE-001` by moving `markImpressed = useCallback(...)` above the auth early return.
+
+## 2026-05-25 20:22 +07 - P0-FE-001 result
+
+### Active Task
+- `P0-002` will resume after the hook-fix commit.
+
+### What Changed
+- Moved `markImpressed = useCallback(...)` above the auth early return in `frontend/src/app/recommendations/page.tsx`.
+
+### Validation Results
+- `npm run lint` in `frontend/`: passed with 18 warnings and 0 errors.
+- `npm run build` in `frontend/`: passed.
+
+### Remaining Issues
+- Existing frontend warnings remain.
+- P0-002 still needs full validation rerun and commit after the hook-fix commit.
+
+### Next Exact Action
+- Stage only `frontend/src/app/recommendations/page.tsx` and modified durable state files, inspect staged diff, and commit `fix: resolve frontend hook order violation`.
+
+## 2026-05-25 20:28 +07 - P0-FE-001 commit
+
+### Active Task
+- `P0-002` will resume after the root durable-state checkpoint.
+
+### What Changed
+- Committed the hook fix inside the nested `frontend/` repo.
+
+### Commands Run
+- `git -C frontend status --short --branch`
+- `git -C frontend log --oneline -5`
+- `git -C frontend add -- src/app/recommendations/page.tsx`
+- `git -C frontend diff --cached --name-only`
+- `git -C frontend diff --cached --check`
+- `git -C frontend diff --cached --stat`
+- `git -C frontend commit -m "fix: resolve frontend hook order violation"`
+
+### Validation Results
+- Frontend nested commit created: `6e76e92`.
+
+### Next Exact Action
+- Commit root durable state checkpoint, then resume P0-002 validation.

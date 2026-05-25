@@ -1,9 +1,9 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 19:58 +07
+Updated: 2026-05-25 20:22 +07
 
 ## Current Objective
-Commit the completed read-only cleanup audit, then start conservative safe cleanup.
+Commit the root durable-state checkpoint for the frontend hook fix, then return to P0-002 validation.
 
 ## Current Phase
 cleanup
@@ -12,7 +12,7 @@ cleanup
 P0-002
 
 ## Latest Commit Hash
-`703c516` (`docs: initialize codex long-running project state`).
+Root: `b2b4f55` (`docs: add cleanup audit`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ P0-002
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- P0-001 complete but not yet committed: tracked `docs/agent/` state files changed and `docs/agent/CLEANUP_AUDIT.md` added.
+- P0-FE-001 hook fix is committed in nested `frontend/` as `6e76e92`. Root durable-state checkpoint is pending. P0-002 can resume after that checkpoint.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -33,9 +33,11 @@ P0-002
 - `docs/agent/FAILURE_LEDGER.md`
 - `docs/agent/ARTIFACT_INDEX.md`
 - `docs/agent/CLEANUP_AUDIT.md`
+- `testing/archive/manual-debug/` expected next.
+- `frontend/src/app/recommendations/page.tsx`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. `P0-001` cleanup audit is complete and ready to commit. No product code changes have been made.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-002 moved selected files locally. P0-FE-001 fixed the lint blocker, passed frontend lint/build, and committed in nested `frontend/` as `6e76e92`.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -49,6 +51,7 @@ Initializer docs were committed as `703c516`. `P0-001` cleanup audit is complete
 - Recovery `git status --short --branch` and `git log --oneline -10`.
 - Initializer commit: `git commit -m "docs: initialize codex long-running project state"`.
 - P0-001 repository scans for tracked/untracked/ignored files, generated artifacts, imports, and top-level layout.
+- P0-001 commit: `git commit -m "docs: add cleanup audit"`.
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
@@ -56,10 +59,15 @@ Initializer docs were committed as `703c516`. `P0-001` cleanup audit is complete
 - `git diff -- AGENTS.md docs\agent` produced no output because these paths were untracked at the time.
 - P0-001 `TASK_QUEUE.json` parse passed.
 - P0-001 `git status --short --branch` ran successfully.
+- P0-002 `.venv\Scripts\python.exe -m pytest -q` passed: 291 tests, 11 warnings.
+- P0-002 `npm run lint` failed: one hook-order error and 18 warnings.
+- P0-FE-001 `npm run lint` passed: 0 errors, 18 warnings.
+- P0-FE-001 `npm run build` passed.
+- P0-FE-001 nested frontend commit: `6e76e92`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
-- Frontend hook-order lint failure reported in `frontend/src/app/recommendations/page.tsx`.
+- Frontend hook-order lint failure was fixed in `frontend/src/app/recommendations/page.tsx`; frontend warnings remain.
 - Docker Compose exposes internal services to host ports.
 - Scraper URL endpoint lacks SSRF guard.
 - Gateway direct `/pipeline/run` is unauthenticated.
@@ -72,4 +80,9 @@ Initializer docs were committed as `703c516`. `P0-001` cleanup audit is complete
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Stage only `docs/agent/CLEANUP_AUDIT.md` and modified `docs/agent/` state files, inspect staged diff, and commit `docs: add cleanup audit`.
+Stage only root durable state files, inspect staged diff, and commit a docs checkpoint recording frontend commit `6e76e92`.
+- P0-002 moved `browser_e2e.py`, `check_overflow.py`, `check_scrape.py`, `insert_scraped.py`, and `scrape_1000.json` under `testing/archive/manual-debug/`.
+- P0-002 backend validation: `291 passed, 11 warnings`.
+- P0-002 frontend lint failed with hook-order error in `frontend/src/app/recommendations/page.tsx`.
+- P0-FE-001 frontend lint passed with warnings only.
+- P0-FE-001 frontend build passed.

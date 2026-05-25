@@ -62,3 +62,38 @@
 - Result: pass
 - Summary: Command completed and showed modified tracked state files; untracked `CLEANUP_AUDIT.md` requires staged diff review before commit.
 - Related commit hash: pending cleanup audit commit.
+
+## 2026-05-25 20:08 +07
+- Task ID: `P0-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `291 passed, 11 warnings in 96.24s`.
+- Related commit hash: pending safe cleanup commit.
+
+## 2026-05-25 20:10 +07
+- Task ID: `P0-002`
+- Command: `npm run lint` in `frontend/`
+- Result: fail
+- Summary: 1 error and 18 warnings. The error is `react-hooks/rules-of-hooks` for conditional `useCallback` at `frontend/src/app/recommendations/page.tsx:329`.
+- Related commit hash: `frontend:6e76e92`.
+
+## 2026-05-25 20:18 +07
+- Task ID: `P0-FE-001`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 18 warnings and no errors.
+- Related commit hash: `frontend:6e76e92`.
+
+## 2026-05-25 20:21 +07
+- Task ID: `P0-FE-001`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully, TypeScript completed, and 12 static pages generated.
+- Related commit hash: `frontend:6e76e92`.
+
+## 2026-05-25 20:28 +07
+- Task ID: `P0-FE-001`
+- Command: `git -C frontend commit -m "fix: resolve frontend hook order violation"`
+- Result: pass
+- Summary: Created nested frontend commit `6e76e92` adding `src/app/recommendations/page.tsx`.
+- Related commit hash: `frontend:6e76e92`.
