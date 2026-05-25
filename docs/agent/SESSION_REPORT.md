@@ -1262,3 +1262,21 @@
 
 ### Next Exact Action
 - Validate `docs/agent/TASK_QUEUE.json`, commit this root state checkpoint, then split `P3-FEAT-003` into backend and frontend child tasks.
+
+## 2026-05-25 22:38 +07 - P3-FEAT-003 split
+
+### Active Task
+- `P3-FEAT-003-BE` - Saved jobs and skip buttons backend.
+
+### What Changed
+- Split parent `P3-FEAT-003` into backend and frontend child tasks.
+- Marked `P3-FEAT-003-BE` in progress and left `P3-FEAT-003-FE` pending.
+- Recorded the backend mini plan in `DECISION_LOG.md`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Commit this state-only split checkpoint.
+- Inspect existing job, feedback, and interaction routes before writing backend tests.
+
+### Next Exact Action
+- Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then add focused backend tests for saved jobs and skip behavior.

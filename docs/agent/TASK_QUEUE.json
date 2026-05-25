@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "frontend",
-  "current_task_id": "P3-FEAT-003",
+  "current_phase": "backend",
+  "current_task_id": "P3-FEAT-003-BE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -816,21 +816,71 @@
       "phase": "frontend",
       "title": "Saved jobs and skip buttons",
       "priority": "P3",
-      "status": "pending",
+      "status": "blocked",
       "scope": "medium",
       "depends_on": [
         "P3-FEAT-002"
       ],
-      "files_expected": [],
+      "files_expected": [
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md"
+      ],
       "files_touched": [],
       "validation_commands": [
-        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-003-BE and P3-FEAT-003-FE are done."
+    },
+    {
+      "id": "P3-FEAT-003-BE",
+      "phase": "backend",
+      "title": "Saved jobs and skip buttons backend",
+      "priority": "P3",
+      "status": "in_progress",
+      "scope": "small",
+      "depends_on": [
+        "P3-FEAT-002"
+      ],
+      "files_expected": [
+        "services/gateway/main.py",
+        "tests/test_saved_jobs_skip.py"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_saved_jobs_skip.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Add authenticated backend contracts for saved jobs and skipped jobs using existing job and interaction storage where possible."
+    },
+    {
+      "id": "P3-FEAT-003-FE",
+      "phase": "frontend",
+      "title": "Saved jobs and skip buttons frontend",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "small",
+      "depends_on": [
+        "P3-FEAT-003-BE"
+      ],
+      "files_expected": [
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/recommendations/page.tsx",
+        "frontend/src/app/profile/page.tsx"
+      ],
+      "files_touched": [],
+      "validation_commands": [
         "npm run lint",
         "npm run build"
       ],
       "validation_status": "not_run",
       "commit": "",
-      "notes": "Split backend/frontend subtasks before implementation."
+      "notes": "Render save and skip controls after backend contracts are validated."
     },
     {
       "id": "P3-FEAT-004",

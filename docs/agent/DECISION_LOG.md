@@ -268,3 +268,11 @@
 - UI contract: fetch `/api/profile/completeness` for authenticated profile users, show percent, completed/missing counts, and labeled item states near the existing editable profile sections.
 - Skipped option: Reusing only `user.completion_percent`.
 - Reason skipped: The new backend contract exposes actionable missing item IDs and labels for the meter, while `completion_percent` is the older onboarding progress field.
+
+## 2026-05-25 22:38 +07 - P3-FEAT-003-BE backend mini plan
+- Decision: Split saved jobs and skip buttons into backend and frontend child tasks before implementation.
+- Expected backend files to touch: `services/gateway/main.py`, `tests/test_saved_jobs_skip.py`, and durable `docs/agent/` state files.
+- Validation commands: focused saved/skip API tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract target: authenticated endpoints should let users save jobs, list saved jobs, unsave jobs, and mark jobs as skipped without exposing another user's state.
+- Skipped option: Implementing save/skip as frontend-only local state.
+- Reason skipped: Save and skip are user actions that must persist and feed recommendation feedback/history.
