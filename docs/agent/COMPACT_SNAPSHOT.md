@@ -3,16 +3,16 @@
 Updated: 2026-05-25 21:56 +07
 
 ## Current Objective
-Commit completed `P2-005` learned calibration layer.
+Start `P3-FEAT-001-BE` skill taxonomy autocomplete backend after recording the P2-005 commit.
 
 ## Current Phase
-ml
+backend
 
 ## Current Task ID
-P2-005
+P3-FEAT-001-BE
 
 ## Latest Commit Hash
-Root: `a80547b` (`docs: update long-running agent checkpoint`). Latest product commit: `34757e9` (`refactor: reframe dqn as skill path recommender`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `ba45824` (`feat: add learned recommendation calibration layer`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -265,6 +265,8 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P2-005 expanded focused contracts passed: `15 passed`.
 - P2-005 full backend tests passed: `326 passed, 1 warning`.
 - P2-005 smoke report generated at `reports/ml/calibration_layer_smoke.json`.
+- P2-005 committed as `ba45824`.
+- P3-FEAT-001 split into backend and frontend child tasks.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -280,4 +282,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Parse `docs/agent/TASK_QUEUE.json`, stage only P2-005 files plus durable state files, inspect staged diff, and commit `feat: add learned recommendation calibration layer`.
+Validate `docs/agent/TASK_QUEUE.json`, commit this state-only checkpoint, then inspect gateway profile/skills routes and existing frontend skill-entry UI before writing backend autocomplete tests.

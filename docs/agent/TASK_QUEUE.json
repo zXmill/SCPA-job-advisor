@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "ml",
-  "current_task_id": "P2-005",
+  "current_phase": "backend",
+  "current_task_id": "P3-FEAT-001-BE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -618,15 +618,15 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "",
-      "notes": "Added deterministic learned logistic calibration over SBERT, NCF, DQN, skill gap, recency, salary, location, and interaction depth while preserving static baseline scores. Full backend validation passed; commit hash will be recorded in the next checkpoint."
+      "commit": "ba45824",
+      "notes": "Added deterministic learned logistic calibration over SBERT, NCF, DQN, skill gap, recency, salary, location, and interaction depth while preserving static baseline scores. Full backend validation passed."
     },
     {
       "id": "P3-FEAT-001",
       "phase": "frontend",
       "title": "Skill taxonomy autocomplete",
       "priority": "P3",
-      "status": "pending",
+      "status": "blocked",
       "scope": "medium",
       "depends_on": [
         "P2-005"
@@ -640,7 +640,52 @@
       ],
       "validation_status": "not_run",
       "commit": "",
-      "notes": "Split backend/frontend subtasks before implementation."
+      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-001-BE and P3-FEAT-001-FE are done."
+    },
+    {
+      "id": "P3-FEAT-001-BE",
+      "phase": "backend",
+      "title": "Skill taxonomy autocomplete backend",
+      "priority": "P3",
+      "status": "in_progress",
+      "scope": "small",
+      "depends_on": [
+        "P2-005"
+      ],
+      "files_expected": [
+        "services/gateway/main.py",
+        "tests/"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_skill_taxonomy_autocomplete.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Add the backend API contract for skill taxonomy suggestions after inspecting existing profile and skill fields."
+    },
+    {
+      "id": "P3-FEAT-001-FE",
+      "phase": "frontend",
+      "title": "Skill taxonomy autocomplete frontend",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "small",
+      "depends_on": [
+        "P3-FEAT-001-BE"
+      ],
+      "files_expected": [
+        "frontend/"
+      ],
+      "files_touched": [],
+      "validation_commands": [
+        "npm run lint",
+        "npm run build"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Wire the backend suggestions into profile skill entry after backend contract validation passes."
     },
     {
       "id": "P3-FEAT-002",

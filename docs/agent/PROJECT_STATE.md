@@ -83,7 +83,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P2-005` - add learned recommendation calibration layer. Commit pending.
+`P2-005` - add learned recommendation calibration layer. Commit `ba45824`.
 
 ## Next Task
-`P3-FEAT-001` - skill taxonomy autocomplete.
+`P3-FEAT-001-BE` - skill taxonomy autocomplete backend contract.

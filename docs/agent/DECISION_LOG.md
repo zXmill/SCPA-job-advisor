@@ -219,3 +219,12 @@
 - Skipped option: Adding LightGBM or a heavier training dependency.
 - Reason skipped: The repo has no production labels yet for calibrator training; a pure-Python logistic smoke model is reviewable, deterministic, and sufficient to create the serving contract without adding dependency risk.
 - Risk and mitigation: Strategy label changes broke two stale tests; updated them to assert calibrator metadata and static baseline preservation, then reran focused and full backend validation.
+
+## 2026-05-25 21:56 +07 - P3-FEAT-001 split and backend mini plan
+- Decision: Split skill taxonomy autocomplete into `P3-FEAT-001-BE` and `P3-FEAT-001-FE` before implementation.
+- Expected backend files to touch: `services/gateway/main.py`, a focused backend test under `tests/`, and durable `docs/agent/` state files.
+- Backend validation commands: focused skill-taxonomy API test first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Expected frontend files to touch later: profile or skills UI under `frontend/`, with `npm run lint` and `npm run build` validation inside the nested frontend repo.
+- Skipped option: Building backend and frontend autocomplete in one commit.
+- Reason skipped: The user required backend and frontend feature tasks with separate validation and commits.
+- Risk and mitigation: Inspect existing gateway profile/skills routes and frontend skill-entry UI before choosing the API shape.

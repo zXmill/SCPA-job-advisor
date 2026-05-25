@@ -1046,3 +1046,28 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P2-005 files plus durable state files, inspect staged diff, and commit `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07 - P2-005 commit and P3-FEAT-001-BE start
+
+### Active Task
+- `P3-FEAT-001-BE` - Skill taxonomy autocomplete backend.
+
+### What Changed
+- Committed `P2-005` as `ba45824`.
+- Split parent `P3-FEAT-001` into backend and frontend child tasks.
+- Marked backend child task in progress.
+
+### Commands Run
+- `git commit -m "feat: add learned recommendation calibration layer"`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Validation Results
+- P2-005 validation remains: focused contracts passed and full backend pytest passed with `326 passed, 1 warning`.
+
+### Remaining Issues
+- Root repo remains dirty with pre-existing `README.md` and broad untracked project files.
+- `P3-FEAT-001-BE` implementation has not started yet.
+
+### Next Exact Action
+- Validate `docs/agent/TASK_QUEUE.json`, commit this state-only checkpoint, then inspect gateway profile/skills routes and existing frontend skill-entry UI before writing backend autocomplete tests.
