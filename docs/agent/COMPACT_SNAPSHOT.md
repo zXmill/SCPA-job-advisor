@@ -12,7 +12,7 @@ frontend
 P4-ADV-002
 
 ## Latest Commit Hash
-Root: pending (`feat: add certificate OCR design and smoke`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
+Root: `3857086` (`feat: add certificate OCR design and smoke`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
 
 ## Current Git Branch
 `agent-run`

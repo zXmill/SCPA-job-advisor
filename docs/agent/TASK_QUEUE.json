@@ -1377,7 +1377,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending",
+      "commit": "3857086",
       "notes": "Design doc written. Smoke implementation includes authenticated POST /api/profile/certificates, PDF/PNG/JPG/JPEG support, PyPDF2 text extraction, image OCR graceful fallback when pytesseract unavailable, cert name/issuer heuristics, certification_skills lookup, user_certifications insert, 5 passing tests."
     },
     {
