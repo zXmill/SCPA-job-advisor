@@ -167,6 +167,20 @@ MAX_CV_SIZE_MB = int(os.getenv("MAX_CV_SIZE_MB", "5"))
 MAX_CV_SIZE_BYTES = MAX_CV_SIZE_MB * 1024 * 1024
 CV_ALLOWED_EXTENSIONS = {".pdf", ".txt"}
 
+# ── Certificate Upload ──
+CERT_UPLOAD_DIR = Path(os.getenv("CERT_UPLOAD_DIR", "data/uploads/certificates"))
+CERT_ALLOWED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg"}
+
+try:
+    from PIL import Image
+except ImportError:  # pragma: no cover
+    Image = None
+
+try:
+    import pytesseract
+except ImportError:  # pragma: no cover
+    pytesseract = None
+
 # ── Database ──
 def _async_db_url(url: str) -> str:
     url = url.strip()
@@ -1733,6 +1747,237 @@ async def upload_cv(
         "filename": filename,
         "stored_name": stored_name,
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def _extract_text_from_certificate(file_bytes: bytes, filename: str) -> str | None:
+    ext = Path(filename).suffix.lower()
+    if ext == ".pdf":
+        if PdfReader is None:
+            return None
+        try:
+            reader = PdfReader(io.BytesIO(file_bytes))
+            pages = [page.extract_text() or "" for page in reader.pages]
+            return "\n".join(pages)
+        except Exception:
+            return None
+    if ext in (".png", ".jpg", ".jpeg"):
+        if Image is None or pytesseract is None:
+            return None
+        try:
+            img = Image.open(io.BytesIO(file_bytes))
+            return pytesseract.image_to_string(img)
+        except Exception:
+            return None
+    return None
+
+
+def _parse_certificate_name(text: str) -> str | None:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    keywords = ("certificate", "certification", "sertifikat", "diploma", "badge", "credential", "licence", "license")
+    candidates: list[str] = []
+    for line in lines:
+        lowered = line.lower()
+        if any(kw in lowered for kw in keywords):
+            candidates.append(line)
+    if not candidates:
+        return None
+    # Prefer the longest candidate as it likely contains the full cert title.
+    return max(candidates, key=len)
+
+
+def _parse_certificate_issuer(text: str) -> str | None:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    # Simple heuristics: look for known issuer keywords or URLs.
+    issuer_keywords = (
+        "amazon web services", "google", "microsoft", "oracle", "cisco",
+        "comptia", "isc", "pmi", "axelos", "peoplecert", "aws",
+    )
+    for line in lines:
+        lowered = line.lower()
+        if any(kw in lowered for kw in issuer_keywords):
+            return line
+    # Fallback: lines containing "www." or ".com" or "@" near the top/bottom.
+    for line in lines[:5] + lines[-5:]:
+        lowered = line.lower()
+        if "www." in lowered or ".com" in lowered or "@" in lowered:
+            if len(line) < 60:
+                return line
+    return None
+
+
+async def _lookup_certification_skills(db: AsyncSession, cert_name: str | None) -> list[str]:
+    if not cert_name:
+        return []
+    try:
+        rows = (
+            await db.execute(
+                text(
+                    "SELECT mapped_skills FROM certification_skills "
+                    "WHERE cert_name_regex IS NOT NULL"
+                )
+            )
+        ).mappings().all()
+    except Exception:
+        return []
+    found: set[str] = set()
+    cert_lower = cert_name.lower()
+    for row in rows:
+        regex = str(row.get("cert_name_regex") or "").strip()
+        if regex and regex.lower() in cert_lower:
+            for skill in row.get("mapped_skills") or []:
+                if skill:
+                    found.add(str(skill))
+    return list(found)
+
+
+async def _seed_default_certification_skills(db: AsyncSession) -> None:
+    """Seed a few known certificate-to-skill mappings if the table is empty."""
+    try:
+        count = (await db.execute(text("SELECT COUNT(*) FROM certification_skills"))).scalar_one()
+        if int(count or 0) > 0:
+            return
+    except Exception:
+        return
+    defaults = [
+        ("AWS Certified", "Amazon Web Services", ["Cloud Computing", "AWS"]),
+        ("Google Cloud", "Google", ["Cloud Computing", "Google Cloud Platform"]),
+        ("Microsoft Azure", "Microsoft", ["Cloud Computing", "Azure"]),
+        ("Python", None, ["Python"]),
+        ("SQL", None, ["SQL"]),
+    ]
+    for cert_regex, issuer, skills in defaults:
+        try:
+            await db.execute(
+                text(
+                    "INSERT INTO certification_skills (cert_name_regex, issuer, mapped_skills) "
+                    "VALUES (:cert_name_regex, :issuer, :skills) "
+                    "ON CONFLICT DO NOTHING"
+                ),
+                {
+                    "cert_name_regex": cert_regex,
+                    "issuer": issuer,
+                    "skills": skills,
+                },
+            )
+        except Exception:
+            pass
+    try:
+        await db.commit()
+    except Exception:
+        await db.rollback()
+
+
+@app.post("/api/profile/certificates")
+async def upload_certificate(
+    file: UploadFile = File(...),
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    uid = user["id"]
+
+    filename = file.filename or "unknown"
+    ext = Path(filename).suffix.lower()
+    if ext not in CERT_ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '{ext}'. Allowed: {', '.join(CERT_ALLOWED_EXTENSIONS)}.",
+        )
+
+    file_bytes = await file.read()
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+    if len(file_bytes) > MAX_CV_SIZE_BYTES:
+        raise HTTPException(
+            status_code=400, detail=f"File too large. Max size: {MAX_CV_SIZE_MB} MB."
+        )
+
+    # Save file to disk.
+    CERT_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    stored_name = f"{uuid.uuid4().hex}{ext}"
+    stored_path = CERT_UPLOAD_DIR / stored_name
+    stored_path.write_bytes(file_bytes)
+
+    raw_text = _extract_text_from_certificate(file_bytes, filename)
+    ocr_available = raw_text is not None and raw_text.strip() != ""
+
+    cert_name: str | None = None
+    issuer: str | None = None
+    mapped_skills: list[str] = []
+    skills_added = 0
+    ocr_confidence = "medium"
+
+    if ocr_available:
+        cert_name = _parse_certificate_name(raw_text)  # type: ignore[arg-type]
+        issuer = _parse_certificate_issuer(raw_text)  # type: ignore[arg-type]
+        await _seed_default_certification_skills(db)
+        mapped_skills = await _lookup_certification_skills(db, cert_name)
+
+        # Upsert mapped skills into user_skills.
+        for skill in mapped_skills:
+            result = await db.execute(
+                text(
+                    "INSERT INTO user_skills (user_id, skill, category, proficiency_level) "
+                    "VALUES (:uid, :skill, 'technical', 'intermediate') "
+                    "ON CONFLICT DO NOTHING"
+                ),
+                {"uid": uid, "skill": skill},
+            )
+            if getattr(result, "rowcount", 0):
+                skills_added += 1
+    else:
+        ocr_confidence = "low"
+
+    # Insert user_certifications record.
+    cert_result = await db.execute(
+        text(
+            "INSERT INTO user_certifications "
+            "(user_id, file_path, cert_name, issuer, ocr_confidence, mapped_skills, status) "
+            "VALUES (:uid, :file_path, :cert_name, :issuer, :ocr_confidence, :mapped_skills, 'confirmed') "
+            "RETURNING id"
+        ),
+        {
+            "uid": uid,
+            "file_path": str(stored_path),
+            "cert_name": cert_name,
+            "issuer": issuer,
+            "ocr_confidence": ocr_confidence,
+            "mapped_skills": mapped_skills,
+        },
+    )
+    cert_id = cert_result.scalar_one()
+
+    await db.commit()
+    await _invalidate_pipeline_user(uid)
+
+    if ocr_available:
+        return {
+            "status": "ok",
+            "cert_id": cert_id,
+            "cert_name": cert_name,
+            "issuer": issuer,
+            "mapped_skills": mapped_skills,
+            "skills_added": skills_added,
+            "ocr_confidence": ocr_confidence,
+            "filename": filename,
+            "ocr_available": True,
+        }
+
+    return {
+        "status": "pending",
+        "cert_id": cert_id,
+        "cert_name": cert_name,
+        "issuer": issuer,
+        "mapped_skills": mapped_skills,
+        "skills_added": skills_added,
+        "ocr_confidence": ocr_confidence,
+        "filename": filename,
+        "ocr_available": False,
+        "message": (
+            "Image stored but OCR requires tesseract. "
+            "Install pytesseract and the Tesseract binary to enable image text extraction."
+        ),
     }
 
 

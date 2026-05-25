@@ -1680,3 +1680,18 @@
 - Summary: Full backend suite passed with 352 passed, 2 warnings.
 - Related commit hash: pending.
 
+
+## 2026-05-26 01:28 +07
+- Task ID: P4-ADV-002
+- Command: .\.venv\Scripts\python.exe -m pytest tests	est_certificate_upload.py -q
+- Result: pass
+- Summary: 5 passed. Certificate upload PDF extraction, image pending OCR, unsupported type, empty file, and no-auth tests all passed.
+- Related commit hash: pending.
+
+## 2026-05-26 01:32 +07
+- Task ID: P4-ADV-002
+- Command: .\.venv\Scripts\python.exe -m pytest -q
+- Result: pass
+- Summary: Full backend suite passed with 357 passed, 2 warnings.
+- Related commit hash: pending.
+

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "ml",
-  "current_task_id": "P4-ADV-001",
+  "current_task_id": "P4-ADV-002",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1353,7 +1353,7 @@
       "phase": "ml",
       "title": "Certificate OCR design and smoke",
       "priority": "P3",
-      "status": "pending",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P4-ADV-001"
@@ -1361,11 +1361,24 @@
       "files_expected": [
         "docs/ml/"
       ],
-      "files_touched": [],
-      "validation_commands": [],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Design doc first, then smoke implementation."
+      "files_touched": [
+        "docs/ml/CERTIFICATE_OCR.md",
+        "services/gateway/main.py",
+        "tests/test_certificate_upload.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_certificate_upload.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "passed",
+      "commit": "pending",
+      "notes": "Design doc written. Smoke implementation includes authenticated POST /api/profile/certificates, PDF/PNG/JPG/JPEG support, PyPDF2 text extraction, image OCR graceful fallback when pytesseract unavailable, cert name/issuer heuristics, certification_skills lookup, user_certifications insert, 5 passing tests."
     },
     {
       "id": "P4-ADV-003",

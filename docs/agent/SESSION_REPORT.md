@@ -1820,3 +1820,53 @@
 
 ### Next Exact Action
 - Stage P4-ADV-001 code and state files, inspect staged diff, commit `feat: add CV/resume ingestion design and smoke`, then update state checkpoint.
+
+## 2026-05-26 01:05 +07 - Recovery note
+
+### Active Task
+- `P4-ADV-002` - Certificate OCR design and smoke.
+
+### Previous Task Complete
+- `P4-ADV-001` committed as `c6afe30`. State checkpoint `654d669`.
+
+### Current State
+- Root repo `docs/agent/` state files still point `current_task_id` to `P4-ADV-001`.
+- Next task `P4-ADV-002` is pending.
+- `user_certifications` table exists from migration `008_feature_extension_foundation.py`.
+- No certificate upload/OCR endpoint exists yet.
+
+### Validation Still Needed
+- Update state pointers to `P4-ADV-002`.
+- Read existing `user_certifications` schema and design the certificate upload flow.
+
+### Next Exact Action
+- Transition state to P4-ADV-002, then design and implement certificate upload/OCR smoke.
+
+## 2026-05-26 01:30 +07 - P4-ADV-002 result
+
+### Active Task
+- `P4-ADV-002` - Certificate OCR design and smoke.
+
+### What Changed
+- Added design doc `docs/ml/CERTIFICATE_OCR.md` covering upload mechanism, PDF/image text extraction, cert name/issuer parsing, certification_skills lookup, and security.
+- Added `POST /api/profile/certificates` to gateway: accepts PDF/PNG/JPG/JPEG up to 5 MB.
+- PDF text extraction uses PyPDF2 (same as CV upload).
+- Image OCR uses pytesseract when available; otherwise returns `pending` status with a graceful message.
+- Added `_parse_certificate_name` and `_parse_certificate_issuer` heuristic helpers.
+- Added `_lookup_certification_skills` and `_seed_default_certification_skills` helpers.
+- Inserts `user_certifications` record with extracted metadata and mapped skills.
+- Upserts mapped skills into `user_skills`.
+- Added `tests/test_certificate_upload.py` with 5 passing tests.
+
+### Validation Results
+- `tests/test_certificate_upload.py`: 5 passed.
+- Full backend suite: `357 passed, 2 warnings`.
+- Frontend lint: passed with 16 existing warnings, 0 errors.
+
+### Remaining Issues
+- Existing frontend lint warnings remain but do not fail lint.
+- Image OCR requires external Tesseract binary; smoke gracefully handles its absence.
+- PyPDF2 deprecation warning remains.
+
+### Next Exact Action
+- Stage P4-ADV-002 code and state files, inspect staged diff, commit `feat: add certificate OCR design and smoke`, then update state checkpoint.

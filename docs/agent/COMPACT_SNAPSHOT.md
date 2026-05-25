@@ -9,10 +9,10 @@ Continue from the active task in TASK_QUEUE.json, which is now complete. Next ta
 frontend
 
 ## Current Task ID
-P4-ADV-001
+P4-ADV-002
 
 ## Latest Commit Hash
-Root: `c6afe30` (`feat: add CV/resume ingestion design and smoke`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
+Root: pending (`feat: add certificate OCR design and smoke`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
 
 ## Current Git Branch
 `agent-run`
@@ -33,10 +33,10 @@ Root: `c6afe30` (`feat: add CV/resume ingestion design and smoke`). Backend: `45
 - `docs/agent/VALIDATION_LEDGER.md`
 
 ## Current Implementation Status
-- `P4-ADV-001` is implemented and validated.
-- Design doc at `docs/ml/CV_RESUME_INGESTION.md`.
-- Gateway `POST /api/profile/cv` supports PDF and TXT uploads, extracts text, scans for known skills, upserts into `user_skills`, and records `cv_uploaded_at`.
-- `P4-ADV-002` is the next pending task.
+- `P4-ADV-002` is implemented and validated.
+- Design doc at `docs/ml/CERTIFICATE_OCR.md`.
+- Gateway `POST /api/profile/certificates` supports PDF and image uploads, extracts text, parses cert name/issuer, looks up `certification_skills`, inserts `user_certifications`, and upserts into `user_skills`.
+- `P4-ADV-003` is the next pending task.
 
 ## Commands Already Run
 - Frontend lint: `npm run lint` passed with 16 existing warnings, 0 errors.

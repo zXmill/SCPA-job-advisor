@@ -413,3 +413,12 @@
 - Skipped option: Full DOCX/image-OCR/LLM extraction in this task.
 - Risk and mitigation: PyPDF2 is deprecated but sufficient for smoke; migration to pypdf is documented as future work.
 
+
+## 2026-05-26 01:15 +07 - P4-ADV-002 certificate OCR mini plan
+- Decision: Add an authenticated gateway endpoint for certificate upload with heuristic text extraction and skill mapping.
+- Expected files to touch: docs/ml/CERTIFICATE_OCR.md, services/gateway/main.py, tests/test_certificate_upload.py, and durable docs/agent/ state files.
+- Validation commands: focused pytest for certificate upload, full backend pytest, frontend lint.
+- Chosen approach: reuse PyPDF2 for PDFs; add runtime-gated pytesseract for images with graceful fallback.
+- Skipped option: Full DOCX support, LLM-based parsing, certificate verification against issuers.
+- Risk and mitigation: pytesseract requires external Tesseract binary; the endpoint returns pending status with a clear message when it is unavailable.
+
