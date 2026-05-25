@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "frontend",
-  "current_task_id": "P3-FEAT-006",
+  "current_phase": "backend",
+  "current_task_id": "P3-FEAT-006-BE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1127,21 +1127,76 @@
       "phase": "frontend",
       "title": "Admin model-health dashboard",
       "priority": "P3",
-      "status": "pending",
+      "status": "blocked",
       "scope": "medium",
       "depends_on": [
         "P3-FEAT-005"
       ],
-      "files_expected": [],
+      "files_expected": [
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md"
+      ],
+      "files_touched": [
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-006-BE and P3-FEAT-006-FE are done."
+    },
+    {
+      "id": "P3-FEAT-006-BE",
+      "phase": "backend",
+      "title": "Admin model-health dashboard backend",
+      "priority": "P3",
+      "status": "in_progress",
+      "scope": "small",
+      "depends_on": [
+        "P3-FEAT-005"
+      ],
+      "files_expected": [
+        "services/gateway/main.py",
+        "tests/test_admin_model_health.py"
+      ],
       "files_touched": [],
       "validation_commands": [
-        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_admin_model_health.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Add an admin-only gateway contract that summarizes pipeline/model health and telemetry for the frontend dashboard."
+    },
+    {
+      "id": "P3-FEAT-006-FE",
+      "phase": "frontend",
+      "title": "Admin model-health dashboard frontend",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "small",
+      "depends_on": [
+        "P3-FEAT-006-BE"
+      ],
+      "files_expected": [
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/analytics/page.tsx"
+      ],
+      "files_touched": [],
+      "validation_commands": [
         "npm run lint",
         "npm run build"
       ],
       "validation_status": "not_run",
       "commit": "",
-      "notes": "Split backend/frontend subtasks before implementation."
+      "notes": "Expose admin model-health status on the analytics/dashboard surface after backend validation passes."
     },
     {
       "id": "P3-FEAT-007",

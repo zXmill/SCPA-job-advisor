@@ -346,3 +346,12 @@
 - Skipped option: Failing the whole job page when skill-gap loading fails.
 - Reason skipped: Job details are still useful if the skill-gap endpoint is temporarily unavailable; the page renders an inline skill-gap error instead.
 - Risk and mitigation: Validated with frontend lint, build, dynamic route HTTP smoke, staged diff check, and a nested frontend commit.
+
+## 2026-05-25 23:54 +07 - P3-FEAT-006 split and backend mini plan
+- Decision: Split admin model-health dashboard into `P3-FEAT-006-BE` and `P3-FEAT-006-FE`, with an admin-only gateway contract first.
+- Expected backend files to touch: `services/gateway/main.py`, `tests/test_admin_model_health.py`, and durable `docs/agent/` state files.
+- Backend validation commands: focused admin model-health tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract target: authenticated admin users can fetch a model-health summary with pipeline telemetry and SBERT/NCF/DQN/calibrator status; normal users are rejected.
+- Expected frontend files to touch later: `frontend/src/lib/api.ts` and `frontend/src/app/analytics/page.tsx`, with `npm run lint` and `npm run build` validation.
+- Skipped option: Calling internal model services directly from the browser.
+- Reason skipped: Internal services are intentionally hidden behind the gateway and Docker network; the dashboard should consume a gateway-admin contract.
