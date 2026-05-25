@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 23:54 +07
+Updated: 2026-05-25 23:40 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -80,7 +80,8 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Frontend profile page now fetches job alerts, creates simple daily/weekly alerts, lists active alerts, and disables alerts through the backend API.
 - Gateway job skill-gap detail endpoint now returns a page-ready contract with job context, required/matched/missing skills, explanation metadata, missing-job 404 behavior, and persisted `skill_gap_snapshots`.
 - Frontend job detail page now renders skill-gap percent, required skills, matched skills, and missing skills from the backend contract.
-- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `345 passed, 1 warning` after P3-FEAT-005-BE.
+- Gateway admin model-health endpoint is available at authenticated admin-only `GET /api/admin/model-health`; it summarizes pipeline status, downstream scraper/SBERT/NCF/DQN URLs, calibrator/aggregation stage status, telemetry, and continual-training state from pipeline health.
+- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `347 passed, 1 warning` after P3-FEAT-006-BE.
 - Latest frontend validation after P3-FEAT-004-FE: `npm run lint` passed with 16 existing warnings, `npm run build` passed, and local HTTP smoke returned `200` for `/profile`.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
@@ -95,7 +96,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P3-FEAT-005-FE` - skill-gap detail frontend. Frontend commit `13fca88`.
+`P3-FEAT-006-BE` - admin model-health dashboard backend. Commit pending.
 
 ## Next Task
-`P3-FEAT-006-BE` - admin model-health dashboard backend. Add an admin-only model-health summary contract before frontend integration.
+`P3-FEAT-006-FE` - admin model-health dashboard frontend. Add the dashboard surface after the backend commit is recorded.

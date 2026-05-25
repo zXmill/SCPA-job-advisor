@@ -761,6 +761,48 @@ def _require_admin_role(token_payload: dict[str, Any]) -> None:
         raise HTTPException(status_code=403, detail="Admin role required")
 
 
+def _admin_model_health_summary(pipeline_health: dict[str, Any]) -> dict[str, Any]:
+    downstream = pipeline_health.get("downstream")
+    downstream = downstream if isinstance(downstream, dict) else {}
+    telemetry = pipeline_health.get("telemetry")
+    telemetry = telemetry if isinstance(telemetry, dict) else {}
+    stages = telemetry.get("stages")
+    stages = stages if isinstance(stages, dict) else {}
+
+    def service_model(name: str, stage_name: str | None = None) -> dict[str, Any]:
+        url = downstream.get(name)
+        return {
+            "status": "configured" if url else "unconfigured",
+            "url": url,
+            "stage": stages.get(stage_name or name, {}),
+        }
+
+    return {
+        "status": pipeline_health.get("status", "unknown"),
+        "pipeline": {
+            "status": pipeline_health.get("status", "unknown"),
+            "mode": pipeline_health.get("mode"),
+            "p95_target_ms": pipeline_health.get("p95_target_ms"),
+        },
+        "models": {
+            "scraper": service_model("scraper", "scrape"),
+            "sbert": service_model("sbert"),
+            "ncf": service_model("ncf"),
+            "dqn": service_model("dqn"),
+            "calibrator": {
+                "status": "active" if "calibrator" in stages else "inactive",
+                "stage": stages.get("calibrator", {}),
+            },
+            "aggregation": {
+                "status": "active" if "aggregation" in stages else "inactive",
+                "stage": stages.get("aggregation", {}),
+            },
+        },
+        "telemetry": telemetry,
+        "continual_training": pipeline_health.get("continual_training", {}),
+    }
+
+
 async def _require_user(db: AsyncSession, token_payload: dict[str, Any]) -> dict[str, Any]:
     user_id = token_payload.get("sub")
     if not user_id:
@@ -1200,6 +1242,15 @@ async def proxy_company_logo(
 @app.get("/ready")
 async def ready() -> dict[str, Any]:
     return {"status": "ready", "pipeline": await _pipeline_get("/health", timeout=HEALTH_TIMEOUT_SECONDS)}
+
+
+@app.get("/api/admin/model-health")
+async def admin_model_health(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+) -> dict[str, Any]:
+    _require_admin_role(token_payload)
+    pipeline_health = await _pipeline_get("/health", timeout=HEALTH_TIMEOUT_SECONDS)
+    return _admin_model_health_summary(pipeline_health)
 
 
 @app.get("/api/skills/search", response_model=SkillSearchResponse)

@@ -1157,7 +1157,7 @@
       "phase": "backend",
       "title": "Admin model-health dashboard backend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-005"
@@ -1166,14 +1166,24 @@
         "services/gateway/main.py",
         "tests/test_admin_model_health.py"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/gateway/main.py",
+        "tests/test_admin_model_health.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_admin_model_health.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_admin_model_health.py tests\\test_pipeline_execution_auth.py tests\\test_pipeline_telemetry.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Add an admin-only gateway contract that summarizes pipeline/model health and telemetry for the frontend dashboard."
+      "validation_status": "passed",
+      "commit": "pending `feat: add admin model-health backend`",
+      "notes": "Admin-only gateway contract summarizes pipeline health, downstream scraper/SBERT/NCF/DQN status, calibrator/aggregation telemetry, and continual-training state. Focused, adjacent, and full backend validation passed."
     },
     {
       "id": "P3-FEAT-006-FE",

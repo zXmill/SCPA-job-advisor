@@ -355,3 +355,11 @@
 - Expected frontend files to touch later: `frontend/src/lib/api.ts` and `frontend/src/app/analytics/page.tsx`, with `npm run lint` and `npm run build` validation.
 - Skipped option: Calling internal model services directly from the browser.
 - Reason skipped: Internal services are intentionally hidden behind the gateway and Docker network; the dashboard should consume a gateway-admin contract.
+
+## 2026-05-25 23:40 +07 - P3-FEAT-006-BE backend implementation decision
+- Decision: Add `GET /api/admin/model-health` to the gateway and derive its payload from the pipeline `/health` contract.
+- Contract: require an admin bearer token, call pipeline health with `HEALTH_TIMEOUT_SECONDS`, and return pipeline status, downstream scraper/SBERT/NCF/DQN configuration, calibrator/aggregation stage status, telemetry, and continual-training state.
+- Trade-off: The gateway summarizes model health instead of storing a separate health table, keeping the dashboard live and avoiding another persistence path.
+- Skipped option: Letting the frontend call pipeline or model services directly.
+- Reason skipped: Those services are internal by design; exposing them would weaken the service boundary fixed earlier.
+- Risk and mitigation: Added focused admin/auth tests, used the existing `_require_admin_role` guard, and ran adjacent pipeline auth/telemetry plus full backend pytest.

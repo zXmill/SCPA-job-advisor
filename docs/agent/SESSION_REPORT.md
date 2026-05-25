@@ -1601,3 +1601,47 @@
 
 ### Next Exact Action
 - Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then write focused backend tests for admin model-health access and payload shape.
+
+## 2026-05-25 23:36 +07 - Post-compact recovery
+
+### Active Task
+- `P3-FEAT-006-BE` - Admin model-health dashboard backend.
+
+### Dirty Files
+- Root repo still has pre-existing `README.md` modification and broad untracked project files.
+- Current task test file `tests/test_admin_model_health.py` is untracked and must be staged only with its matching backend implementation and durable state.
+
+### Previous Task Completeness
+- `P3-FEAT-005-FE` is complete and recorded with nested frontend commit `13fca88`.
+- `P3-FEAT-006-BE` is in progress. Focused tests were started before recovery, but the endpoint implementation is still pending.
+
+### Validation Still Needed
+- Re-run the focused `tests/test_admin_model_health.py` red check or continue from the recorded 404 failure.
+- After implementation, run focused backend tests, adjacent pipeline/auth regressions, full backend pytest, and JSON validation.
+
+### Next Exact Action
+- Inspect the current admin model-health test and gateway health/admin helpers, then implement the admin-only endpoint in `services/gateway/main.py`.
+
+## 2026-05-25 23:40 +07 - P3-FEAT-006-BE result
+
+### Active Task
+- `P3-FEAT-006-BE` is implemented and validated. Commit is pending.
+
+### What Changed
+- Added focused admin model-health tests for missing auth, non-admin rejection, and the admin payload shape.
+- Added `GET /api/admin/model-health` in the gateway.
+- Reused `_require_admin_role` and `_pipeline_get("/health", timeout=HEALTH_TIMEOUT_SECONDS)`.
+- Added a small summary helper that normalizes pipeline health into pipeline status, model/downstream status, telemetry, and continual-training fields.
+
+### Validation Results
+- TDD red: `tests/test_admin_model_health.py` failed with `404 Not Found` because the endpoint did not exist.
+- Focused admin model-health tests passed: `2 passed`.
+- Adjacent auth/telemetry regression passed: `4 passed`.
+- Full backend suite passed: `347 passed, 1 warning`.
+
+### Remaining Issues
+- One warning remains in the intentional wrong-secret JWT test.
+- Frontend admin model-health dashboard integration is still pending.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P3-FEAT-006-BE files plus durable state files, inspect staged diff, and commit `feat: add admin model-health backend`.
