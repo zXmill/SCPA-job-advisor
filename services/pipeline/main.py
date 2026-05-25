@@ -7,11 +7,13 @@ run calls scraper, SBERT, NCF, DQN, then aggregates the returned scores.
 from __future__ import annotations
 
 import logging
+import math
 import os
 import time
 import asyncio
 import hmac
 import uuid
+from collections import deque
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -68,6 +70,19 @@ training_state: dict[str, Any] = {
     "last_finished_at": None,
     "last_error": None,
     "last_summary": None,
+}
+TELEMETRY_WINDOW_SIZE = max(1, int(os.getenv("PIPELINE_TELEMETRY_WINDOW", "200")))
+TELEMETRY_STAGE_NAMES = ("scrape", "sbert", "ncf", "dqn", "calibrator", "aggregation")
+TELEMETRY_STAGE_ALIASES = {
+    "scrape": "scrape",
+    "encode": "sbert",
+    "ncf_score": "ncf",
+    "dqn_rank": "dqn",
+    "calibrator": "calibrator",
+    "aggregate": "aggregation",
+}
+STAGE_LATENCY_HISTORY: dict[str, deque[float]] = {
+    stage: deque(maxlen=TELEMETRY_WINDOW_SIZE) for stage in TELEMETRY_STAGE_NAMES
 }
 
 # NOTE: removed in-process USER_PROFILE_CACHE. The gateway always sends the
@@ -161,9 +176,55 @@ async def _stage(name: str, timings: dict[str, float], awaitable):
     started = time.perf_counter()
     result = await awaitable
     timings[name] = round((time.perf_counter() - started) * 1000, 2)
+    _record_stage_latency(name, timings[name])
     summary = getattr(result, "summary", None)
     logger.info("stage=%s duration_ms=%.2f summary=%s", name, timings[name], summary)
     return result
+
+
+def _percentile(values: list[float], percentile: float) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(float(value) for value in values)
+    if len(ordered) == 1:
+        return round(ordered[0], 2)
+    rank = (len(ordered) - 1) * (percentile / 100.0)
+    lower = math.floor(rank)
+    upper = math.ceil(rank)
+    if lower == upper:
+        return round(ordered[int(rank)], 2)
+    weight = rank - lower
+    return round(ordered[lower] + (ordered[upper] - ordered[lower]) * weight, 2)
+
+
+def _record_stage_latency(stage_name: str, duration_ms: float) -> None:
+    canonical = TELEMETRY_STAGE_ALIASES.get(stage_name, stage_name)
+    history = STAGE_LATENCY_HISTORY.setdefault(
+        canonical,
+        deque(maxlen=TELEMETRY_WINDOW_SIZE),
+    )
+    history.append(round(max(0.0, float(duration_ms)), 2))
+
+
+def _stage_latency_stats(stage_name: str) -> dict[str, float | int]:
+    values = list(STAGE_LATENCY_HISTORY.get(stage_name, ()))
+    return {
+        "count": len(values),
+        "last_ms": round(values[-1], 2) if values else 0.0,
+        "p50_ms": _percentile(values, 50.0),
+        "p95_ms": _percentile(values, 95.0),
+    }
+
+
+def _telemetry_snapshot() -> dict[str, Any]:
+    return {
+        "window_size": TELEMETRY_WINDOW_SIZE,
+        "p95_target_ms": P95_TARGET_MS,
+        "stages": {
+            stage: _stage_latency_stats(stage)
+            for stage in TELEMETRY_STAGE_NAMES
+        },
+    }
 
 
 async def _run_scrape_embedding_cycle(refresh_jobs: bool = True) -> dict[str, Any]:
@@ -245,6 +306,7 @@ async def health() -> dict[str, Any]:
             "scrape_target": SCRAPE_TARGET,
             "candidate_pool_limit": CANDIDATE_POOL_LIMIT,
         },
+        "telemetry": _telemetry_snapshot(),
     }
 
 
@@ -286,6 +348,7 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
             "reason": "empty_candidates",
             "fallback_flags": ["empty_candidates"],
         }
+        stages["telemetry"] = _telemetry_snapshot()
         return PipelineRunResponse(
             run_id=run_id,
             user_id=str(request.user_id),
@@ -314,9 +377,17 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
     )
     stages["dqn_rank"] = dqn_ranked.summary
 
+    timings["calibrator"] = 0.0
+    _record_stage_latency("calibrator", timings["calibrator"])
+    stages["calibrator"] = {
+        "mode": "static_baseline",
+        "duration_ms": timings["calibrator"],
+    }
+
     aggregated = await _stage("aggregate", timings, run_aggregate_stage(scrape.user, dqn_ranked.jobs))
     stages["aggregate"] = aggregated.summary
     timings["total"] = round((time.perf_counter() - started) * 1000, 2)
+    stages["telemetry"] = _telemetry_snapshot()
     fallback_flags: list[str] = []
     if "fallback" in str(stages.get("scrape", {}).get("source", "")).lower():
         fallback_flags.append("scraper_fallback")

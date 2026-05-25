@@ -619,3 +619,52 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P1-PERF-003 files plus durable state files, inspect staged diff, and commit `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:59 +07 - P1-OBS-001 start
+
+### Active Task
+- `P1-OBS-001` - Pipeline telemetry.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked project files remain.
+- New task state changes: durable `docs/agent/` files updated to reconcile `P1-PERF-003` as commit `742992a` and mark `P1-OBS-001` in progress.
+
+### Previous Task Complete
+- `P1-PERF-003` committed as `742992a`.
+
+### Validation Still Needed
+- Inspect existing pipeline timing behavior.
+- Add focused telemetry tests before implementation.
+- Run focused telemetry tests and full backend pytest.
+
+### Commands Run
+- `git commit -m "perf: add recommendation database indexes"`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Inspect `services/pipeline/main.py` timing hooks and add a focused test for p50/p95 telemetry across scrape, SBERT, NCF, DQN, calibrator, and aggregation.
+
+## 2026-05-25 21:05 +07 - P1-OBS-001 result
+
+### Active Task
+- `P1-OBS-001` is implemented and ready to commit.
+
+### What Changed
+- Added bounded in-process stage latency history in `services/pipeline/main.py`.
+- Added p50/p95 telemetry snapshots to `/health` and pipeline response `stages["telemetry"]`.
+- Added a static calibrator telemetry placeholder until the learned calibration layer exists.
+- Added `tests/test_pipeline_telemetry.py`.
+
+### Validation Results
+- TDD red: focused telemetry test failed because `stages["telemetry"]` was missing.
+- Focused telemetry test: `1 passed`.
+- Existing pipeline and full-pipeline entrypoint contracts: `4 passed`.
+- Internal service auth regression: `3 passed`.
+- Full backend suite: `309 passed, 11 warnings`.
+
+### Remaining Issues
+- Existing pytest warnings about short test JWT keys remain.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P1-OBS-001 files plus durable state files, inspect staged diff, and commit `observability: add recommendation pipeline telemetry`.

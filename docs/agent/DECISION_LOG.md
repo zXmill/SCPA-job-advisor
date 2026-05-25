@@ -115,3 +115,20 @@
 - Skipped option: A B-tree index for leading-wildcard `location ILIKE`.
 - Reason skipped: The current query uses `%term%`; B-tree would not be effective without changing the search strategy or adding a trigram extension.
 - Risk and mitigation: Added focused ORM metadata assertions and a reversible Alembic migration, then validated upgrade, downgrade, re-upgrade, and full pytest.
+
+## 2026-05-25 20:59 +07 - P1-OBS-001 telemetry mini plan
+- Decision: Add in-process pipeline stage latency telemetry for the existing recommendation stages before introducing external observability infrastructure.
+- Expected files to touch: `services/pipeline/main.py`, possibly `services/pipeline/stages/` if the stage result shape requires it, `tests/test_pipeline_telemetry.py`, and durable `docs/agent/` state files.
+- Validation commands: focused telemetry tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: track p50 and p95 per stage for scrape, SBERT, NCF, DQN, calibrator, and aggregation.
+- Skipped option: Adding Prometheus/OpenTelemetry dependencies in this task.
+- Reason skipped: The code already has timing hooks around stage execution; p50/p95 summaries can be added without new infrastructure or Docker changes.
+- Risk and mitigation: Preserve the existing pipeline response contract and add telemetry as additive metadata.
+
+## 2026-05-25 21:05 +07 - P1-OBS-001 telemetry design
+- Decision: Keep per-stage latency samples in bounded in-process deques and expose p50/p95 snapshots through `/health` and `stages["telemetry"]` in pipeline responses.
+- Stage mapping: `scrape` stays `scrape`; `encode` reports as `sbert`; `ncf_score` reports as `ncf`; `dqn_rank` reports as `dqn`; `aggregate` reports as `aggregation`.
+- Calibrator treatment: record a `calibrator` stage with `0.0 ms` and `mode=static_baseline` until the learned calibration task is implemented.
+- Skipped option: Renaming existing `timings_ms` keys.
+- Reason skipped: Existing clients may depend on `encode`, `ncf_score`, `dqn_rank`, and `aggregate`; telemetry aliases are additive.
+- Risk and mitigation: Added a response-contract test and reran existing pipeline contracts plus full pytest.

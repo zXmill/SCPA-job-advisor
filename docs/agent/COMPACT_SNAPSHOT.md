@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 20:57 +07
+Updated: 2026-05-25 21:05 +07
 
 ## Current Objective
-Commit the completed `P1-PERF-003` database index task.
+Commit the completed `P1-OBS-001` pipeline telemetry task.
 
 ## Current Phase
 performance
 
 ## Current Task ID
-P1-PERF-003
+P1-OBS-001
 
 ## Latest Commit Hash
-Root: `a9c1b46` (`docs: update long-running agent checkpoint`); pending commit `perf: add recommendation database indexes`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `742992a` (`perf: add recommendation database indexes`); pending commit `observability: add recommendation pipeline telemetry`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `a9c1b46` (`docs: update long-running agent checkpoint`); pending commit `
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task changes: `db/models.py`, `db/migrations/009_reco_hot_indexes.py`, `db/tests/test_models.py`, and durable `docs/agent/` state files.
+- Current task changes: `services/pipeline/main.py`, `tests/test_pipeline_telemetry.py`, and durable `docs/agent/` state files.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -58,9 +58,11 @@ Root: `a9c1b46` (`docs: update long-running agent checkpoint`); pending commit `
 - `db/models.py`
 - `db/migrations/009_reco_hot_indexes.py`
 - `db/tests/test_models.py`
+- `services/pipeline/main.py`
+- `tests/test_pipeline_telemetry.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. `P1-PERF-003` is implemented and validation passed; commit is pending.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. `P1-OBS-001` is implemented and validation passed; commit is pending.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -113,6 +115,11 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Added and verified TDD red model-index assertions.
 - Implemented ORM and Alembic hot-path indexes.
 - Ran P1-PERF-003 focused model tests, Alembic heads/current/upgrade/downgrade checks, and full backend pytest.
+- P1-PERF-003 commit: `git commit -m "perf: add recommendation database indexes"`.
+- Inspected `services/pipeline/main.py` timing hooks and pipeline tests.
+- Added and verified TDD red telemetry response contract.
+- Implemented rolling p50/p95 in-process telemetry and static calibrator placeholder.
+- Ran P1-OBS-001 focused, regression, and full backend validation commands.
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
@@ -168,6 +175,12 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P1-PERF-003 Alembic downgrade to `008_feature_extension_foundation` passed.
 - P1-PERF-003 Alembic re-upgrade head passed.
 - P1-PERF-003 full backend tests passed: `308 passed, 11 warnings`.
+- P1-PERF-003 commit exists as `742992a`.
+- P1-OBS-001 TDD red confirmed missing `stages["telemetry"]`.
+- P1-OBS-001 focused telemetry test passed: `1 passed`.
+- P1-OBS-001 pipeline contract tests passed: `4 passed`.
+- P1-OBS-001 internal service auth regression passed: `3 passed`.
+- P1-OBS-001 full backend tests passed: `309 passed, 11 warnings`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -182,4 +195,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only P1-PERF-003 files plus durable state files, inspect staged diff, and commit `perf: add recommendation database indexes`.
+Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only P1-OBS-001 files plus durable state files, inspect staged diff, and commit `observability: add recommendation pipeline telemetry`.

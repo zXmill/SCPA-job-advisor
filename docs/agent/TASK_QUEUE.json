@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "performance",
-  "current_task_id": "P1-PERF-003",
+  "current_task_id": "P1-OBS-001",
   "tasks": [
     {
       "id": "INIT-001",
@@ -378,7 +378,7 @@
         ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini heads"
       ],
       "validation_status": "passed",
-      "commit": "pending: perf: add recommendation database indexes",
+      "commit": "742992a",
       "notes": "Added non-duplicate indexes for active newest job candidate loading, active source/experience filtered job lists, and per-user application history."
     },
     {
@@ -386,22 +386,33 @@
       "phase": "performance",
       "title": "Pipeline telemetry",
       "priority": "P1",
-      "status": "pending",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P1-PERF-003"
       ],
       "files_expected": [
         "services/pipeline/main.py",
-        "services/pipeline/stages/"
+        "services/pipeline/stages/",
+        "tests/test_pipeline_telemetry.py"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/pipeline/main.py",
+        "tests/test_pipeline_telemetry.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_pipeline_telemetry.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Track p50/p95 per scrape, SBERT, NCF, DQN, calibrator, and aggregation stage."
+      "validation_status": "passed",
+      "commit": "pending: observability: add recommendation pipeline telemetry",
+      "notes": "Added rolling p50/p95 stage telemetry for scrape, SBERT, NCF, DQN, static calibrator placeholder, and aggregation."
     },
     {
       "id": "P2-001",
