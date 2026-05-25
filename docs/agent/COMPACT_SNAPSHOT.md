@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 23:18 +07
+Updated: 2026-05-25 23:23 +07
 
 ## Current Objective
-Record and checkpoint completed `P3-FEAT-004-FE` job alerts frontend, then split `P3-FEAT-005` before implementation.
+Checkpoint the `P3-FEAT-005` split, then start backend contract tests for the skill-gap detail endpoint.
 
 ## Current Phase
-frontend
+backend
 
 ## Current Task ID
-P3-FEAT-005
+P3-FEAT-005-BE
 
 ## Latest Commit Hash
-Root: `c196c70` (`docs: update long-running agent checkpoint`) before the pending durable-state checkpoint. Backend job-alert commit: `25b50ac`. Frontend nested repo: `9196506` (`feat: add job alerts frontend`).
+Root: `9b1beba` (`docs: update long-running agent checkpoint`). Backend job-alert commit: `25b50ac`. Frontend nested repo: `9196506` (`feat: add job alerts frontend`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `c196c70` (`docs: update long-running agent checkpoint`) before the pendin
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task state changes: durable `docs/agent/` files recording frontend job-alert commit `9196506`, marking `P3-FEAT-004-FE` and parent `P3-FEAT-004` done, and pointing next to `P3-FEAT-005`.
+- Current task state changes: durable `docs/agent/` files splitting `P3-FEAT-005` into backend/frontend child tasks and marking `P3-FEAT-005-BE` in progress.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -79,7 +79,7 @@ Root: `c196c70` (`docs: update long-running agent checkpoint`) before the pendin
 - `tests/test_job_alerts.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. P2-003 committed as `8ba2004`. P2-004 state checkpoint committed as `313f823`. P2-004 committed as `34757e9`. P2-005 state checkpoint committed as `a80547b`; P2-005 committed as `ba45824`. P3-FEAT-001-BE committed as `bf72c99`; P3-FEAT-001-FE committed in nested `frontend/` as `6915df6`; root checkpoint committed as `f2fb52b`; split checkpoint committed as `221beb1`; P3-FEAT-002-BE committed as `c0dd8e6`; P3-FEAT-002-FE committed in nested `frontend/` as `68deb7e`; root checkpoint committed as `60a2186`; P3-FEAT-003 split checkpoint committed as `8460824`; P3-FEAT-003-BE committed as `297d0ad`; P3-FEAT-003-FE committed in nested `frontend/` as `ffa45b4`; root checkpoint committed as `ce62692`; P3-FEAT-004 split checkpoint committed as `7c0202e`; P3-FEAT-004-BE committed as `25b50ac`; P3-FEAT-004-FE committed in nested `frontend/` as `9196506`. Root durable checkpoint for the frontend commit is pending.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. P2-003 committed as `8ba2004`. P2-004 state checkpoint committed as `313f823`. P2-004 committed as `34757e9`. P2-005 state checkpoint committed as `a80547b`; P2-005 committed as `ba45824`. P3-FEAT-001-BE committed as `bf72c99`; P3-FEAT-001-FE committed in nested `frontend/` as `6915df6`; root checkpoint committed as `f2fb52b`; split checkpoint committed as `221beb1`; P3-FEAT-002-BE committed as `c0dd8e6`; P3-FEAT-002-FE committed in nested `frontend/` as `68deb7e`; root checkpoint committed as `60a2186`; P3-FEAT-003 split checkpoint committed as `8460824`; P3-FEAT-003-BE committed as `297d0ad`; P3-FEAT-003-FE committed in nested `frontend/` as `ffa45b4`; root checkpoint committed as `ce62692`; P3-FEAT-004 split checkpoint committed as `7c0202e`; P3-FEAT-004-BE committed as `25b50ac`; P3-FEAT-004-FE committed in nested `frontend/` as `9196506`; root checkpoint committed as `9b1beba`. P3-FEAT-005-BE is active after a docs-only split.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -310,6 +310,7 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P3-FEAT-004-FE `npm run build` passed.
 - P3-FEAT-004-FE local HTTP smoke returned `200` for `/profile`.
 - P3-FEAT-004-FE committed in nested `frontend/` as `9196506`.
+- P3-FEAT-005 split planned backend/frontend child tasks; existing gateway route `GET /api/jobs/{job_id}/skill-gap` needs focused backend tests and page-ready contract hardening.
 - Reference report records older backend/frontend findings from 2026-05-25; current durable validation should be trusted over the report for tasks already completed.
 
 ## Known Errors
@@ -325,4 +326,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Validate `docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, commit `docs: update long-running agent checkpoint`, then split `P3-FEAT-005` into backend/frontend child tasks before implementation.
+Validate `docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, commit `docs: update long-running agent checkpoint`, then add focused backend tests for `GET /api/jobs/{job_id}/skill-gap`.

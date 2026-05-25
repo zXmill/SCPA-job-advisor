@@ -314,3 +314,12 @@
 - Skipped option: Implementing notification channel settings or delivery previews.
 - Reason skipped: The current backend contract persists alert preferences only; scheduled delivery belongs to a later notification task.
 - Risk and mitigation: Added typed API helpers, kept the profile UI scoped to create/list/disable, added accessible names for form controls, and validated with frontend lint, build, and `/profile` smoke.
+
+## 2026-05-25 23:23 +07 - P3-FEAT-005 split and backend mini plan
+- Decision: Split skill-gap detail into `P3-FEAT-005-BE` and `P3-FEAT-005-FE`, with backend contract hardening first.
+- Expected backend files to touch: `services/gateway/main.py`, `tests/test_skill_gap_detail.py`, and durable `docs/agent/` state files.
+- Backend validation commands: focused skill-gap detail tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract target: the existing authenticated `GET /api/jobs/{job_id}/skill-gap` route should become page-ready, tested, and explicit about missing jobs and matched/missing skills.
+- Expected frontend files to touch later: `frontend/src/lib/api.ts` and `frontend/src/app/jobs/[id]/page.tsx`, with `npm run lint` and `npm run build` validation.
+- Skipped option: Building the frontend page directly against the current untested route.
+- Reason skipped: The route exists but lacks focused backend coverage, so frontend work should not lock in an under-specified contract.

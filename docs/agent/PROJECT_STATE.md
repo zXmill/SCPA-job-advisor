@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 23:18 +07
+Updated: 2026-05-25 23:23 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -96,4 +96,4 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 `P3-FEAT-004-FE` - job alerts frontend. Frontend commit `9196506`.
 
 ## Next Task
-`P3-FEAT-005` - skill-gap detail page. Split into backend/frontend child tasks before implementation.
+`P3-FEAT-005-BE` - skill-gap detail backend contract. Harden the existing authenticated job skill-gap endpoint before frontend integration.

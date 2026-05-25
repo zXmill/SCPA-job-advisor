@@ -1494,3 +1494,22 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.
+
+## 2026-05-25 23:23 +07 - P3-FEAT-005 split
+
+### Active Task
+- `P3-FEAT-005-BE` - Skill-gap detail backend contract.
+
+### What Changed
+- Split parent `P3-FEAT-005` into backend and frontend child tasks.
+- Marked `P3-FEAT-005-BE` in progress and left `P3-FEAT-005-FE` pending.
+- Confirmed the gateway already has `GET /api/jobs/{job_id}/skill-gap`, but the route lacks focused tests and a page-ready contract.
+- Recorded the backend mini plan in `DECISION_LOG.md`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Commit this state-only split checkpoint.
+- Add focused backend tests for skill-gap detail behavior before changing the gateway route.
+
+### Next Exact Action
+- Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then write focused backend tests for the existing skill-gap route.
