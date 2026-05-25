@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "frontend",
-  "current_task_id": "P3-FEAT-006-FE",
+  "current_task_id": "P3-FEAT-007",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1127,7 +1127,7 @@
       "phase": "frontend",
       "title": "Admin model-health dashboard",
       "priority": "P3",
-      "status": "blocked",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P3-FEAT-005"
@@ -1146,11 +1146,13 @@
         "docs/agent/VALIDATION_LEDGER.md"
       ],
       "validation_commands": [
-        ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_admin_model_health.py -q",
+        "npm run lint",
+        "npm run build"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-006-BE and P3-FEAT-006-FE are done."
+      "validation_status": "passed",
+      "commit": "backend:fcd28b7 frontend:9090cd0",
+      "notes": "Backend and frontend child tasks are complete. Admin analytics page now consumes the gateway model-health contract."
     },
     {
       "id": "P3-FEAT-006-BE",
@@ -1190,7 +1192,7 @@
       "phase": "frontend",
       "title": "Admin model-health dashboard frontend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-006-BE"
@@ -1199,14 +1201,25 @@
         "frontend/src/lib/api.ts",
         "frontend/src/app/analytics/page.tsx"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/analytics/page.tsx",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         "npm run lint",
-        "npm run build"
+        "npm run build",
+        "Invoke-WebRequest -UseBasicParsing http://127.0.0.1:3000/analytics -TimeoutSec 5",
+        "git -C frontend diff --cached --check"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Expose admin model-health status on the analytics/dashboard surface after backend validation passes."
+      "validation_status": "passed",
+      "commit": "frontend:9090cd0",
+      "notes": "Analytics page renders an admin-only model-health panel above the existing job listing. Browser tool was not exposed by tool discovery; lint, build, HTTP smoke, and staged diff check passed."
     },
     {
       "id": "P3-FEAT-007",

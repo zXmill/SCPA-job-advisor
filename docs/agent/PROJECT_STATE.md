@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 23:42 +07
+Updated: 2026-05-25 23:47 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -81,8 +81,9 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Gateway job skill-gap detail endpoint now returns a page-ready contract with job context, required/matched/missing skills, explanation metadata, missing-job 404 behavior, and persisted `skill_gap_snapshots`.
 - Frontend job detail page now renders skill-gap percent, required skills, matched skills, and missing skills from the backend contract.
 - Gateway admin model-health endpoint is available at authenticated admin-only `GET /api/admin/model-health`; it summarizes pipeline status, downstream scraper/SBERT/NCF/DQN URLs, calibrator/aggregation stage status, telemetry, and continual-training state from pipeline health.
+- Frontend analytics page now renders an admin-only model-health panel with pipeline status, model service status, stage p50/p95 telemetry, and continual-training state from `GET /api/admin/model-health`.
 - Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `347 passed, 1 warning` after P3-FEAT-006-BE.
-- Latest frontend validation after P3-FEAT-004-FE: `npm run lint` passed with 16 existing warnings, `npm run build` passed, and local HTTP smoke returned `200` for `/profile`.
+- Latest frontend validation after P3-FEAT-006-FE: `npm run lint` passed with 16 existing warnings, `npm run build` passed, and local HTTP smoke returned `200` for `/analytics`.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
@@ -96,7 +97,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P3-FEAT-006-BE` - admin model-health dashboard backend. Root commit `fcd28b7`.
+`P3-FEAT-006-FE` - admin model-health dashboard frontend. Nested frontend commit `9090cd0`.
 
 ## Next Task
-`P3-FEAT-006-FE` - admin model-health dashboard frontend. Add the dashboard surface on the existing analytics route.
+`P3-FEAT-007` - recommendation reason filters. Split backend/frontend subtasks before implementation.

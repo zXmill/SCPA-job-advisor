@@ -371,3 +371,11 @@
 - UI contract: admins should see pipeline status, model service configuration, p50/p95 stage telemetry, and continual-training status from `GET /api/admin/model-health`.
 - Skipped option: Creating a separate `/admin/model-health` route.
 - Reason skipped: The existing analytics/dashboard surface is already the operational view; a new route would expand navigation scope for a small child task.
+
+## 2026-05-25 23:47 +07 - P3-FEAT-006-FE frontend implementation decision
+- Decision: Render the model-health panel only for users whose role is `admin`, while preserving the existing analytics job search/listing flow for all users.
+- Contract: add a typed `api.getAdminModelHealth()` helper, call it from the analytics page for admins, and display pipeline status, model services, stage latency, and continual-training state.
+- Trade-off: The nested frontend repo still had `src/app/analytics/page.tsx` untracked, so the frontend commit adds the full route file.
+- Skipped option: Fetching the admin endpoint for every user and handling `403` in the UI.
+- Reason skipped: Non-admin users should not spend a request on an admin-only operational panel.
+- Risk and mitigation: Validated with frontend lint, production build, local `/analytics` HTTP smoke, and nested staged diff check. Browser visual inspection was not available because tool discovery exposed no Browser tool and Node REPL had no Playwright module.
