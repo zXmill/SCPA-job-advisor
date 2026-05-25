@@ -355,32 +355,39 @@
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_policy_contracts.py -q`
 - Result: fail
 - Summary: Expected TDD red failure. DQN rank made six policy-network forward calls for three jobs instead of one batched call.
-- Related commit hash: pending batch scoring commit.
+- Related commit hash: `7ce8e79`.
 
 ## 2026-05-25 20:39 +07
 - Task ID: `P1-PERF-002`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_policy_contracts.py -q`
 - Result: pass
 - Summary: `3 passed in 3.84s`.
-- Related commit hash: pending batch scoring commit.
+- Related commit hash: `7ce8e79`.
 
 ## 2026-05-25 20:40 +07
 - Task ID: `P1-PERF-002`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_ncf_neumf_contracts.py -q`
 - Result: pass
 - Summary: `4 passed in 3.98s`.
-- Related commit hash: pending batch scoring commit.
+- Related commit hash: `7ce8e79`.
 
 ## 2026-05-25 20:42 +07
 - Task ID: `P1-PERF-002`
 - Command: `.\.venv\Scripts\python.exe -m pytest -q`
 - Result: pass
 - Summary: `307 passed, 11 warnings in 91.10s`.
-- Related commit hash: pending batch scoring commit.
+- Related commit hash: `7ce8e79`.
 
 ## 2026-05-25 20:42 +07
 - Task ID: `P1-PERF-002`
 - Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
 - Result: pass
 - Summary: Durable task queue parsed successfully after marking P1-PERF-002 done.
-- Related commit hash: pending batch scoring commit.
+- Related commit hash: `7ce8e79`.
+
+## 2026-05-25 20:45 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after reconciling `P1-PERF-002` and marking `P1-PERF-003` in progress.
+- Related commit hash: pending survival checkpoint commit.

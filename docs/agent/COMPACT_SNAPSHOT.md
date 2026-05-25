@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 20:42 +07
+Updated: 2026-05-25 20:45 +07
 
 ## Current Objective
-Commit the completed `P1-PERF-002` batch scoring change, then start `P1-PERF-003`.
+Create a survival checkpoint after `P1-PERF-002`, then continue `P1-PERF-003` database index work.
 
 ## Current Phase
-security
+performance
 
 ## Current Task ID
-P1-PERF-002
+P1-PERF-003
 
 ## Latest Commit Hash
-Root: `f167a99` (`perf: cache sbert job embeddings`); pending commit `perf: batch recommendation model scoring`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `7ce8e79` (`perf: batch recommendation model scoring`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `f167a99` (`perf: cache sbert job embeddings`); pending commit `perf: batc
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task changes: `services/dqn/main.py`, `tests/test_dqn_policy_contracts.py`, `tests/test_ncf_neumf_contracts.py`, and durable `docs/agent/` state files.
+- Current task changes: durable `docs/agent/` state files for the survival checkpoint; database index implementation has not started yet.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -57,7 +57,7 @@ Root: `f167a99` (`perf: cache sbert job embeddings`); pending commit `perf: batc
 - `tests/test_ncf_neumf_contracts.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. `P1-PERF-002` is implemented and validation passed; commit is pending.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. `P1-PERF-003` is marked in progress; database index implementation has not started.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -152,6 +152,7 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P1-PERF-002 DQN policy contracts passed: `3 passed`.
 - P1-PERF-002 NCF NeuMF contracts passed: `4 passed`.
 - P1-PERF-002 full backend tests passed: `307 passed, 11 warnings`.
+- P1-PERF-002 commit exists as `7ce8e79`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -165,4 +166,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only P1-PERF-002 files plus durable state files, inspect staged diff, and commit `perf: batch recommendation model scoring`.
+Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`; then inspect database models, migrations, and hot recommendation queries for `P1-PERF-003`.

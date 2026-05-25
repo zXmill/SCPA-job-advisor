@@ -97,3 +97,12 @@
 - Skipped option: Optimizing model internals before confirming whether the pipeline already calls batch endpoints.
 - Reason skipped: The largest latency win may be eliminating per-job HTTP calls, not changing model math.
 - Risk and mitigation: Preserve response shape expected by downstream aggregation while adding batch summaries/counters.
+
+## 2026-05-25 20:45 +07 - Survival checkpoint and P1-PERF-003 mini plan
+- Decision: Reconcile durable state after the compact and create a state-only survival checkpoint before database index work.
+- Expected files to touch next: `db/models.py`, a new Alembic migration under `db/migrations/` if indexes are missing, targeted migration/index tests if existing patterns support them, and durable `docs/agent/` state files.
+- Validation commands: inspect current indexes first, then run `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads` and `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: add indexes for hot recommendation paths while avoiding duplicate indexes.
+- Skipped option: Adding broad indexes to every foreign key or score column without query evidence.
+- Reason skipped: Duplicate or low-value indexes increase write overhead and migration noise.
+- Risk and mitigation: Compare `db/models.py`, existing migrations, and recommendation query filters/orderings before creating a migration.

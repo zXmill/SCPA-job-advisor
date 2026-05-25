@@ -536,3 +536,59 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P1-PERF-002 files and durable state files, inspect staged diff, and commit `perf: batch recommendation model scoring`.
+
+## 2026-05-25 20:45 +07 - Post-compact recovery note
+
+### Active Task
+- Repository state shows `P1-PERF-002` is already committed as `7ce8e79`; the next active task should be `P1-PERF-003` - Database indexes.
+
+### Dirty Files
+- Pre-existing: `README.md` modified.
+- Pre-existing: broad untracked project files and directories remain.
+- New recovery change: `docs/agent/SESSION_REPORT.md`.
+
+### Previous Task Complete
+- Yes. `git log --oneline -10` shows `7ce8e79 perf: batch recommendation model scoring` as the latest commit.
+- Durable files still need reconciliation from the previous pending-commit state.
+
+### Validation Still Needed
+- Reconcile durable state with `7ce8e79`.
+- Run `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`.
+- Commit a survival checkpoint before editing database models or migrations.
+
+### Commands Run
+- `Get-Content -Raw AGENTS.md`
+- `Get-Content -Raw docs\agent\PROJECT_STATE.md`
+- `Get-Content -Raw docs\agent\TASK_QUEUE.json`
+- `Get-Content -Raw docs\agent\COMPACT_SNAPSHOT.md`
+- `Get-Content -Raw docs\agent\SESSION_REPORT.md`
+- `Get-Content -Raw docs\agent\DECISION_LOG.md`
+- `Get-Content -Raw docs\agent\VALIDATION_LEDGER.md`
+- `Get-Content -Raw docs\agent\FAILURE_LEDGER.md`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Update durable state to mark `P1-PERF-002` committed as `7ce8e79`, mark `P1-PERF-003` in progress, and create `docs: update long-running agent checkpoint`.
+
+## 2026-05-25 20:45 +07 - Survival checkpoint before P1-PERF-003
+
+### Active Task
+- `P1-PERF-003` - Database indexes.
+
+### What Changed
+- Reconciled durable state with root commit `7ce8e79`.
+- Marked `P1-PERF-003` in progress and recorded the mini plan in `DECISION_LOG.md`.
+
+### Validation Still Needed
+- Inspect staged checkpoint diff before commit.
+
+### Validation Results
+- `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`: passed.
+
+### Remaining Issues
+- Existing pytest warnings about short test JWT keys remain.
+- Root repo remains dirty with pre-existing modified `README.md` and broad untracked project files.
+
+### Next Exact Action
+- Commit the state-only survival checkpoint, then inspect current database models, migrations, and recommendation query paths before adding indexes.

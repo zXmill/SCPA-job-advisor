@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "security",
-  "current_task_id": "P1-PERF-002",
+  "current_phase": "performance",
+  "current_task_id": "P1-PERF-003",
   "tasks": [
     {
       "id": "INIT-001",
@@ -344,7 +344,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending: perf: batch recommendation model scoring",
+      "commit": "7ce8e79",
       "notes": "NCF already used one batched NeuMF forward; tightened contract. DQN rank now batches policy-network Q-value scoring across jobs and reuses the Q matrix for action selection."
     },
     {
@@ -352,7 +352,7 @@
       "phase": "performance",
       "title": "Database indexes",
       "priority": "P1",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "medium",
       "depends_on": [
         "P1-PERF-002"
@@ -361,14 +361,21 @@
         "db/models.py",
         "db/migrations/"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest -q",
         ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini heads"
       ],
       "validation_status": "not_run",
       "commit": "",
-      "notes": "Add non-duplicate indexes for hot recommendation paths."
+      "notes": "Start by inspecting models, migrations, and recommendation queries; add only non-duplicate indexes for hot recommendation paths."
     },
     {
       "id": "P1-OBS-001",
