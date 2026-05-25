@@ -222,25 +222,32 @@
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_execution_auth.py -q`
 - Result: fail
 - Summary: Expected TDD red failure. Direct `/pipeline/run` returned 200 without credentials because the route had no auth dependency.
-- Related commit hash: pending pipeline execution security commit.
+- Related commit hash: `8c4f9b1`.
 
 ## 2026-05-25 20:20 +07
 - Task ID: `P1-SEC-003`
 - Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_execution_auth.py -q`
 - Result: pass
 - Summary: `1 passed in 0.03s`.
-- Related commit hash: pending pipeline execution security commit.
+- Related commit hash: `8c4f9b1`.
 
 ## 2026-05-25 20:23 +07
 - Task ID: `P1-SEC-003`
 - Command: `.\.venv\Scripts\python.exe -m pytest -q`
 - Result: pass
 - Summary: `304 passed, 11 warnings in 93.32s`.
-- Related commit hash: pending pipeline execution security commit.
+- Related commit hash: `8c4f9b1`.
 
 ## 2026-05-25 20:23 +07
 - Task ID: `P1-SEC-003`
 - Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
 - Result: pass
 - Summary: Durable task queue parsed successfully after marking P1-SEC-003 done.
-- Related commit hash: pending pipeline execution security commit.
+- Related commit hash: `8c4f9b1`.
+
+## 2026-05-25 20:24 +07
+- Task ID: `P1-CI-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-CI-001 in progress for the survival checkpoint.
+- Related commit hash: pending checkpoint commit.

@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 20:23 +07
+Updated: 2026-05-25 20:24 +07
 
 ## Current Objective
-Commit the completed `P1-SEC-003` pipeline execution route hardening, then start `P1-CI-001`.
+Create survival checkpoint after the security commits, then implement `P1-CI-001` CI hardening.
 
 ## Current Phase
 security
 
 ## Current Task ID
-P1-SEC-003
+P1-CI-001
 
 ## Latest Commit Hash
-Root: `be52d4f` (`security: add ssrf guard to scraper endpoint`); pending commit `security: protect pipeline execution endpoint`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `8c4f9b1` (`security: protect pipeline execution endpoint`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `be52d4f` (`security: add ssrf guard to scraper endpoint`); pending commit
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task changes: `services/gateway/main.py`, `tests/test_pipeline_execution_auth.py`, and durable `docs/agent/` state files.
+- Current checkpoint changes: durable `docs/agent/` files updated to reconcile `P1-SEC-003` and start `P1-CI-001`.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -51,7 +51,7 @@ Root: `be52d4f` (`security: add ssrf guard to scraper endpoint`); pending commit
 - `tests/test_pipeline_execution_auth.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. `P1-SEC-003` is implemented and validation passed; commit is pending.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. `P1-CI-001` is marked in progress; no CI files have been edited yet.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -84,6 +84,7 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Added and verified TDD red route-auth test.
 - Implemented admin-only direct pipeline route guard.
 - Ran P1-SEC-003 focused and full validation commands.
+- P1-SEC-003 commit: `git commit -m "security: protect pipeline execution endpoint"`.
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
@@ -114,6 +115,7 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P1-SEC-003 TDD red confirmed public direct route.
 - P1-SEC-003 focused route-auth test passed: `1 passed`.
 - P1-SEC-003 full backend tests passed: `304 passed, 11 warnings`.
+- P1-SEC-003 commit exists as `8c4f9b1`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -127,4 +129,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only P1-SEC-003 files plus durable state files, inspect staged diff, and commit `security: protect pipeline execution endpoint`.
+Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.

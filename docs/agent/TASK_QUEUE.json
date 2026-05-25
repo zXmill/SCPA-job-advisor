@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "security",
-  "current_task_id": "P1-SEC-003",
+  "current_task_id": "P1-CI-001",
   "tasks": [
     {
       "id": "INIT-001",
@@ -248,7 +248,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending: security: protect pipeline execution endpoint",
+      "commit": "8c4f9b1",
       "notes": "Direct gateway /pipeline/run now requires a valid admin bearer token. Normal user recommendations remain on /api/recommendations."
     },
     {
@@ -256,7 +256,7 @@
       "phase": "infra",
       "title": "Harden CI",
       "priority": "P1",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "medium",
       "depends_on": [
         "P1-SEC-003"

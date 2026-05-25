@@ -391,3 +391,27 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P1-SEC-003 files and durable state files, inspect the staged diff, and commit `security: protect pipeline execution endpoint`.
+
+## 2026-05-25 20:24 +07 - Survival checkpoint
+
+### Active Task
+- `P1-CI-001` - Harden CI.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked repo files remain.
+- New checkpoint state changes: durable `docs/agent/` files updated to reconcile `P1-SEC-003` as commit `8c4f9b1` and mark `P1-CI-001` in progress.
+
+### Previous Task Complete
+- `P1-SEC-003` committed as `8c4f9b1`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Commit this state-only checkpoint before editing CI.
+
+### Commands Run
+- `git commit -m "security: protect pipeline execution endpoint"`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Validate task queue JSON, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.

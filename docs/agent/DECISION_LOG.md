@@ -71,3 +71,11 @@
 - Skipped option: Removing the route outright in this task.
 - Reason skipped: Some local/admin scripts may still rely on direct execution; admin gating narrows exposure while preserving an intentional operator path.
 - Risk and mitigation: Existing tests may call `/pipeline/run` directly. Update only tests that represent the new security contract.
+
+## 2026-05-25 20:24 +07 - Survival checkpoint and P1-CI-001 mini plan
+- Decision: Create a state-only checkpoint after three security commits, then start CI hardening.
+- Expected files to touch next: `.github/workflows/ci.yml` and durable `docs/agent/` state files.
+- Validation commands: inspect current CI, update workflow to install dependencies and run backend tests, Alembic head/upgrade where feasible, frontend lint, and frontend build; validate workflow YAML shape and run local equivalents already proven for backend/frontend where practical.
+- Skipped option: Combining CI hardening with the previous security commits.
+- Reason skipped: CI changes are infrastructure work with different validation and should remain a separate checkpoint.
+- Risk and mitigation: `.github/workflows/ci.yml` is currently untracked in the root repo; stage only that workflow if it is changed.
