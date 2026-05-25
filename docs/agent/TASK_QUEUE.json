@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "backend",
-  "current_task_id": "P3-FEAT-007-BE",
+  "current_phase": "frontend",
+  "current_task_id": "P3-FEAT-007-FE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1281,7 +1281,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending `feat: add recommendation reason filter backend`",
+      "commit": "45660fa",
       "notes": "Recommendation responses expose reason_filter_scores and labels for semantic fit, interaction fit, career signal, location fit, and recency. Focused, adjacent, and full backend validation passed."
     },
     {
@@ -1289,7 +1289,7 @@
       "phase": "frontend",
       "title": "Recommendation reason filters frontend",
       "priority": "P3",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-007-BE"

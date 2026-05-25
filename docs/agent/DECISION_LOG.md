@@ -396,3 +396,11 @@
 - Skipped option: Mutating pipeline aggregate output for this UI concern.
 - Reason skipped: The gateway already adapts the pipeline response for frontend contracts, so this keeps pipeline stage outputs stable.
 - Risk and mitigation: Added focused route coverage through `/api/recommendations`, then ran adjacent recommendation feedback/saved-job regressions and full backend pytest.
+
+## 2026-05-25 23:59 +07 - P3-FEAT-007-FE frontend mini plan
+- Decision: Add reason-filter controls to the existing recommendations page next to the current sort control.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/recommendations/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository, plus local `/recommendations` smoke if the dev server is available.
+- UI contract: users should be able to prioritize match, SBERT semantic fit, NCF interaction fit, DQN career signal, closest location, or newest jobs using the backend `reason_filter_scores`.
+- Skipped option: Adding backend query parameters for server-side filtering in this task.
+- Reason skipped: Recommendation slates are already loaded client-side; this task is about user control over the current slate, not changing candidate generation.

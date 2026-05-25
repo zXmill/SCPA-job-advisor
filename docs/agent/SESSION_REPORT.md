@@ -1733,3 +1733,43 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P3-FEAT-007-BE files plus durable state files, inspect staged diff, and commit `feat: add recommendation reason filter backend`.
+
+## 2026-05-25 23:59 +07 - P3-FEAT-007-BE commit and P3-FEAT-007-FE start
+
+### Active Task
+- `P3-FEAT-007-FE` - Recommendation reason filters frontend.
+
+### What Changed
+- Committed `P3-FEAT-007-BE` as `45660fa`.
+- Recorded the backend commit hash in the task queue and project state.
+- Marked the frontend child task in progress.
+- Recorded a frontend mini plan in `DECISION_LOG.md`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Commit this state-only checkpoint before editing frontend files.
+- Inspect the recommendation API type and page sort controls before adding reason filters.
+
+### Next Exact Action
+- Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then implement the recommendations-page reason-filter controls.
+
+## 2026-05-26 00:05 +07 - Recovery note
+
+### Active Task
+- `P3-FEAT-007-FE` - Recommendation reason filters frontend.
+
+### Previous Task Complete
+- `P3-FEAT-007-BE` committed as `45660fa`. Backend validation passed (`348 passed, 1 warning`).
+
+### Current State
+- Root repo `docs/agent/` state files are modified but uncommitted. They correctly point `current_task_id` to `P3-FEAT-007-FE` and mark it `in_progress`.
+- Frontend nested repo last commit is `9090cd0 feat: add admin model-health frontend`.
+- No frontend code changes have been made for reason filters yet.
+- `frontend/src/lib/api.ts` and `frontend/src/app/recommendations/page.tsx` are the expected target files.
+
+### Validation Still Needed
+- Commit the root state checkpoint.
+- Run `npm run lint` and `npm run build` in `frontend/` before and after frontend changes.
+
+### Next Exact Action
+- Stage and commit root `docs/agent/` state updates, then inspect the recommendations page and API types to implement reason-filter controls.
