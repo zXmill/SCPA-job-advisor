@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 21:06 +07
+Updated: 2026-05-25 21:14 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -64,13 +64,13 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 ## Known Working Areas
 - Repository contains extensive pytest coverage and local report evidence of backend health.
 - JWT access and refresh signing secrets now fail fast when missing or shorter than 32 bytes in shared auth and gateway configuration.
-- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `313 passed, 1 warning` after P2-001.
+- Gateway CORS origins now default to localhost in development and reject empty or wildcard origins in production.
+- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `317 passed, 1 warning` after P2-002.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
 - Frontend lint still reports warnings, but the blocking hook-order error in `frontend/src/app/recommendations/page.tsx` has been fixed and validated locally.
 - Existing frontend lint warnings remain but do not fail lint.
-- CORS defaults are too permissive outside Compose.
 - Feedback forwarding can report queued without a durable retry outbox.
 - No fresh import validation was run during this initializer, so known broken imports remain unknown.
 
@@ -80,7 +80,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P2-001` - validated JWT secret configuration. Root commit `dc5cc2c`.
+`P2-002` - restricted CORS origins by environment. Commit pending.
 
 ## Next Task
-Continue `P2-002`: CORS hardening.
+Commit `P2-002`, then continue `P2-003`: durable feedback outbox.

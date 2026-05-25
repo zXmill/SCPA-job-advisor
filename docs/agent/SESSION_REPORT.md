@@ -778,3 +778,31 @@
 
 ### Next Exact Action
 - Validate task queue JSON, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.
+
+## 2026-05-25 21:14 +07 - P2-002 result
+
+### Active Task
+- `P2-002` is implemented, validated, and ready to commit.
+
+### What Changed
+- Added environment-aware CORS origin resolution in `services/gateway/main.py`.
+- Development defaults to `http://localhost:3000` and `http://localhost:8000` when no CORS origins are configured.
+- Production rejects empty CORS origin configuration and rejects wildcard `*` origins.
+- Docker Compose now passes `APP_ENV` to the gateway and uses explicit CORS origins instead of hard-coded `*`.
+- `.env.example` now documents `CORS_ALLOW_ORIGINS` and the production wildcard rejection rule.
+- Added `tests/test_cors_config.py`.
+
+### Validation Results
+- TDD red: `tests\test_cors_config.py` failed because `_resolve_cors_origins` did not exist.
+- Focused CORS suite: `4 passed`.
+- Gateway auth/CORS regression: `44 passed, 1 warning`.
+- `docker compose config --quiet` passed with explicit production CORS origin and required throwaway secrets.
+- Rendered Compose config confirmed `APP_ENV=production` and `CORS_ALLOW_ORIGINS=https://scpa.example.com`.
+- Full backend suite: `317 passed, 1 warning`.
+
+### Remaining Issues
+- `P2-003` durable feedback outbox is still pending.
+- One warning remains in the wrong-secret test because it intentionally signs a forged token with a short attacker-controlled secret.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P2-002 files plus durable state files, inspect staged diff, and commit `security: restrict cors origins`.

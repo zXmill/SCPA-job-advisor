@@ -456,7 +456,7 @@
       "phase": "security",
       "title": "CORS hardening",
       "priority": "P2",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P2-001"
@@ -467,6 +467,10 @@
         ".env.example"
       ],
       "files_touched": [
+        "services/gateway/main.py",
+        "docker-compose.yml",
+        ".env.example",
+        "tests/test_cors_config.py",
         "docs/agent/PROJECT_STATE.md",
         "docs/agent/TASK_QUEUE.json",
         "docs/agent/DECISION_LOG.md",
@@ -475,12 +479,14 @@
         "docs/agent/VALIDATION_LEDGER.md"
       ],
       "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_cors_config.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_cors_config.py tests\\test_auth_endpoints.py tests\\test_pipeline_execution_auth.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q",
-        "docker compose config"
+        "docker compose config --quiet"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Restrict CORS by environment. No wildcard CORS in production. Started after survival checkpoint; implementation not yet begun."
+      "validation_status": "passed",
+      "commit": "pending security: restrict cors origins",
+      "notes": "Added environment-aware CORS origin resolution, local dev defaults, production wildcard/empty-origin rejection, and Compose/.env wiring for explicit origins."
     },
     {
       "id": "P2-003",

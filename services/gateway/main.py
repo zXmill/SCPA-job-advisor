@@ -44,6 +44,40 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
 logger = logging.getLogger("scpa.gateway")
 
 # ── Configuration ──
+DEFAULT_DEV_CORS_ORIGINS = ("http://localhost:3000", "http://localhost:8000")
+PRODUCTION_ENVS = {"production", "prod"}
+
+
+def _resolve_cors_origins(app_env: str | None, raw_origins: str | None) -> list[str]:
+    env = (app_env or "development").strip().lower()
+    origins = [
+        origin.strip()
+        for origin in (raw_origins or "").split(",")
+        if origin.strip()
+    ]
+
+    if not origins and env not in PRODUCTION_ENVS:
+        origins = list(DEFAULT_DEV_CORS_ORIGINS)
+
+    if env in PRODUCTION_ENVS:
+        if not origins:
+            raise RuntimeError("CORS origins must be configured in production")
+        if "*" in origins:
+            raise RuntimeError("Wildcard CORS origins are not allowed in production")
+
+    return origins
+
+
+def _cors_origins_from_env() -> list[str]:
+    raw_origins = (
+        os.getenv("CORS_ALLOW_ORIGINS")
+        or os.getenv("CORS_ALLOWED_ORIGINS")
+        or os.getenv("CORS_ORIGINS")
+    )
+    return _resolve_cors_origins(os.getenv("APP_ENV", "development"), raw_origins)
+
+
+APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
 JWT_SECRET = validate_jwt_secret(os.getenv("JWT_SECRET", ""), "JWT_SECRET")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS", "24"))
@@ -841,11 +875,7 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=(
-        os.getenv("CORS_ALLOW_ORIGINS")
-        or os.getenv("CORS_ALLOWED_ORIGINS")
-        or os.getenv("CORS_ORIGINS", "*")
-    ).split(","),
+    allow_origins=_cors_origins_from_env(),
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],

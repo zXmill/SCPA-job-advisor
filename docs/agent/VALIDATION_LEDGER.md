@@ -608,3 +608,59 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after recording `P2-001` commit `dc5cc2c` and marking `P2-002` in progress.
 - Related commit hash: pending survival checkpoint commit.
+
+## 2026-05-25 21:06 +07
+- Task ID: `P2-002`
+- Command: `git commit -m "docs: update long-running agent checkpoint"`
+- Result: pass
+- Summary: Created state-only survival checkpoint `f9711cd`.
+- Related commit hash: `f9711cd`.
+
+## 2026-05-25 21:11 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_cors_config.py -q`
+- Result: fail
+- Summary: Expected TDD red failure: 4 failures because `_resolve_cors_origins` did not exist.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:12 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_cors_config.py -q`
+- Result: pass
+- Summary: `4 passed in 0.04s`.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:13 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_cors_config.py tests\test_auth_endpoints.py tests\test_pipeline_execution_auth.py -q`
+- Result: pass
+- Summary: `44 passed, 1 warning in 62.32s`.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:13 +07
+- Task ID: `P2-002`
+- Command: `docker compose config --quiet`
+- Result: pass
+- Summary: Compose configuration validated with explicit production CORS origin and required throwaway JWT/internal/database environment variables.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:13 +07
+- Task ID: `P2-002`
+- Command: `docker compose config --format json`
+- Result: pass
+- Summary: Rendered gateway environment included `APP_ENV=production` and `CORS_ALLOW_ORIGINS=https://scpa.example.com`.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:14 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `317 passed, 1 warning in 93.00s`.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:14 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking `P2-002` done.
+- Related commit hash: pending `security: restrict cors origins`.

@@ -26,11 +26,12 @@ services:
       GATEWAY_P95_TARGET_MS: "150"
       DATABASE_URL: ${GATEWAY_DATABASE_URL:?GATEWAY_DATABASE_URL required}
       PUBLIC_GATEWAY_URL: ${PUBLIC_GATEWAY_URL:-http://localhost:8000}
+      APP_ENV: ${APP_ENV:-development}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET required}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       JWT_EXPIRY_HOURS: "24"
-      CORS_ALLOW_ORIGINS: "*"
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8000}
       LOG_LEVEL: INFO
     depends_on:
       postgres:

@@ -158,3 +158,11 @@
 - Skipped option: Hard-coding one production origin immediately.
 - Reason skipped: The repo already has `CORS_ALLOW_ORIGINS` and `CORS_ALLOWED_ORIGINS` environment surfaces; inspect current parsing and Compose wiring before choosing the smallest compatible contract.
 - Risk and mitigation: Preserve local development ergonomics for `localhost` while adding a production fail-fast or safe default for wildcard origins.
+
+## 2026-05-25 21:14 +07 - P2-002 CORS hardening design
+- Decision: Resolve CORS origins through a small gateway helper that defaults development to localhost origins and rejects missing or wildcard origins when `APP_ENV` is `production` or `prod`.
+- Compose wiring: Pass `APP_ENV` into the gateway and set `CORS_ALLOW_ORIGINS` from `CORS_ALLOWED_ORIGINS`, defaulting to localhost instead of `*`.
+- `.env.example`: Document `CORS_ALLOW_ORIGINS` and the production wildcard rejection rule.
+- Skipped option: Rejecting wildcard origins in every environment.
+- Reason skipped: The task requirement is production hardening; local development may still intentionally use permissive values outside production, though the default is now restricted.
+- Risk and mitigation: Added focused CORS config tests, gateway auth regressions, Compose rendering validation, and full backend pytest.
