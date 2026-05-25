@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "backend",
-  "current_task_id": "P3-FEAT-001-BE",
+  "current_phase": "frontend",
+  "current_task_id": "P3-FEAT-001-FE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -672,21 +672,22 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "",
-      "notes": "Added exclude support to skill autocomplete so selected canonical skills and aliases can be filtered out. Full backend validation passed; commit hash will be recorded in the next checkpoint."
+      "commit": "bf72c99",
+      "notes": "Added exclude support to skill autocomplete so selected canonical skills and aliases can be filtered out. Full backend validation passed."
     },
     {
       "id": "P3-FEAT-001-FE",
       "phase": "frontend",
       "title": "Skill taxonomy autocomplete frontend",
       "priority": "P3",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-001-BE"
       ],
       "files_expected": [
-        "frontend/"
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/profile/page.tsx"
       ],
       "files_touched": [],
       "validation_commands": [

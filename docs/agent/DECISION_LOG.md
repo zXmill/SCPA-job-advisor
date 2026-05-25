@@ -235,3 +235,12 @@
 - Skipped option: Adding a new route name such as `/api/skills/autocomplete`.
 - Reason skipped: The existing endpoint already exposes taxonomy suggestions and is used by profile validation semantics; extending it is a smaller backend contract.
 - Risk and mitigation: Added focused tests for canonical-name and alias exclusion, then reran existing taxonomy/profile regressions and full backend pytest.
+
+## 2026-05-25 21:56 +07 - P3-FEAT-001-FE frontend mini plan
+- Decision: Wire skill entry on the existing profile page to the backend taxonomy search endpoint.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/profile/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in `frontend/`.
+- Requirement: Suggest canonical skills while editing, exclude selected skills, and preserve existing save semantics.
+- Skipped option: Reworking onboarding skill entry in the same task.
+- Reason skipped: This child task should be a narrow frontend integration after the backend contract; onboarding can reuse the API in a later task if needed.
+- Risk and mitigation: The nested frontend repo is already dirty; stage only the touched frontend files and do not revert unrelated frontend changes.
