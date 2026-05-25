@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "frontend",
-  "current_task_id": "P3-FEAT-007-FE",
+  "current_phase": "ml",
+  "current_task_id": "P4-ADV-001",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1226,7 +1226,7 @@
       "phase": "frontend",
       "title": "Recommendation reason filters",
       "priority": "P3",
-      "status": "blocked",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P3-FEAT-006"
@@ -1247,9 +1247,9 @@
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-007-BE and P3-FEAT-007-FE are done."
+      "validation_status": "passed",
+      "commit": "45660fa / f226e7e",
+      "notes": "Both backend (P3-FEAT-007-BE) and frontend (P3-FEAT-007-FE) child tasks are done."
     },
     {
       "id": "P3-FEAT-007-BE",
@@ -1320,7 +1320,7 @@
       "phase": "ml",
       "title": "CV/resume ingestion design and smoke",
       "priority": "P3",
-      "status": "pending",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P3-FEAT-007"
@@ -1328,11 +1328,25 @@
       "files_expected": [
         "docs/ml/"
       ],
-      "files_touched": [],
-      "validation_commands": [],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Design doc first, then smoke implementation."
+      "files_touched": [
+        "docs/ml/CV_RESUME_INGESTION.md",
+        "services/gateway/main.py",
+        "services/gateway/requirements.txt",
+        "tests/test_cv_upload.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\test_cv_upload.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "passed",
+      "commit": "pending",
+      "notes": "Design doc written. Smoke implementation includes authenticated POST /api/profile/cv, PDF/TXT extraction, skill extraction from taxonomy, user_skills upsert, and 4 passing tests."
     },
     {
       "id": "P4-ADV-002",

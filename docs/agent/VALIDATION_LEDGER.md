@@ -1665,3 +1665,18 @@
 - Result: pass
 - Summary: Next.js 16.2.6 build compiled successfully, TypeScript completed, and 12 static pages generated.
 - Related commit hash: f226e7e.
+
+## 2026-05-26 00:42 +07
+- Task ID: P4-ADV-001
+- Command: .\.venv\Scripts\python.exe -m pytest tests	est_cv_upload.py -q
+- Result: pass
+- Summary: 4 passed. CV upload txt extraction, unsupported type, empty file, and no-auth tests all passed.
+- Related commit hash: pending.
+
+## 2026-05-26 00:55 +07
+- Task ID: P4-ADV-001
+- Command: .\.venv\Scripts\python.exe -m pytest -q
+- Result: pass
+- Summary: Full backend suite passed with 352 passed, 2 warnings.
+- Related commit hash: pending.
+

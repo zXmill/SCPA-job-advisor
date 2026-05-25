@@ -404,3 +404,12 @@
 - UI contract: users should be able to prioritize match, SBERT semantic fit, NCF interaction fit, DQN career signal, closest location, or newest jobs using the backend `reason_filter_scores`.
 - Skipped option: Adding backend query parameters for server-side filtering in this task.
 - Reason skipped: Recommendation slates are already loaded client-side; this task is about user control over the current slate, not changing candidate generation.
+
+## 2026-05-26 00:30 +07 - P4-ADV-001 CV/resume ingestion mini plan
+- Decision: Add an authenticated gateway endpoint for CV/resume upload with immediate skill extraction.
+- Expected files to touch: docs/ml/CV_RESUME_INGESTION.md, services/gateway/main.py, services/gateway/requirements.txt, tests/test_cv_upload.py, and durable docs/agent/ state files.
+- Validation commands: focused pytest for CV upload, full backend pytest, frontend lint/build.
+- Chosen approach: reuse the existing skill taxonomy and _canonicalize_profile_skills logic by adding a new _extract_skills_from_cv_text helper that never raises on unknown text.
+- Skipped option: Full DOCX/image-OCR/LLM extraction in this task.
+- Risk and mitigation: PyPDF2 is deprecated but sufficient for smoke; migration to pypdf is documented as future work.
+

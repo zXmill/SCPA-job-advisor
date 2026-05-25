@@ -1796,3 +1796,27 @@
 
 ### Next Exact Action
 - Stage root `docs/agent/` state updates for P3-FEAT-007-FE completion, inspect staged diff, commit `docs: update long-running agent checkpoint`, then proceed to `P4-ADV-001`.
+
+## 2026-05-26 00:45 +07 - P4-ADV-001 result
+
+### Active Task
+- `P4-ADV-001` - CV/resume ingestion design and smoke.
+
+### What Changed
+- Added design doc `docs/ml/CV_RESUME_INGESTION.md` covering upload mechanism, text extraction, skill extraction, storage, security, and frontend UX.
+- Added `POST /api/profile/cv` to gateway: accepts PDF/TXT up to 5 MB, extracts text, scans for known skills from taxonomy, upserts matched skills into `user_skills`, records `cv_uploaded_at`.
+- Added `_extract_skills_from_cv_text` helper that safely scans CV text for canonical skills without raising on unknown words.
+- Added `tests/test_cv_upload.py` with 4 passing tests: txt extraction, unsupported type, empty file, no auth.
+- Added `PyPDF2>=3.0.0` and `python-multipart>=0.0.5` to `services/gateway/requirements.txt`.
+
+### Validation Results
+- `tests/test_cv_upload.py`: 4 passed.
+- Full backend suite: `352 passed, 2 warnings`.
+- Frontend lint/build: passed with existing warnings only.
+
+### Remaining Issues
+- Existing frontend lint warnings remain but do not fail lint.
+- PyPDF2 deprecation warning; future work should migrate to `pypdf`.
+
+### Next Exact Action
+- Stage P4-ADV-001 code and state files, inspect staged diff, commit `feat: add CV/resume ingestion design and smoke`, then update state checkpoint.

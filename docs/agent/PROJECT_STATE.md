@@ -84,8 +84,10 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Frontend analytics page now renders an admin-only model-health panel with pipeline status, model service status, stage p50/p95 telemetry, and continual-training state from `GET /api/admin/model-health`.
 - Gateway recommendation responses now expose explicit `reason_filter_scores` and `reason_filter_labels` for semantic fit, interaction fit, career signal, location fit, and recency.
 - Frontend recommendations page now supports sorting by reason filters (semantic fit, interaction fit, career signal, location fit, recency) in addition to match percent and recency. The active reason score is displayed in the card sidebar.
+- Gateway authenticated `POST /api/profile/cv` endpoint accepts PDF and TXT uploads, extracts text, scans for known skills from the taxonomy, upserts matched skills into `user_skills`, and records `cv_uploaded_at`.
 - Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `348 passed, 1 warning` after P3-FEAT-007-BE.
 - Latest frontend validation after P3-FEAT-007-FE: `npm run lint` passed with 16 existing warnings, `npm run build` passed.
+- Latest backend validation after P4-ADV-001: `348 + 4 = 352 passed, 2 warnings`.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
@@ -99,7 +101,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P3-FEAT-007-FE` - recommendation reason filters frontend. Nested commit `f226e7e`.
+`P4-ADV-001` - CV/resume ingestion design and smoke. Root commit pending.
 
 ## Next Task
-`P4-ADV-001` - CV/resume ingestion design and smoke.
+`P4-ADV-002` - Certificate OCR design and smoke.

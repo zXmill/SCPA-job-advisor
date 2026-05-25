@@ -9,10 +9,10 @@ Continue from the active task in TASK_QUEUE.json, which is now complete. Next ta
 frontend
 
 ## Current Task ID
-P3-FEAT-007-FE
+P4-ADV-001
 
 ## Latest Commit Hash
-Root: `a27c226` (`docs: update long-running agent checkpoint`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
+Root: pending (`feat: add CV/resume ingestion design and smoke`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
 
 ## Current Git Branch
 `agent-run`
@@ -33,12 +33,10 @@ Root: `a27c226` (`docs: update long-running agent checkpoint`). Backend: `45660f
 - `docs/agent/VALIDATION_LEDGER.md`
 
 ## Current Implementation Status
-- `P3-FEAT-007-FE` is implemented and validated.
-- Frontend recommendations sort dropdown now includes reason-based options: semantic_fit, interaction_fit, career_signal, location_fit, recency.
-- Fixed existing `recent` sort that previously returned 0 (no-op).
-- `RecommendationData` type updated with `reason_filter_scores` and `reason_filter_labels`.
-- `RecScoreSidebar` conditionally shows the active reason score bar when a reason sort is selected.
-- `P4-ADV-001` is the next pending task.
+- `P4-ADV-001` is implemented and validated.
+- Design doc at `docs/ml/CV_RESUME_INGESTION.md`.
+- Gateway `POST /api/profile/cv` supports PDF and TXT uploads, extracts text, scans for known skills, upserts into `user_skills`, and records `cv_uploaded_at`.
+- `P4-ADV-002` is the next pending task.
 
 ## Commands Already Run
 - Frontend lint: `npm run lint` passed with 16 existing warnings, 0 errors.

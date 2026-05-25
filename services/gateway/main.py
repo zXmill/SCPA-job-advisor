@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import asyncio
+import io
 import os
 import time
 import uuid
@@ -11,6 +12,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from difflib import get_close_matches
 from html import escape
+from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlparse
 
@@ -18,7 +20,7 @@ import httpx
 import json
 import jwt as pyjwt
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
+from fastapi import Depends, FastAPI, File, HTTPException, Query, Request, Response, UploadFile
 
 # Load .env from project root (two levels up from this file)
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
@@ -40,6 +42,11 @@ except ImportError:  # pragma: no cover - only used in minimal gateway deploymen
         "SQL": {"sql"},
         "English": {"english", "bahasa inggris"},
     }
+
+try:
+    from PyPDF2 import PdfReader
+except ImportError:  # pragma: no cover - optional PDF extraction
+    PdfReader = None
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
 logger = logging.getLogger("scpa.gateway")
@@ -153,6 +160,12 @@ REASON_FILTER_LABELS = {
     "recency": "Newest jobs",
 }
 REASON_FILTER_RECENCY_WINDOW_DAYS = 30.0
+
+# ── CV Upload ──
+CV_UPLOAD_DIR = Path(os.getenv("CV_UPLOAD_DIR", "data/uploads/cv"))
+MAX_CV_SIZE_MB = int(os.getenv("MAX_CV_SIZE_MB", "5"))
+MAX_CV_SIZE_BYTES = MAX_CV_SIZE_MB * 1024 * 1024
+CV_ALLOWED_EXTENSIONS = {".pdf", ".txt"}
 
 # ── Database ──
 def _async_db_url(url: str) -> str:
@@ -957,6 +970,49 @@ async def _canonicalize_profile_skills(
     return canonical
 
 
+async def _extract_skills_from_cv_text(db: AsyncSession, raw_text: str) -> list[str]:
+    """Scan CV text for known skill names/aliases and return canonical matches.
+
+    Unlike ``_canonicalize_profile_skills``, this never raises on unknown text;
+    it simply skips words that do not match the taxonomy.
+    """
+    taxonomy = await _load_skill_taxonomy(db)
+    if not taxonomy:
+        return []
+
+    lookup: dict[str, str] = {}
+    for skill in taxonomy:
+        lookup[_normalise_skill_value(skill["name"])] = skill["name"]
+        for alias in skill.get("aliases", []):
+            lookup[_normalise_skill_value(alias)] = skill["name"]
+
+    # Index multi-word skills so phrases like "machine learning" match first.
+    multi_word_skills = {k: v for k, v in lookup.items() if " " in k}
+    single_word_skills = {k: v for k, v in lookup.items() if " " not in k}
+
+    text_lower = raw_text.lower()
+    found: dict[str, str] = {}
+
+    # Try multi-word matches first to avoid partial overlaps.
+    for term, canonical_name in multi_word_skills.items():
+        if term in text_lower:
+            found[canonical_name] = canonical_name
+
+    # Then single-word token matches (strip trailing punctuation).
+    _punctuation = str.maketrans("", "", '.,;:!?()[]{}"\'`/~@#$%^&*+=|<>')
+    tokens = set()
+    for word in text_lower.split():
+        word = word.strip().translate(_punctuation)
+        if word:
+            tokens.add(_normalise_skill_value(word))
+    for token in tokens:
+        if token in single_word_skills:
+            canonical_name = single_word_skills[token]
+            found[canonical_name] = canonical_name
+
+    return list(found.keys())
+
+
 async def _profile_skill_names(db: AsyncSession, user_id: Any) -> list[str]:
     rows = (
         await db.execute(
@@ -1586,6 +1642,98 @@ async def onboarding(
     await db.commit()
     await _invalidate_pipeline_user(uid)
     return {"status": "saved", "step": body.step}
+
+
+def _extract_text_from_cv(file_bytes: bytes, filename: str) -> str:
+    ext = Path(filename).suffix.lower()
+    if ext == ".txt":
+        return file_bytes.decode("utf-8", errors="ignore")
+    if ext == ".pdf":
+        if PdfReader is None:
+            raise HTTPException(
+                status_code=422, detail="PDF extraction is not available in this environment."
+            )
+        try:
+            reader = PdfReader(io.BytesIO(file_bytes))
+            pages = [page.extract_text() or "" for page in reader.pages]
+            return "\n".join(pages)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=422, detail=f"Failed to extract text from PDF: {exc}"
+            )
+    raise HTTPException(status_code=400, detail="Unsupported file type.")
+
+
+@app.post("/api/profile/cv")
+async def upload_cv(
+    file: UploadFile = File(...),
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    uid = user["id"]
+
+    filename = file.filename or "unknown"
+    ext = Path(filename).suffix.lower()
+    if ext not in CV_ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '{ext}'. Allowed: {', '.join(CV_ALLOWED_EXTENSIONS)}.",
+        )
+
+    file_bytes = await file.read()
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+    if len(file_bytes) > MAX_CV_SIZE_BYTES:
+        raise HTTPException(
+            status_code=400, detail=f"File too large. Max size: {MAX_CV_SIZE_MB} MB."
+        )
+
+    raw_text = _extract_text_from_cv(file_bytes, filename)
+    if not raw_text.strip():
+        raise HTTPException(status_code=422, detail="Could not extract any text from the file.")
+
+    # Save file to disk with UUID-based name to prevent collisions and traversal.
+    CV_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    stored_name = f"{uuid.uuid4().hex}{ext}"
+    stored_path = CV_UPLOAD_DIR / stored_name
+    stored_path.write_bytes(file_bytes)
+
+    # Extract skills from CV text without raising on unknown words.
+    extracted_skills = await _extract_skills_from_cv_text(db, raw_text)
+
+    # Upsert extracted skills.
+    skills_added = 0
+    for skill in extracted_skills:
+        result = await db.execute(
+            text(
+                "INSERT INTO user_skills (user_id, skill, category, proficiency_level) "
+                "VALUES (:uid, :skill, 'technical', 'intermediate') "
+                "ON CONFLICT DO NOTHING"
+            ),
+            {"uid": uid, "skill": skill},
+        )
+        if getattr(result, "rowcount", 0):
+            skills_added += 1
+
+    await db.execute(
+        text(
+            "UPDATE users SET cv_uploaded_at = NOW(), updated_at = NOW() WHERE id = :id"
+        ),
+        {"id": uid},
+    )
+    await db.commit()
+    await _invalidate_pipeline_user(uid)
+
+    return {
+        "status": "ok",
+        "extracted_skills": extracted_skills,
+        "skills_added": skills_added,
+        "skills_ignored": len(extracted_skills) - skills_added,
+        "filename": filename,
+        "stored_name": stored_name,
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 # ════════════════════════════════════════════════════════════════
