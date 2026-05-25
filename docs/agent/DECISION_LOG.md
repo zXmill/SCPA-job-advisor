@@ -331,3 +331,11 @@
 - Skipped option: Computing skill gaps from free-text descriptions in this task.
 - Reason skipped: Existing job records already carry structured `match_data.skills`; NLP extraction would expand scope and risk beyond the detail-page contract.
 - Risk and mitigation: Added focused route tests, included `skill_gap_snapshots` in test cleanup, ran adjacent profile/saved-job regressions, and ran full backend pytest.
+
+## 2026-05-25 23:38 +07 - P3-FEAT-005-FE frontend mini plan
+- Decision: Expose skill-gap detail on the existing job detail page instead of creating a separate route.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/jobs/[id]/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository, plus local `/jobs/{id}` smoke if a stable seeded job URL is available.
+- UI contract: show required, matched, and missing skills plus the backend explanation and match percentage near the existing job description.
+- Skipped option: Adding a new standalone skill-gap route.
+- Reason skipped: Job-specific skill gaps are most useful in context of a job detail, and a new route would expand navigation and state scope for this child task.

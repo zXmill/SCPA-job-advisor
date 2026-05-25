@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "backend",
-  "current_task_id": "P3-FEAT-005-BE",
+  "current_phase": "frontend",
+  "current_task_id": "P3-FEAT-005-FE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1081,7 +1081,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending feat: add skill-gap detail backend",
+      "commit": "f03c853",
       "notes": "Existing skill-gap route now has a page-ready contract, 404 behavior for missing jobs, display-case matched/missing skills, explanation metadata, and persisted snapshots."
     },
     {
@@ -1089,7 +1089,7 @@
       "phase": "frontend",
       "title": "Skill-gap detail frontend",
       "priority": "P3",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-005-BE"
@@ -1105,7 +1105,7 @@
       ],
       "validation_status": "not_run",
       "commit": "",
-      "notes": "Expose the backend skill-gap contract on the job detail surface after backend validation passes."
+      "notes": "Expose the backend skill-gap detail contract on the job detail surface after backend commit f03c853."
     },
     {
       "id": "P3-FEAT-006",

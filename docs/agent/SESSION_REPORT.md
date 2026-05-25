@@ -1538,3 +1538,21 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P3-FEAT-005-BE files plus durable state files, inspect staged diff, and commit `feat: add skill-gap detail backend`.
+
+## 2026-05-25 23:38 +07 - P3-FEAT-005-BE commit and P3-FEAT-005-FE start
+
+### Active Task
+- `P3-FEAT-005-FE` - Skill-gap detail frontend.
+
+### What Changed
+- Committed `P3-FEAT-005-BE` as `f03c853`.
+- Marked the frontend child task in progress.
+- Recorded a frontend mini plan in `DECISION_LOG.md`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Commit this state-only checkpoint before editing frontend files.
+- Inspect the current frontend job detail page and API helper before adding the skill-gap detail UI.
+
+### Next Exact Action
+- Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then implement job detail skill-gap rendering against the backend contract.
