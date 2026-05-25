@@ -1289,7 +1289,7 @@
       "phase": "frontend",
       "title": "Recommendation reason filters frontend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-007-BE"
@@ -1298,14 +1298,22 @@
         "frontend/src/lib/api.ts",
         "frontend/src/app/recommendations/page.tsx"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/recommendations/page.tsx",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         "npm run lint",
         "npm run build"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Add user-facing reason filter controls on recommendations after the backend response contract is validated."
+      "validation_status": "passed",
+      "commit": "f226e7e",
+      "notes": "Expanded recommendations sort dropdown with reason-based options (semantic_fit, interaction_fit, career_signal, location_fit, recency). Fixed existing recent sort bug. Updated RecommendationData type. Active reason score is shown in RecScoreSidebar when a reason sort is selected."
     },
     {
       "id": "P4-ADV-001",

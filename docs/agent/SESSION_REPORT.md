@@ -1773,3 +1773,26 @@
 
 ### Next Exact Action
 - Stage and commit root `docs/agent/` state updates, then inspect the recommendations page and API types to implement reason-filter controls.
+
+## 2026-05-26 00:15 +07 - P3-FEAT-007-FE result
+
+### Active Task
+- `P3-FEAT-007-FE` is implemented and validated.
+
+### What Changed
+- Updated `RecommendationData` type in `frontend/src/lib/api.ts` to include `reason_filter_scores` and `reason_filter_labels`.
+- Expanded recommendations sort dropdown with reason-based options: Semantic Match, Interaction Fit, Career Signal, Lokasi, Recency.
+- Fixed existing `recent` sort that previously returned 0 (no-op) by sorting on `posted_at` date.
+- `RecScoreSidebar` now conditionally shows the active reason score bar when a reason sort is selected.
+- Nested frontend commit `f226e7e` created.
+
+### Validation Results
+- `npm run lint` in `frontend/`: passed with 16 warnings, 0 errors.
+- `npm run build` in `frontend/`: passed (12 static pages generated).
+
+### Remaining Issues
+- Existing frontend lint warnings remain but do not fail lint.
+- Pre-existing nested frontend dirty/untracked files remain unrelated.
+
+### Next Exact Action
+- Stage root `docs/agent/` state updates for P3-FEAT-007-FE completion, inspect staged diff, commit `docs: update long-running agent checkpoint`, then proceed to `P4-ADV-001`.

@@ -1,60 +1,57 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 23:57 +07
+Updated: 2026-05-26 00:15 +07
 
 ## Current Objective
-Commit the validated `P3-FEAT-007-BE` recommendation reason-filter backend, then start `P3-FEAT-007-FE`.
+Continue from the active task in TASK_QUEUE.json, which is now complete. Next task is P4-ADV-001.
 
 ## Current Phase
-backend
+frontend
 
 ## Current Task ID
-P3-FEAT-007-BE
+P3-FEAT-007-FE
 
 ## Latest Commit Hash
-Root: `655d91c` (`docs: update long-running agent checkpoint`). Current backend task commit pending: `feat: add recommendation reason filter backend`. Nested frontend repo: `9090cd0` (`feat: add admin model-health frontend`).
+Root: `a27c226` (`docs: update long-running agent checkpoint`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
 
 ## Current Git Branch
 `agent-run`
 
 ## Dirty Files
 - Pre-existing root: `README.md` modified.
-- Pre-existing root: many untracked project files/directories, including `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and root artifacts.
+- Pre-existing root: many untracked project files/directories.
 - Pre-existing nested frontend dirty/untracked files remain unrelated to the active task.
-- Current task: `services/gateway/main.py`, `tests/test_recommendation_reason_filters.py`, and durable files under `docs/agent/`.
+- Current task: `docs/agent/` state files being updated for P3-FEAT-007-FE completion.
 
 ## Files Changed This Session
-- `services/gateway/main.py`
-- `tests/test_recommendation_reason_filters.py`
+- `frontend/src/lib/api.ts`
+- `frontend/src/app/recommendations/page.tsx`
 - `docs/agent/PROJECT_STATE.md`
 - `docs/agent/TASK_QUEUE.json`
-- `docs/agent/DECISION_LOG.md`
 - `docs/agent/SESSION_REPORT.md`
 - `docs/agent/COMPACT_SNAPSHOT.md`
 - `docs/agent/VALIDATION_LEDGER.md`
 
 ## Current Implementation Status
-- `P3-FEAT-007-BE` is implemented and validated.
-- Gateway recommendation items now include `reason_filter_scores` and `reason_filter_labels`.
-- Scores cover semantic fit, interaction fit, career signal, location fit, and recency.
-- `P3-FEAT-007-FE` is pending until the backend commit and follow-up state checkpoint are recorded.
+- `P3-FEAT-007-FE` is implemented and validated.
+- Frontend recommendations sort dropdown now includes reason-based options: semantic_fit, interaction_fit, career_signal, location_fit, recency.
+- Fixed existing `recent` sort that previously returned 0 (no-op).
+- `RecommendationData` type updated with `reason_filter_scores` and `reason_filter_labels`.
+- `RecScoreSidebar` conditionally shows the active reason score bar when a reason sort is selected.
+- `P4-ADV-001` is the next pending task.
 
 ## Commands Already Run
-- P3-FEAT-007 split checkpoint commit: `git commit -m "docs: update long-running agent checkpoint"` -> `655d91c`.
-- Focused TDD red: `.\.venv\Scripts\python.exe -m pytest tests\test_recommendation_reason_filters.py -q`.
-- Focused pass: `.\.venv\Scripts\python.exe -m pytest tests\test_recommendation_reason_filters.py -q`.
-- Adjacent pass: `.\.venv\Scripts\python.exe -m pytest tests\test_recommendation_reason_filters.py tests\test_feedback_outbox.py tests\test_saved_jobs_skip.py -q`.
-- Full backend pass: `.\.venv\Scripts\python.exe -m pytest -q`.
+- Frontend lint: `npm run lint` passed with 16 existing warnings, 0 errors.
+- Frontend build: `npm run build` passed (12 static pages generated).
+- Nested frontend commit: `git commit` -> `f226e7e`.
 
 ## Validation Results
-- TDD red confirmed missing `reason_filter_scores`.
-- Focused reason-filter backend test passed: `1 passed`.
-- Adjacent recommendation feedback/saved-job regression passed: `7 passed`.
-- Full backend suite passed: `348 passed, 1 warning`.
+- Frontend lint passed with 0 errors.
+- Frontend build passed.
 
 ## Known Errors
 - One existing warning remains in the intentional wrong-secret JWT test.
-- Existing frontend lint warnings remain but are not blocking.
+- Existing frontend lint warnings remain but do not fail lint.
 
 ## Do-Not-Change Constraints
 - Do not stage or revert pre-existing root `README.md` changes or broad untracked project files unless a task explicitly owns them.
@@ -64,4 +61,4 @@ Root: `655d91c` (`docs: update long-running agent checkpoint`). Current backend 
 - Do not claim completion or move to the next task without fresh validation.
 
 ## Next Exact Action
-Validate `docs/agent/TASK_QUEUE.json`, stage only `services/gateway/main.py`, `tests/test_recommendation_reason_filters.py`, and current durable state files, inspect staged diff, run `git diff --cached --check`, then commit `feat: add recommendation reason filter backend`.
+Stage root `docs/agent/` state updates, inspect staged diff, commit `docs: update long-running agent checkpoint`, then proceed to `P4-ADV-001`.

@@ -83,8 +83,9 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Gateway admin model-health endpoint is available at authenticated admin-only `GET /api/admin/model-health`; it summarizes pipeline status, downstream scraper/SBERT/NCF/DQN URLs, calibrator/aggregation stage status, telemetry, and continual-training state from pipeline health.
 - Frontend analytics page now renders an admin-only model-health panel with pipeline status, model service status, stage p50/p95 telemetry, and continual-training state from `GET /api/admin/model-health`.
 - Gateway recommendation responses now expose explicit `reason_filter_scores` and `reason_filter_labels` for semantic fit, interaction fit, career signal, location fit, and recency.
+- Frontend recommendations page now supports sorting by reason filters (semantic fit, interaction fit, career signal, location fit, recency) in addition to match percent and recency. The active reason score is displayed in the card sidebar.
 - Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `348 passed, 1 warning` after P3-FEAT-007-BE.
-- Latest frontend validation after P3-FEAT-006-FE: `npm run lint` passed with 16 existing warnings, `npm run build` passed, and local HTTP smoke returned `200` for `/analytics`.
+- Latest frontend validation after P3-FEAT-007-FE: `npm run lint` passed with 16 existing warnings, `npm run build` passed.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
@@ -98,7 +99,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P3-FEAT-007-BE` - recommendation reason filters backend. Root commit `45660fa`.
+`P3-FEAT-007-FE` - recommendation reason filters frontend. Nested commit `f226e7e`.
 
 ## Next Task
-`P3-FEAT-007-FE` - recommendation reason filters frontend. Add the user-facing controls to the recommendations page.
+`P4-ADV-001` - CV/resume ingestion design and smoke.
