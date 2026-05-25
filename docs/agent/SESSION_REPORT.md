@@ -1645,3 +1645,22 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P3-FEAT-006-BE files plus durable state files, inspect staged diff, and commit `feat: add admin model-health backend`.
+
+## 2026-05-25 23:42 +07 - P3-FEAT-006-BE commit and P3-FEAT-006-FE start
+
+### Active Task
+- `P3-FEAT-006-FE` - Admin model-health dashboard frontend.
+
+### What Changed
+- Committed `P3-FEAT-006-BE` as `fcd28b7`.
+- Recorded the backend commit hash in the task queue and project state.
+- Marked the frontend child task in progress.
+- Recorded a frontend mini plan in `DECISION_LOG.md`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Commit this state-only checkpoint before editing frontend files.
+- Inspect the existing analytics page and frontend API helper before adding the model-health dashboard.
+
+### Next Exact Action
+- Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then implement the analytics-page model-health frontend.

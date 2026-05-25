@@ -363,3 +363,11 @@
 - Skipped option: Letting the frontend call pipeline or model services directly.
 - Reason skipped: Those services are internal by design; exposing them would weaken the service boundary fixed earlier.
 - Risk and mitigation: Added focused admin/auth tests, used the existing `_require_admin_role` guard, and ran adjacent pipeline auth/telemetry plus full backend pytest.
+
+## 2026-05-25 23:42 +07 - P3-FEAT-006-FE frontend mini plan
+- Decision: Add the admin model-health view to the existing analytics surface instead of introducing a new route.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/analytics/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository, plus a local analytics route smoke if the dev server is available.
+- UI contract: admins should see pipeline status, model service configuration, p50/p95 stage telemetry, and continual-training status from `GET /api/admin/model-health`.
+- Skipped option: Creating a separate `/admin/model-health` route.
+- Reason skipped: The existing analytics/dashboard surface is already the operational view; a new route would expand navigation scope for a small child task.

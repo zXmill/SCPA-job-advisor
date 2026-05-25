@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "backend",
-  "current_task_id": "P3-FEAT-006-BE",
+  "current_phase": "frontend",
+  "current_task_id": "P3-FEAT-006-FE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1182,7 +1182,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending `feat: add admin model-health backend`",
+      "commit": "fcd28b7",
       "notes": "Admin-only gateway contract summarizes pipeline health, downstream scraper/SBERT/NCF/DQN status, calibrator/aggregation telemetry, and continual-training state. Focused, adjacent, and full backend validation passed."
     },
     {
@@ -1190,7 +1190,7 @@
       "phase": "frontend",
       "title": "Admin model-health dashboard frontend",
       "priority": "P3",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-006-BE"
