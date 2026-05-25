@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "frontend",
-  "current_task_id": "P3-FEAT-001-FE",
+  "current_task_id": "P3-FEAT-002",
   "tasks": [
     {
       "id": "INIT-001",
@@ -626,21 +626,37 @@
       "phase": "frontend",
       "title": "Skill taxonomy autocomplete",
       "priority": "P3",
-      "status": "blocked",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P2-005"
       ],
-      "files_expected": [],
-      "files_touched": [],
+      "files_expected": [
+        "services/gateway/main.py",
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/profile/page.tsx"
+      ],
+      "files_touched": [
+        "services/gateway/main.py",
+        "tests/test_skill_taxonomy_autocomplete.py",
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/profile/page.tsx",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/FAILURE_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest -q",
         "npm run lint",
         "npm run build"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-001-BE and P3-FEAT-001-FE are done."
+      "validation_status": "passed",
+      "commit": "backend:bf72c99; frontend:6915df6",
+      "notes": "Completed backend exclude-aware skill search and frontend profile autocomplete integration."
     },
     {
       "id": "P3-FEAT-001-BE",
@@ -680,7 +696,7 @@
       "phase": "frontend",
       "title": "Skill taxonomy autocomplete frontend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-001-BE"
@@ -689,35 +705,48 @@
         "frontend/src/lib/api.ts",
         "frontend/src/app/profile/page.tsx"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/profile/page.tsx",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/FAILURE_LEDGER.md"
+      ],
       "validation_commands": [
         "npm run lint",
         "npm run build"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Wire the backend suggestions into profile skill entry after backend contract validation passes."
+      "validation_status": "passed",
+      "commit": "frontend:6915df6",
+      "notes": "Added profile skill suggestions using `/api/skills/search`, selected-skill exclusion, canonical suggestion insertion, lint/build validation, and nested frontend commit."
     },
     {
       "id": "P3-FEAT-002",
       "phase": "frontend",
       "title": "Profile completeness meter",
       "priority": "P3",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "medium",
       "depends_on": [
         "P3-FEAT-001"
       ],
-      "files_expected": [],
+      "files_expected": [
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md"
+      ],
       "files_touched": [],
       "validation_commands": [
-        ".\\.venv\\Scripts\\python.exe -m pytest -q",
-        "npm run lint",
-        "npm run build"
+        ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
       ],
       "validation_status": "not_run",
       "commit": "",
-      "notes": "Split backend/frontend subtasks before implementation."
+      "notes": "Active parent task for splitting profile completeness meter into backend/frontend child tasks before implementation."
     },
     {
       "id": "P3-FEAT-003",

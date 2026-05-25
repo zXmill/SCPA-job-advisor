@@ -44,3 +44,12 @@
 - Final fix if solved: Full backend pytest passed with `326 passed, 1 warning`.
 - Related files: `tests/test_e2e_pipeline.py`, `tests/test_online_recommender_learning.py`, `services/pipeline/stages/stage_5_aggregate.py`.
 - Do not repeat notes: When changing strategy labels, update contract tests to assert durable capabilities rather than legacy display strings.
+
+## 2026-05-25 21:56 +07 - P3-FEAT-001-FE frontend lint failure
+- Error message: `react-hooks/set-state-in-effect` for synchronous profile suggestion clearing, plus `jsx-a11y/role-has-required-aria-props` for suggestion options.
+- Command that caused it: `npm run lint` in `frontend/`.
+- Root cause: The first autocomplete implementation cleared suggestion state directly in an effect branch and rendered `role="option"` without `aria-selected`.
+- Fix attempted: Move empty-input clearing into the input change handler, add `aria-selected={false}`, remove a newly unused import, and remove an unused catch binding.
+- Final fix if solved: `npm run lint` exited 0 with existing warnings only; `npm run build` passed.
+- Related files: `frontend/src/app/profile/page.tsx`.
+- Do not repeat notes: For React 19 lint, avoid direct synchronous state clearing in effect bodies; put user-input derived clears in event handlers or async callbacks.

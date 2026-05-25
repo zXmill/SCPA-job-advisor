@@ -244,3 +244,11 @@
 - Skipped option: Reworking onboarding skill entry in the same task.
 - Reason skipped: This child task should be a narrow frontend integration after the backend contract; onboarding can reuse the API in a later task if needed.
 - Risk and mitigation: The nested frontend repo is already dirty; stage only the touched frontend files and do not revert unrelated frontend changes.
+
+## 2026-05-25 21:56 +07 - P3-FEAT-002 profile completeness split mini plan
+- Decision: Start `P3-FEAT-002` as a planning/split task before product implementation.
+- Expected files to touch before implementation: durable `docs/agent/` state files only.
+- Validation command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`.
+- Requirement: Create separate backend and frontend child tasks for the profile completeness meter with their own validation and commits.
+- Skipped option: Implementing the meter directly inside the parent task.
+- Reason skipped: The product-feature phase requires separate backend and frontend tasks.
