@@ -215,3 +215,25 @@
 
 ### Next Exact Action
 - Commit root durable state checkpoint, then resume P0-002 validation.
+
+## 2026-05-25 20:47 +07 - P0-002 result
+
+### Active Task
+- `P1-SEC-001` will be next after the safe-cleanup commit.
+
+### What Changed
+- Moved `browser_e2e.py`, `check_overflow.py`, `check_scrape.py`, `insert_scraped.py`, and `scrape_1000.json` to `testing/archive/manual-debug/`.
+
+### Validation Results
+- `.\.venv\Scripts\python.exe -m pytest -q`: passed, `291 passed, 11 warnings`.
+- `npm run lint` in `frontend/`: passed with 18 warnings and 0 errors.
+- `npm run build` in `frontend/`: passed.
+- `docker compose config --quiet`: passed.
+- `docs/agent/TASK_QUEUE.json` parsed successfully.
+
+### Remaining Issues
+- Root repo remains dirty with pre-existing modified `README.md` and broad untracked project files.
+- Frontend nested repo remains dirty with pre-existing changes other than the committed recommendation page.
+
+### Next Exact Action
+- Stage only `testing/archive/manual-debug/*` and durable state files, inspect staged diff, and commit `chore: perform safe repository cleanup`.

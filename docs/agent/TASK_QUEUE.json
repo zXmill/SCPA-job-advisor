@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "cleanup",
-  "current_task_id": "P0-002",
+  "current_phase": "security",
+  "current_task_id": "P1-SEC-001",
   "tasks": [
     {
       "id": "INIT-001",
@@ -80,7 +80,7 @@
       "phase": "cleanup",
       "title": "Safe cleanup",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P0-001"
@@ -103,7 +103,10 @@
         "docs/agent/TASK_QUEUE.json",
         "docs/agent/DECISION_LOG.md",
         "docs/agent/SESSION_REPORT.md",
-        "docs/agent/COMPACT_SNAPSHOT.md"
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/ARTIFACT_INDEX.md"
       ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest -q",
@@ -111,9 +114,9 @@
         "npm run build",
         "docker compose config"
       ],
-      "validation_status": "failed",
-      "commit": "",
-      "notes": "Moved root manual debug files locally. Backend tests passed. Frontend lint blocker was fixed in P0-FE-001; rerun full P0-002 validation next."
+      "validation_status": "passed",
+      "commit": "pending: chore: perform safe repository cleanup",
+      "notes": "Moved root manual debug files to testing/archive/manual-debug. Backend tests, frontend lint/build, Docker Compose config, and JSON validation passed."
     },
     {
       "id": "P0-FE-001",

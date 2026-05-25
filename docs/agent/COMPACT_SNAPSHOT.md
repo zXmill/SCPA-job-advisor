@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 20:22 +07
+Updated: 2026-05-25 20:47 +07
 
 ## Current Objective
-Commit the root durable-state checkpoint for the frontend hook fix, then return to P0-002 validation.
+Commit the completed safe cleanup, then start P1-SEC-001.
 
 ## Current Phase
-cleanup
+security
 
 ## Current Task ID
-P0-002
+P1-SEC-001
 
 ## Latest Commit Hash
-Root: `b2b4f55` (`docs: add cleanup audit`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `d1bb86b` (`docs: record frontend hook fix checkpoint`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `b2b4f55` (`docs: add cleanup audit`). Frontend nested repo: `6e76e92` (`f
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- P0-FE-001 hook fix is committed in nested `frontend/` as `6e76e92`. Root durable-state checkpoint is pending. P0-002 can resume after that checkpoint.
+- P0-002 is complete and ready to commit. Root manual debug artifacts are staged next under `testing/archive/manual-debug/`.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -35,9 +35,14 @@ Root: `b2b4f55` (`docs: add cleanup audit`). Frontend nested repo: `6e76e92` (`f
 - `docs/agent/CLEANUP_AUDIT.md`
 - `testing/archive/manual-debug/` expected next.
 - `frontend/src/app/recommendations/page.tsx`
+- `testing/archive/manual-debug/browser_e2e.py`
+- `testing/archive/manual-debug/check_overflow.py`
+- `testing/archive/manual-debug/check_scrape.py`
+- `testing/archive/manual-debug/insert_scraped.py`
+- `testing/archive/manual-debug/scrape_1000.json`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-002 moved selected files locally. P0-FE-001 fixed the lint blocker, passed frontend lint/build, and committed in nested `frontend/` as `6e76e92`.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 moved selected files locally and all validation gates passed.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -64,6 +69,10 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P0-FE-001 `npm run lint` passed: 0 errors, 18 warnings.
 - P0-FE-001 `npm run build` passed.
 - P0-FE-001 nested frontend commit: `6e76e92`.
+- Root state checkpoint after hook fix: `d1bb86b`.
+- P0-002 `docker compose config --quiet` passed.
+- P0-002 final `npm run lint` passed with warnings only.
+- P0-002 final `npm run build` passed.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -80,7 +89,7 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Stage only root durable state files, inspect staged diff, and commit a docs checkpoint recording frontend commit `6e76e92`.
+Stage only `testing/archive/manual-debug/*` and root durable state files, inspect staged diff, and commit `chore: perform safe repository cleanup`.
 - P0-002 moved `browser_e2e.py`, `check_overflow.py`, `check_scrape.py`, `insert_scraped.py`, and `scrape_1000.json` under `testing/archive/manual-debug/`.
 - P0-002 backend validation: `291 passed, 11 warnings`.
 - P0-002 frontend lint failed with hook-order error in `frontend/src/app/recommendations/page.tsx`.

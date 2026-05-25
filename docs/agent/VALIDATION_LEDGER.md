@@ -97,3 +97,38 @@
 - Result: pass
 - Summary: Created nested frontend commit `6e76e92` adding `src/app/recommendations/page.tsx`.
 - Related commit hash: `frontend:6e76e92`.
+
+## 2026-05-25 20:38 +07
+- Task ID: `P0-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `291 passed, 11 warnings in 97.94s`.
+- Related commit hash: pending safe cleanup commit.
+
+## 2026-05-25 20:38 +07
+- Task ID: `P0-002`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 18 warnings and no errors.
+- Related commit hash: pending safe cleanup commit.
+
+## 2026-05-25 20:38 +07
+- Task ID: `P0-002`
+- Command: `docker compose config --quiet`
+- Result: pass
+- Summary: Compose configuration validated with no output.
+- Related commit hash: pending safe cleanup commit.
+
+## 2026-05-25 20:38 +07
+- Task ID: `P0-002`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: JSON parsed successfully.
+- Related commit hash: pending safe cleanup commit.
+
+## 2026-05-25 20:45 +07
+- Task ID: `P0-002`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully, TypeScript completed, and 12 static pages generated.
+- Related commit hash: pending safe cleanup commit.

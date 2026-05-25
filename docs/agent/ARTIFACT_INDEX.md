@@ -19,3 +19,8 @@
 - `docs/agent/FAILURE_LEDGER.md`
 - `docs/agent/ARTIFACT_INDEX.md`
 - `docs/agent/CLEANUP_AUDIT.md`
+- `testing/archive/manual-debug/browser_e2e.py`
+- `testing/archive/manual-debug/check_overflow.py`
+- `testing/archive/manual-debug/check_scrape.py`
+- `testing/archive/manual-debug/insert_scraped.py`
+- `testing/archive/manual-debug/scrape_1000.json`
