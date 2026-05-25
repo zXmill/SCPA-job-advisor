@@ -352,7 +352,7 @@
       "phase": "performance",
       "title": "Database indexes",
       "priority": "P1",
-      "status": "in_progress",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P1-PERF-002"
@@ -362,20 +362,24 @@
         "db/migrations/"
       ],
       "files_touched": [
+        "db/models.py",
+        "db/migrations/009_reco_hot_indexes.py",
+        "db/tests/test_models.py",
         "docs/agent/PROJECT_STATE.md",
         "docs/agent/TASK_QUEUE.json",
         "docs/agent/DECISION_LOG.md",
         "docs/agent/SESSION_REPORT.md",
         "docs/agent/COMPACT_SNAPSHOT.md",
-        "docs/agent/VALIDATION_LEDGER.md"
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/FAILURE_LEDGER.md"
       ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest -q",
         ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini heads"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Start by inspecting models, migrations, and recommendation queries; add only non-duplicate indexes for hot recommendation paths."
+      "validation_status": "passed",
+      "commit": "pending: perf: add recommendation database indexes",
+      "notes": "Added non-duplicate indexes for active newest job candidate loading, active source/experience filtered job lists, and per-user application history."
     },
     {
       "id": "P1-OBS-001",

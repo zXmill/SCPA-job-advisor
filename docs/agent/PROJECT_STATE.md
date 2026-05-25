@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 20:45 +07
+Updated: 2026-05-25 20:57 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -51,9 +51,9 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 
 ## Database And Migrations
 - Alembic config: `alembic.ini`, script location `db/alembic`, version locations `db/migrations`.
-- Detected migration files: `001_initial_schema.py` through `008_feature_extension_foundation.py`.
+- Detected migration files: `001_initial_schema.py` through `009_reco_hot_indexes.py`.
 - Duplicate/legacy Alembic version folder exists at `db/alembic/versions/004_add_company_logo.py`.
-- DB validation has not been rerun in this initializer. The reference report says `alembic heads` returned `008_feature_extension_foundation (head)` on 2026-05-25.
+- Current Alembic head after P1-PERF-003 is `009_reco_hot_indexes`. Local upgrade, one-step downgrade, and re-upgrade passed on 2026-05-25.
 
 ## ML Model Inventory
 - SBERT: multilingual SentenceTransformer default `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; local fine-tuned artifact files exist under ignored `services/sbert/weights/fine_tuned_jupyter/`.
@@ -63,7 +63,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 
 ## Known Working Areas
 - Repository contains extensive pytest coverage and local report evidence of backend health.
-- Reference report records `.venv\Scripts\python.exe -m pytest -q` as `291 passed, 11 warnings` on 2026-05-25. This has not been rerun during this initializer.
+- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `308 passed, 11 warnings` after P1-PERF-003.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
@@ -79,7 +79,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P1-PERF-002` - batched DQN rank policy-network scoring and tightened the NCF batch forward contract. Root commit `7ce8e79`.
+`P1-PERF-003` - added recommendation database indexes for active job candidate loading, source/experience filtered job listing, and user application history. Commit pending.
 
 ## Next Task
-Continue `P1-PERF-003`: add recommendation database indexes after inspecting current models, migrations, and hot recommendation queries.
+Start `P1-OBS-001`: add recommendation pipeline telemetry.

@@ -1,9 +1,9 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 20:45 +07
+Updated: 2026-05-25 20:57 +07
 
 ## Current Objective
-Create a survival checkpoint after `P1-PERF-002`, then continue `P1-PERF-003` database index work.
+Commit the completed `P1-PERF-003` database index task.
 
 ## Current Phase
 performance
@@ -12,7 +12,7 @@ performance
 P1-PERF-003
 
 ## Latest Commit Hash
-Root: `7ce8e79` (`perf: batch recommendation model scoring`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `a9c1b46` (`docs: update long-running agent checkpoint`); pending commit `perf: add recommendation database indexes`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `7ce8e79` (`perf: batch recommendation model scoring`). Frontend nested re
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task changes: durable `docs/agent/` state files for the survival checkpoint; database index implementation has not started yet.
+- Current task changes: `db/models.py`, `db/migrations/009_reco_hot_indexes.py`, `db/tests/test_models.py`, and durable `docs/agent/` state files.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -55,9 +55,12 @@ Root: `7ce8e79` (`perf: batch recommendation model scoring`). Frontend nested re
 - `services/dqn/main.py`
 - `tests/test_dqn_policy_contracts.py`
 - `tests/test_ncf_neumf_contracts.py`
+- `db/models.py`
+- `db/migrations/009_reco_hot_indexes.py`
+- `db/tests/test_models.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. `P1-PERF-003` is marked in progress; database index implementation has not started.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. `P1-PERF-003` is implemented and validation passed; commit is pending.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -105,6 +108,11 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Added and verified TDD red DQN batch forward test.
 - Implemented batched DQN Q-value scoring and tightened NCF batch contract.
 - Ran P1-PERF-002 focused and full validation commands.
+- Survival checkpoint commit: `git commit -m "docs: update long-running agent checkpoint"` (`a9c1b46`).
+- Inspected database models, migrations, and recommendation query paths for hot indexes.
+- Added and verified TDD red model-index assertions.
+- Implemented ORM and Alembic hot-path indexes.
+- Ran P1-PERF-003 focused model tests, Alembic heads/current/upgrade/downgrade checks, and full backend pytest.
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
@@ -153,11 +161,19 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P1-PERF-002 NCF NeuMF contracts passed: `4 passed`.
 - P1-PERF-002 full backend tests passed: `307 passed, 11 warnings`.
 - P1-PERF-002 commit exists as `7ce8e79`.
+- P1-PERF-003 TDD red confirmed the target indexes were missing from ORM metadata.
+- P1-PERF-003 focused model index tests passed: `8 passed`.
+- P1-PERF-003 Alembic heads passed: `009_reco_hot_indexes (head)`.
+- P1-PERF-003 Alembic upgrade head passed after shortening the revision id.
+- P1-PERF-003 Alembic downgrade to `008_feature_extension_foundation` passed.
+- P1-PERF-003 Alembic re-upgrade head passed.
+- P1-PERF-003 full backend tests passed: `308 passed, 11 warnings`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
 - Frontend hook-order lint failure was fixed in `frontend/src/app/recommendations/page.tsx`; frontend warnings remain.
 - Existing frontend lint warnings remain.
+- Initial P1-PERF-003 Alembic upgrade failed because revision id `009_recommendation_hot_path_indexes` exceeded the `alembic_version.version_num varchar(32)` limit; fixed by shortening to `009_reco_hot_indexes`.
 
 ## Do-Not-Change Constraints
 - Do not stage or revert pre-existing dirty files unless a task explicitly owns them.
@@ -166,4 +182,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`; then inspect database models, migrations, and hot recommendation queries for `P1-PERF-003`.
+Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only P1-PERF-003 files plus durable state files, inspect staged diff, and commit `perf: add recommendation database indexes`.

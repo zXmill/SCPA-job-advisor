@@ -391,3 +391,87 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after reconciling `P1-PERF-002` and marking `P1-PERF-003` in progress.
 - Related commit hash: pending survival checkpoint commit.
+
+## 2026-05-25 20:50 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest db\tests\test_models.py::TestIndexes -q`
+- Result: fail
+- Summary: Expected TDD red failure: missing `idx_jobs_active_posted_id`, `idx_jobs_active_source_posted`, `idx_jobs_active_experience_posted`, and `idx_applications_user_applied`.
+- Related commit hash: pending `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:51 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest db\tests\test_models.py::TestIndexes -q`
+- Result: pass
+- Summary: `8 passed in 0.74s`.
+- Related commit hash: pending `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:51 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads`
+- Result: pass
+- Summary: Alembic reported `009_recommendation_hot_path_indexes (head)` before the revision id was shortened.
+- Related commit hash: pending `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:52 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: fail
+- Summary: Migration DDL ran but updating `alembic_version.version_num` failed because `009_recommendation_hot_path_indexes` exceeded `varchar(32)`.
+- Related commit hash: pending `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:53 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads`
+- Result: pass
+- Summary: Alembic reported shortened head `009_reco_hot_indexes`.
+- Related commit hash: pending `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:53 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current`
+- Result: pass
+- Summary: Local database remained at `006_reco_db_contracts`; the failed long-revision upgrade was rolled back.
+- Related commit hash: pending `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:54 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Upgraded through `007`, `008`, and shortened `009_reco_hot_indexes`.
+- Related commit hash: pending `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:54 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current`
+- Result: pass
+- Summary: Local database current revision is `009_reco_hot_indexes (head)`.
+- Related commit hash: pending `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:55 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini downgrade 008_feature_extension_foundation`
+- Result: pass
+- Summary: One-step downgrade dropped the new hot-path indexes successfully.
+- Related commit hash: pending `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:55 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Re-applied `009_reco_hot_indexes` successfully after the downgrade check.
+- Related commit hash: pending `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:57 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `308 passed, 11 warnings in 91.40s`.
+- Related commit hash: pending `perf: add recommendation database indexes`.
+
+## 2026-05-25 20:58 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking `P1-PERF-003` done.
+- Related commit hash: pending `perf: add recommendation database indexes`.

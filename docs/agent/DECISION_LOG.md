@@ -106,3 +106,12 @@
 - Skipped option: Adding broad indexes to every foreign key or score column without query evidence.
 - Reason skipped: Duplicate or low-value indexes increase write overhead and migration noise.
 - Risk and mitigation: Compare `db/models.py`, existing migrations, and recommendation query filters/orderings before creating a migration.
+
+## 2026-05-25 20:57 +07 - P1-PERF-003 index selection
+- Decision: Add three partial active-job indexes and one application history index: newest active jobs by `(posted_at DESC, id)`, active source-filtered jobs by `(source, posted_at DESC, id)`, active experience-filtered jobs by `(experience_level, posted_at DESC, id)`, and applications by `(user_id, applied_at DESC)`.
+- Evidence: Pipeline candidate loading uses `WHERE is_active = true ORDER BY posted_at DESC LIMIT`; gateway job listing uses active jobs with optional `source`/`experience_level` filters and the same newest-first ordering; application history uses `WHERE a.user_id = :uid ORDER BY a.applied_at DESC`.
+- Skipped option: JSONB GIN indexes on `jobs.match_data`.
+- Reason skipped: Current hot paths parse `match_data` after primary row retrieval and do not filter JSONB in SQL.
+- Skipped option: A B-tree index for leading-wildcard `location ILIKE`.
+- Reason skipped: The current query uses `%term%`; B-tree would not be effective without changing the search strategy or adding a trigram extension.
+- Risk and mitigation: Added focused ORM metadata assertions and a reversible Alembic migration, then validated upgrade, downgrade, re-upgrade, and full pytest.

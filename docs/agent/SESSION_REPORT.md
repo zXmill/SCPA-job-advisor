@@ -592,3 +592,30 @@
 
 ### Next Exact Action
 - Commit the state-only survival checkpoint, then inspect current database models, migrations, and recommendation query paths before adding indexes.
+
+## 2026-05-25 20:57 +07 - P1-PERF-003 result
+
+### Active Task
+- `P1-PERF-003` is implemented and ready to commit.
+
+### What Changed
+- Added job hot-path indexes for active newest candidate loading, active source-filtered job listing, and active experience-filtered job listing.
+- Added an application history index for `WHERE user_id = :uid ORDER BY applied_at DESC`.
+- Added Alembic migration `009_reco_hot_indexes`.
+- Updated model index tests to cover the new index contracts and duplicate index-name guard.
+
+### Validation Results
+- TDD red: `db\tests\test_models.py::TestIndexes` failed because the new indexes did not exist yet.
+- Focused model index tests: `8 passed`.
+- Alembic heads: `009_reco_hot_indexes (head)`.
+- Alembic upgrade head: passed after shortening the revision id.
+- Alembic downgrade to `008_feature_extension_foundation`: passed.
+- Alembic re-upgrade head: passed.
+- Full backend suite: `308 passed, 11 warnings`.
+
+### Remaining Issues
+- Existing pytest warnings about short test JWT keys remain.
+- An initial Alembic upgrade failed because the first revision id exceeded `varchar(32)`; fixed and recorded in `FAILURE_LEDGER.md`.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P1-PERF-003 files plus durable state files, inspect staged diff, and commit `perf: add recommendation database indexes`.
