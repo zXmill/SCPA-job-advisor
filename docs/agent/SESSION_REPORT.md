@@ -237,3 +237,61 @@
 
 ### Next Exact Action
 - Stage only `testing/archive/manual-debug/*` and durable state files, inspect staged diff, and commit `chore: perform safe repository cleanup`.
+
+## 2026-05-25 20:02 +07 - Post-compact recovery note
+
+### Active Task
+- `P1-SEC-001` - Restrict public Docker exposure.
+
+### Dirty Files
+- Pre-existing: `README.md` modified.
+- Pre-existing: broad untracked project files and directories remain, including app source, config, docs, reports, notebooks, services, tests, and `frontend/`.
+
+### Previous Task Complete
+- `P0-002` is complete in repository state. Root commit `7b6ce82` exists with message `chore: perform safe repository cleanup`.
+- Durable queue and compact snapshot still need reconciliation from `pending safe cleanup commit` to `7b6ce82`.
+
+### Validation Still Needed
+- Before implementation, update stale durable state for `P0-002` and mark `P1-SEC-001` in progress with expected files and validation commands.
+- For `P1-SEC-001`, run at least `docker compose config`; use environment variables for any required compose secrets during validation.
+
+### Commands Run
+- `Get-Content -Raw AGENTS.md`
+- `Get-Content -Raw docs\agent\PROJECT_STATE.md`
+- `Get-Content -Raw docs\agent\TASK_QUEUE.json`
+- `Get-Content -Raw docs\agent\COMPACT_SNAPSHOT.md`
+- `Get-Content -Raw docs\agent\SESSION_REPORT.md`
+- `Get-Content -Raw docs\agent\DECISION_LOG.md`
+- `Get-Content -Raw docs\agent\VALIDATION_LEDGER.md`
+- `Get-Content -Raw docs\agent\FAILURE_LEDGER.md`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Reconcile durable state with commit `7b6ce82`, then start `P1-SEC-001` by marking it `in_progress`, recording the mini plan, and inspecting Docker/service auth call paths before editing.
+
+## 2026-05-25 20:08 +07 - P1-SEC-001 result
+
+### Active Task
+- `P1-SEC-001` is implemented and ready to commit.
+
+### What Changed
+- Removed host port publishing from PostgreSQL, scraper, SBERT, NCF, DQN, and pipeline in `docker-compose.yml`; gateway remains published on `8000:8000`.
+- Added `INTERNAL_SERVICE_TOKEN` to `.env.example` and required it for gateway/pipeline containers in Compose.
+- Gateway pipeline proxy helpers now send `X-Internal-Service-Token` when configured.
+- Pipeline non-health routes now require the internal token when configured; `/health` remains open for Compose healthchecks.
+- Added `tests/test_internal_service_auth.py`.
+
+### Validation Results
+- `.\.venv\Scripts\python.exe -m pytest tests\test_internal_service_auth.py -q`: passed, `3 passed`.
+- `$env:INTERNAL_SERVICE_TOKEN='test-internal-token-32-bytes-long'; docker compose config --quiet`: passed.
+- `.\.venv\Scripts\python.exe -m pytest -q`: passed, `294 passed, 11 warnings`.
+- Rendered Compose config confirms only `gateway: 8000->8000`; internal services have no host ports.
+
+### Remaining Issues
+- `P1-SEC-002` SSRF guard is still pending.
+- `P1-SEC-003` gateway direct `/pipeline/run` auth hardening is still pending.
+- Existing pytest warnings about short test JWT keys remain.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P1-SEC-001 files and durable state files, inspect the staged diff, and commit `security: restrict internal docker service exposure`.

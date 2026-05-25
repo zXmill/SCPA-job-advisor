@@ -1,9 +1,9 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 20:47 +07
+Updated: 2026-05-25 20:08 +07
 
 ## Current Objective
-Commit the completed safe cleanup, then start P1-SEC-001.
+Commit the completed `P1-SEC-001` Docker exposure and internal token boundary change, then start `P1-SEC-002`.
 
 ## Current Phase
 security
@@ -12,7 +12,7 @@ security
 P1-SEC-001
 
 ## Latest Commit Hash
-Root: `d1bb86b` (`docs: record frontend hook fix checkpoint`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `7b6ce82` (`chore: perform safe repository cleanup`); pending commit `security: restrict internal docker service exposure`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `d1bb86b` (`docs: record frontend hook fix checkpoint`). Frontend nested r
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- P0-002 is complete and ready to commit. Root manual debug artifacts are staged next under `testing/archive/manual-debug/`.
+- Current task changes: `docker-compose.yml`, `.env.example`, `services/gateway/main.py`, `services/pipeline/main.py`, `tests/test_internal_service_auth.py`, and durable `docs/agent/` state files.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -40,9 +40,14 @@ Root: `d1bb86b` (`docs: record frontend hook fix checkpoint`). Frontend nested r
 - `testing/archive/manual-debug/check_scrape.py`
 - `testing/archive/manual-debug/insert_scraped.py`
 - `testing/archive/manual-debug/scrape_1000.json`
+- `docker-compose.yml`
+- `.env.example`
+- `services/gateway/main.py`
+- `services/pipeline/main.py`
+- `tests/test_internal_service_auth.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 moved selected files locally and all validation gates passed.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. `P1-SEC-001` is implemented and validation passed; commit is pending.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -57,6 +62,13 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Initializer commit: `git commit -m "docs: initialize codex long-running project state"`.
 - P0-001 repository scans for tracked/untracked/ignored files, generated artifacts, imports, and top-level layout.
 - P0-001 commit: `git commit -m "docs: add cleanup audit"`.
+- P0-002 commit: `git commit -m "chore: perform safe repository cleanup"`.
+- Post-compact recovery reads for all durable memory files.
+- Post-compact `git status --short --branch` and `git log --oneline -10`.
+- Read `security-review` and `docker-patterns` skill files before this task.
+- Read current Docker Compose, env template, gateway pipeline helper paths, pipeline routes, tests, and reference report Docker exposure section.
+- Implemented Docker exposure and internal token changes.
+- Ran P1-SEC-001 validation commands listed below.
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
@@ -73,11 +85,15 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P0-002 `docker compose config --quiet` passed.
 - P0-002 final `npm run lint` passed with warnings only.
 - P0-002 final `npm run build` passed.
+- P0-002 cleanup commit exists as `7b6ce82`.
+- P1-SEC-001 focused tests passed: `3 passed`.
+- P1-SEC-001 full backend tests passed: `294 passed, 11 warnings`.
+- P1-SEC-001 `docker compose config --quiet` passed with a throwaway process-local `INTERNAL_SERVICE_TOKEN`.
+- Rendered Compose config shows only gateway has a host port: `8000->8000`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
 - Frontend hook-order lint failure was fixed in `frontend/src/app/recommendations/page.tsx`; frontend warnings remain.
-- Docker Compose exposes internal services to host ports.
 - Scraper URL endpoint lacks SSRF guard.
 - Gateway direct `/pipeline/run` is unauthenticated.
 - CI does not run full project gates.
@@ -89,9 +105,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Stage only `testing/archive/manual-debug/*` and root durable state files, inspect staged diff, and commit `chore: perform safe repository cleanup`.
-- P0-002 moved `browser_e2e.py`, `check_overflow.py`, `check_scrape.py`, `insert_scraped.py`, and `scrape_1000.json` under `testing/archive/manual-debug/`.
-- P0-002 backend validation: `291 passed, 11 warnings`.
-- P0-002 frontend lint failed with hook-order error in `frontend/src/app/recommendations/page.tsx`.
-- P0-FE-001 frontend lint passed with warnings only.
-- P0-FE-001 frontend build passed.
+Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only P1-SEC-001 files plus durable state files, inspect staged diff, and commit `security: restrict internal docker service exposure`.

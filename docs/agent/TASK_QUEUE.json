@@ -115,7 +115,7 @@
         "docker compose config"
       ],
       "validation_status": "passed",
-      "commit": "pending: chore: perform safe repository cleanup",
+      "commit": "7b6ce82",
       "notes": "Moved root manual debug files to testing/archive/manual-debug. Backend tests, frontend lint/build, Docker Compose config, and JSON validation passed."
     },
     {
@@ -154,7 +154,7 @@
       "phase": "security",
       "title": "Restrict public Docker exposure",
       "priority": "P1",
-      "status": "pending",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P0-FE-001"
@@ -162,15 +162,30 @@
       "files_expected": [
         "docker-compose.yml",
         ".env.example",
-        "services/shared/"
+        "services/gateway/main.py",
+        "services/pipeline/main.py",
+        "tests/"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "docker-compose.yml",
+        ".env.example",
+        "services/gateway/main.py",
+        "services/pipeline/main.py",
+        "tests/test_internal_service_auth.py",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
-        "docker compose config"
+        "docker compose config",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Expose only gateway/frontend. Add internal service token where needed."
+      "validation_status": "passed",
+      "commit": "pending: security: restrict internal docker service exposure",
+      "notes": "Removed host ports from PostgreSQL, scraper, SBERT, NCF, DQN, and pipeline. Added required INTERNAL_SERVICE_TOKEN in Compose for gateway/pipeline, gateway token forwarding, pipeline non-health route token checks, and focused tests."
     },
     {
       "id": "P1-SEC-002",

@@ -47,28 +47,28 @@
 - Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
 - Result: pass
 - Summary: JSON parsed successfully after starting the cleanup audit task.
-- Related commit hash: pending cleanup audit commit.
+- Related commit hash: `b2b4f55`.
 
 ## 2026-05-25 19:57 +07
 - Task ID: `P0-001`
 - Command: `git status --short --branch`
 - Result: pass
 - Summary: Command completed and showed only docs/agent task changes plus pre-existing dirty files.
-- Related commit hash: pending cleanup audit commit.
+- Related commit hash: `b2b4f55`.
 
 ## 2026-05-25 19:57 +07
 - Task ID: `P0-001`
 - Command: `git diff -- docs/agent`
 - Result: pass
 - Summary: Command completed and showed modified tracked state files; untracked `CLEANUP_AUDIT.md` requires staged diff review before commit.
-- Related commit hash: pending cleanup audit commit.
+- Related commit hash: `b2b4f55`.
 
 ## 2026-05-25 20:08 +07
 - Task ID: `P0-002`
 - Command: `.\.venv\Scripts\python.exe -m pytest -q`
 - Result: pass
 - Summary: `291 passed, 11 warnings in 96.24s`.
-- Related commit hash: pending safe cleanup commit.
+- Related commit hash: `7b6ce82`.
 
 ## 2026-05-25 20:10 +07
 - Task ID: `P0-002`
@@ -103,32 +103,67 @@
 - Command: `.\.venv\Scripts\python.exe -m pytest -q`
 - Result: pass
 - Summary: `291 passed, 11 warnings in 97.94s`.
-- Related commit hash: pending safe cleanup commit.
+- Related commit hash: `7b6ce82`.
 
 ## 2026-05-25 20:38 +07
 - Task ID: `P0-002`
 - Command: `npm run lint` in `frontend/`
 - Result: pass
 - Summary: Lint exited 0 with 18 warnings and no errors.
-- Related commit hash: pending safe cleanup commit.
+- Related commit hash: `7b6ce82`.
 
 ## 2026-05-25 20:38 +07
 - Task ID: `P0-002`
 - Command: `docker compose config --quiet`
 - Result: pass
 - Summary: Compose configuration validated with no output.
-- Related commit hash: pending safe cleanup commit.
+- Related commit hash: `7b6ce82`.
 
 ## 2026-05-25 20:38 +07
 - Task ID: `P0-002`
 - Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
 - Result: pass
 - Summary: JSON parsed successfully.
-- Related commit hash: pending safe cleanup commit.
+- Related commit hash: `7b6ce82`.
 
 ## 2026-05-25 20:45 +07
 - Task ID: `P0-002`
 - Command: `npm run build` in `frontend/`
 - Result: pass
 - Summary: Next.js 16.2.6 build compiled successfully, TypeScript completed, and 12 static pages generated.
-- Related commit hash: pending safe cleanup commit.
+- Related commit hash: `7b6ce82`.
+
+## 2026-05-25 20:06 +07
+- Task ID: `P1-SEC-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_internal_service_auth.py -q`
+- Result: pass
+- Summary: `3 passed in 0.14s`.
+- Related commit hash: pending security commit.
+
+## 2026-05-25 20:06 +07
+- Task ID: `P1-SEC-001`
+- Command: `$env:INTERNAL_SERVICE_TOKEN='test-internal-token-32-bytes-long'; docker compose config --quiet`
+- Result: pass
+- Summary: Compose configuration validated with no output using a throwaway process-local internal token.
+- Related commit hash: pending security commit.
+
+## 2026-05-25 20:07 +07
+- Task ID: `P1-SEC-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `294 passed, 11 warnings in 98.51s`.
+- Related commit hash: pending security commit.
+
+## 2026-05-25 20:08 +07
+- Task ID: `P1-SEC-001`
+- Command: `$env:INTERNAL_SERVICE_TOKEN='test-internal-token-32-bytes-long'; docker compose config --format json`
+- Result: pass
+- Summary: Rendered Compose config shows only `gateway: 8000->8000`; `postgres`, `scraper`, `sbert`, `ncf`, `dqn`, and `pipeline` have no host ports.
+- Related commit hash: pending security commit.
+
+## 2026-05-25 20:08 +07
+- Task ID: `P1-SEC-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-SEC-001 done.
+- Related commit hash: pending security commit.

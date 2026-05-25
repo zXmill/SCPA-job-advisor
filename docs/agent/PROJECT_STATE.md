@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 20:47 +07
+Updated: 2026-05-25 20:08 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -47,7 +47,7 @@ Key variables from `.env.example`, Docker Compose, and service code:
 - Pipeline: 8005.
 - PostgreSQL: 5432.
 
-Current `docker-compose.yml` publishes PostgreSQL, gateway, scraper, SBERT, NCF, DQN, and pipeline to host ports. Later security work should restrict internal services.
+Current `docker-compose.yml` publishes only the gateway on host port 8000. PostgreSQL, scraper, SBERT, NCF, DQN, and pipeline stay on the Docker network without host ports.
 
 ## Database And Migrations
 - Alembic config: `alembic.ini`, script location `db/alembic`, version locations `db/migrations`.
@@ -68,7 +68,6 @@ Current `docker-compose.yml` publishes PostgreSQL, gateway, scraper, SBERT, NCF,
 
 ## Known Broken Areas
 - Frontend lint still reports warnings, but the blocking hook-order error in `frontend/src/app/recommendations/page.tsx` has been fixed and validated locally.
-- Internal Docker services are exposed to host ports.
 - Scraper `/scrape/url` accepts arbitrary URLs and needs SSRF protection.
 - Gateway `/pipeline/run` is unauthenticated and bypasses protected recommendation/profile handling.
 - CI runs a selected pytest subset and does not currently gate frontend lint/build.
@@ -82,7 +81,7 @@ Current `docker-compose.yml` publishes PostgreSQL, gateway, scraper, SBERT, NCF,
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P0-002` - safe cleanup moved selected manual debug artifacts to `testing/archive/manual-debug/` and validation passed.
+`P1-SEC-001` - restricted internal Docker exposure and added a gateway-to-pipeline internal service token boundary. Commit pending.
 
 ## Next Task
-Start `P1-SEC-001`: restrict public Docker exposure after recording the P0-002 commit.
+After committing `P1-SEC-001`, start `P1-SEC-002`: add SSRF protection to scraper URL endpoints.

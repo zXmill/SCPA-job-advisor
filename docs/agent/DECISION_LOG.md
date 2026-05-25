@@ -45,3 +45,11 @@
 - Reason: `frontend/` contains its own `.git`, so the root repo cannot stage `frontend/src/app/recommendations/page.tsx` as a normal tracked file.
 - Trade-off: Root durable state needs a separate docs checkpoint to preserve the frontend commit hash.
 - Result: Nested frontend commit `6e76e92` with message `fix: resolve frontend hook order violation`.
+
+## 2026-05-25 20:02 +07 - P1-SEC-001 Docker exposure mini plan
+- Decision: Restrict Compose host publishing to the public gateway path and add an internal token boundary between gateway and pipeline.
+- Expected files to touch: `docker-compose.yml`, `.env.example`, `services/gateway/main.py`, `services/pipeline/main.py`, focused tests if the current test structure supports them, and durable `docs/agent/` state files.
+- Validation commands: `docker compose config` with required secret environment variables, focused pytest for the internal auth behavior, and broader pytest if the focused change touches shared behavior.
+- Skipped option: Adding token middleware to every model and scraper service in this task.
+- Reason skipped: Removing host port publishing already moves scraper/SBERT/NCF/DQN/PostgreSQL behind the Docker network; a gateway-to-pipeline token directly protects the public-to-internal orchestration boundary without expanding this task across many service files.
+- Risk and mitigation: Compose may fail if the token is required but missing. Document `INTERNAL_SERVICE_TOKEN` in `.env.example` and set a test value explicitly during validation instead of committing a real secret.
