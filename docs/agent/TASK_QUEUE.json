@@ -647,7 +647,7 @@
       "phase": "backend",
       "title": "Skill taxonomy autocomplete backend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P2-005"
@@ -656,14 +656,24 @@
         "services/gateway/main.py",
         "tests/"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/gateway/main.py",
+        "tests/test_skill_taxonomy_autocomplete.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_skill_taxonomy_autocomplete.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_skill_taxonomy_autocomplete.py tests\\test_auth_endpoints.py::TestSkillTaxonomySearch tests\\test_auth_endpoints.py::TestProfileUpdate::test_profile_rejects_skill_outside_taxonomy tests\\test_auth_endpoints.py::TestProfileUpdate::test_profile_skills_replace_semantics -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
+      "validation_status": "passed",
       "commit": "",
-      "notes": "Add the backend API contract for skill taxonomy suggestions after inspecting existing profile and skill fields."
+      "notes": "Added exclude support to skill autocomplete so selected canonical skills and aliases can be filtered out. Full backend validation passed; commit hash will be recorded in the next checkpoint."
     },
     {
       "id": "P3-FEAT-001-FE",

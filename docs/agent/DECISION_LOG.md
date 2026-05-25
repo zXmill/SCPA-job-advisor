@@ -228,3 +228,10 @@
 - Skipped option: Building backend and frontend autocomplete in one commit.
 - Reason skipped: The user required backend and frontend feature tasks with separate validation and commits.
 - Risk and mitigation: Inspect existing gateway profile/skills routes and frontend skill-entry UI before choosing the API shape.
+
+## 2026-05-25 21:56 +07 - P3-FEAT-001-BE autocomplete contract
+- Decision: Keep the existing public `GET /api/skills/search` endpoint and add an `exclude` query parameter for selected-skill filtering.
+- Contract: `exclude` accepts repeated query values or comma-separated values and compares against canonical skill names plus aliases.
+- Skipped option: Adding a new route name such as `/api/skills/autocomplete`.
+- Reason skipped: The existing endpoint already exposes taxonomy suggestions and is used by profile validation semantics; extending it is a smaller backend contract.
+- Risk and mitigation: Added focused tests for canonical-name and alias exclusion, then reran existing taxonomy/profile regressions and full backend pytest.

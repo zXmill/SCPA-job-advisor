@@ -1071,3 +1071,26 @@
 
 ### Next Exact Action
 - Validate `docs/agent/TASK_QUEUE.json`, commit this state-only checkpoint, then inspect gateway profile/skills routes and existing frontend skill-entry UI before writing backend autocomplete tests.
+
+## 2026-05-25 21:56 +07 - P3-FEAT-001-BE result
+
+### Active Task
+- `P3-FEAT-001-BE` is implemented, validated, and ready to commit.
+
+### What Changed
+- Added focused backend tests for skill autocomplete exclusion behavior.
+- Extended `GET /api/skills/search` with an `exclude` query parameter.
+- Exclusion accepts repeated or comma-separated values and filters against canonical skill names and aliases.
+
+### Validation Results
+- TDD red: selected `Python` still appeared when passed through `exclude`.
+- Focused autocomplete tests passed: `2 passed`.
+- Taxonomy/profile regression tests passed: `5 passed`.
+- Full backend suite passed: `328 passed, 1 warning`.
+
+### Remaining Issues
+- Frontend integration task `P3-FEAT-001-FE` is still pending.
+- One warning remains in the intentional wrong-secret JWT test.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P3-FEAT-001-BE files plus durable state files, inspect staged diff, and commit `feat: add skill taxonomy autocomplete backend`.

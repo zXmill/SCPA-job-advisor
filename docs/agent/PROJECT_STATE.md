@@ -69,7 +69,8 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Gateway recommendation feedback now uses a durable database outbox with retry worker support for pipeline forwarding.
 - DQN learning-path responses now expose an explicit MDP contract: state is user profile, missing skills, and market demand; actions are skill/course/certificate/career milestones; reward is skill-gap reduction plus job-match lift.
 - Stage 5 aggregation now applies a learned logistic calibration layer while preserving `static_baseline_score` and ablation metadata.
-- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `326 passed, 1 warning` after P2-005.
+- Gateway skill taxonomy autocomplete now supports excluding already-selected canonical skills and aliases.
+- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `328 passed, 1 warning` after P3-FEAT-001-BE.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
@@ -83,7 +84,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P2-005` - add learned recommendation calibration layer. Commit `ba45824`.
+`P3-FEAT-001-BE` - skill taxonomy autocomplete backend contract. Commit pending.
 
 ## Next Task
-`P3-FEAT-001-BE` - skill taxonomy autocomplete backend contract.
+`P3-FEAT-001-FE` - skill taxonomy autocomplete frontend integration.

@@ -3,7 +3,7 @@
 Updated: 2026-05-25 21:56 +07
 
 ## Current Objective
-Start `P3-FEAT-001-BE` skill taxonomy autocomplete backend after recording the P2-005 commit.
+Commit completed `P3-FEAT-001-BE` skill taxonomy autocomplete backend.
 
 ## Current Phase
 backend
@@ -12,7 +12,7 @@ backend
 P3-FEAT-001-BE
 
 ## Latest Commit Hash
-Root: `ba45824` (`feat: add learned recommendation calibration layer`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `3f4f66d` (`docs: update long-running agent checkpoint`). Latest product commit: `ba45824` (`feat: add learned recommendation calibration layer`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `ba45824` (`feat: add learned recommendation calibration layer`). Frontend
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task state changes: durable `docs/agent/` files recording checkpoint commit `a80547b` before P2-005 implementation.
+- Current task state changes: `P3-FEAT-001-BE` backend autocomplete implementation and durable `docs/agent/` updates.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -73,7 +73,7 @@ Root: `ba45824` (`feat: add learned recommendation calibration layer`). Frontend
 - `tests/test_feedback_outbox.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. P2-003 committed as `8ba2004`. P2-004 state checkpoint committed as `313f823`. P2-004 committed as `34757e9`. P2-005 state checkpoint committed as `a80547b`; P2-005 implementation and validation are complete and ready to commit.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. P2-003 committed as `8ba2004`. P2-004 state checkpoint committed as `313f823`. P2-004 committed as `34757e9`. P2-005 state checkpoint committed as `a80547b`; P2-005 committed as `ba45824`. P3-FEAT-001-BE implementation and validation are complete and ready to commit.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -267,6 +267,10 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P2-005 smoke report generated at `reports/ml/calibration_layer_smoke.json`.
 - P2-005 committed as `ba45824`.
 - P3-FEAT-001 split into backend and frontend child tasks.
+- P3-FEAT-001-BE TDD red confirmed `exclude` was ignored by skill search.
+- P3-FEAT-001-BE focused autocomplete tests passed: `2 passed`.
+- P3-FEAT-001-BE taxonomy/profile regression passed: `5 passed`.
+- P3-FEAT-001-BE full backend tests passed: `328 passed, 1 warning`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -282,4 +286,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Validate `docs/agent/TASK_QUEUE.json`, commit this state-only checkpoint, then inspect gateway profile/skills routes and existing frontend skill-entry UI before writing backend autocomplete tests.
+Parse `docs/agent/TASK_QUEUE.json`, stage only P3-FEAT-001-BE files plus durable state files, inspect staged diff, and commit `feat: add skill taxonomy autocomplete backend`.

@@ -825,6 +825,24 @@ def _skill_search_score(skill: dict[str, Any], query: str) -> int:
     return 99
 
 
+def _normalise_query_values(values: list[str] | None) -> set[str]:
+    normalised: set[str] = set()
+    for value in values or []:
+        for part in str(value).split(","):
+            candidate = _normalise_skill_value(part)
+            if candidate:
+                normalised.add(candidate)
+    return normalised
+
+
+def _skill_identity_terms(skill: dict[str, Any]) -> set[str]:
+    return {
+        _normalise_skill_value(value)
+        for value in [skill["name"], *skill.get("aliases", [])]
+        if _normalise_skill_value(value)
+    }
+
+
 async def _canonicalize_profile_skills(
     db: AsyncSession, raw_skills: list[str]
 ) -> list[str]:
@@ -1083,9 +1101,11 @@ async def ready() -> dict[str, Any]:
 async def search_skills(
     q: str = Query(default="", max_length=128),
     limit: int = Query(default=10, ge=1, le=50),
+    exclude: list[str] | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     query = _normalise_skill_value(q)
+    excluded = _normalise_query_values(exclude)
     taxonomy = await _load_skill_taxonomy(db)
     if query:
         matches = [
@@ -1095,6 +1115,11 @@ async def search_skills(
         matches.sort(key=lambda skill: (_skill_search_score(skill, query), skill["name"]))
     else:
         matches = taxonomy
+    if excluded:
+        matches = [
+            skill for skill in matches
+            if not (_skill_identity_terms(skill) & excluded)
+        ]
     return {"skills": matches[:limit]}
 
 
