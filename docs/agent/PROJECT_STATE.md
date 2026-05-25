@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 21:14 +07
+Updated: 2026-05-25 21:27 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -51,9 +51,9 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 
 ## Database And Migrations
 - Alembic config: `alembic.ini`, script location `db/alembic`, version locations `db/migrations`.
-- Detected migration files: `001_initial_schema.py` through `009_reco_hot_indexes.py`.
+- Detected migration files: `001_initial_schema.py` through `010_feedback_outbox.py`.
 - Duplicate/legacy Alembic version folder exists at `db/alembic/versions/004_add_company_logo.py`.
-- Current Alembic head after P1-PERF-003 is `009_reco_hot_indexes`. Local upgrade, one-step downgrade, and re-upgrade passed on 2026-05-25.
+- Current Alembic head after P2-003 is `010_feedback_outbox`. Local upgrade, one-step downgrade to `009_reco_hot_indexes`, and re-upgrade passed on 2026-05-25.
 
 ## ML Model Inventory
 - SBERT: multilingual SentenceTransformer default `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; local fine-tuned artifact files exist under ignored `services/sbert/weights/fine_tuned_jupyter/`.
@@ -65,13 +65,13 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Repository contains extensive pytest coverage and local report evidence of backend health.
 - JWT access and refresh signing secrets now fail fast when missing or shorter than 32 bytes in shared auth and gateway configuration.
 - Gateway CORS origins now default to localhost in development and reject empty or wildcard origins in production.
-- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `317 passed, 1 warning` after P2-002.
+- Gateway recommendation feedback now uses a durable database outbox with retry worker support for pipeline forwarding.
+- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `321 passed, 1 warning` after P2-003.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
 - Frontend lint still reports warnings, but the blocking hook-order error in `frontend/src/app/recommendations/page.tsx` has been fixed and validated locally.
 - Existing frontend lint warnings remain but do not fail lint.
-- Feedback forwarding can report queued without a durable retry outbox.
 - No fresh import validation was run during this initializer, so known broken imports remain unknown.
 
 ## Current Blockers
@@ -80,7 +80,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P2-002` - restricted CORS origins by environment. Commit pending.
+`P2-003` - durable feedback outbox. Commit pending.
 
 ## Next Task
-Commit `P2-002`, then continue `P2-003`: durable feedback outbox.
+Commit `P2-003`, then continue `P2-004`: reframe DQN as skill path recommender.

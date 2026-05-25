@@ -950,6 +950,53 @@ class FeedbackEvent(Base):
     )
 
 
+class ModelFeedbackOutbox(Base):
+    """Durable delivery queue for model feedback forwarding."""
+
+    __tablename__ = "model_feedback_outbox"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    job_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("jobs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    event_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(32), server_default=text("'pending'"), nullable=False
+    )
+    attempts: Mapped[int] = mapped_column(
+        Integer, server_default=text("0"), nullable=False
+    )
+    last_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("NOW()"), nullable=False
+    )
+    delivered_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("NOW()"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("NOW()"), nullable=False
+    )
+
+    __table_args__ = (
+        Index(
+            "idx_model_feedback_outbox_status_next",
+            "status",
+            "next_attempt_at",
+        ),
+        Index("idx_model_feedback_outbox_user_time", "user_id", created_at.desc()),
+        Index("idx_model_feedback_outbox_job_time", "job_id", created_at.desc()),
+    )
+
+
 class ModelArtifact(Base):
     """Persisted model artifact lineage for SBERT, NCF, DQN, and Hybrid."""
 

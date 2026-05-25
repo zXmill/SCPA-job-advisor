@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "security",
-  "current_task_id": "P2-002",
+  "current_task_id": "P2-003",
   "tasks": [
     {
       "id": "INIT-001",
@@ -485,7 +485,7 @@
         "docker compose config --quiet"
       ],
       "validation_status": "passed",
-      "commit": "pending security: restrict cors origins",
+      "commit": "04b0b91",
       "notes": "Added environment-aware CORS origin resolution, local dev defaults, production wildcard/empty-origin rejection, and Compose/.env wiring for explicit origins."
     },
     {
@@ -493,7 +493,7 @@
       "phase": "backend",
       "title": "Durable feedback outbox",
       "priority": "P2",
-      "status": "pending",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P2-002"
@@ -504,14 +504,32 @@
         "services/gateway/main.py",
         "services/pipeline/main.py"
       ],
-      "files_touched": [],
-      "validation_commands": [
-        ".\\.venv\\Scripts\\python.exe -m pytest -q",
-        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini heads"
+      "files_touched": [
+        "db/models.py",
+        "db/migrations/010_feedback_outbox.py",
+        "db/tests/test_models.py",
+        "tests/conftest.py",
+        "tests/test_feedback_outbox.py",
+        "services/gateway/main.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Add model_feedback_outbox table and retry worker."
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest db\\tests\\test_models.py::TestTableNames::test_table_name db\\tests\\test_models.py::TestTableNames::test_all_tables_in_metadata db\\tests\\test_models.py::TestIndexes::test_model_feedback_outbox_indexes tests\\test_feedback_outbox.py -q",
+        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini heads",
+        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini upgrade head",
+        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini current",
+        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini downgrade 009_reco_hot_indexes",
+        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini upgrade head",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "passed",
+      "commit": "pending feat: add durable feedback outbox",
+      "notes": "Added model_feedback_outbox ORM/migration, transactional gateway outbox writes, immediate delivery marking, retry helper/worker loop, and focused outbox tests."
     },
     {
       "id": "P2-004",

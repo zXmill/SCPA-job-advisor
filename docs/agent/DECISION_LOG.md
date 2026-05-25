@@ -166,3 +166,20 @@
 - Skipped option: Rejecting wildcard origins in every environment.
 - Reason skipped: The task requirement is production hardening; local development may still intentionally use permissive values outside production, though the default is now restricted.
 - Risk and mitigation: Added focused CORS config tests, gateway auth regressions, Compose rendering validation, and full backend pytest.
+
+## 2026-05-25 21:16 +07 - P2-003 durable feedback outbox mini plan
+- Decision: Start `P2-003` with a schema-and-contract read pass before implementation because this task crosses database models, migrations, gateway feedback persistence, and pipeline retry semantics.
+- Expected files to touch next: `db/models.py`, a new Alembic migration under `db/migrations/`, `services/gateway/main.py`, `services/pipeline/main.py` or a focused worker module if the existing shape supports it, focused tests, and durable `docs/agent/` state files.
+- Validation commands: focused outbox tests first, Alembic heads/upgrade/downgrade checks after migration work, then `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: Persist model feedback delivery attempts durably and retry failed forwarding rather than reporting an ephemeral queued state only.
+- Skipped option: Adding a separate external queue service.
+- Reason skipped: The requested artifact is a database-backed outbox table and retry worker; adding Redis/Celery would expand infrastructure beyond the current task.
+- Risk and mitigation: Keep the first implementation narrow: store failed feedback payloads transactionally, expose/test a retry path, and preserve existing frontend feedback response shape.
+
+## 2026-05-25 21:27 +07 - P2-003 outbox design
+- Decision: Store every recommendation feedback payload in `model_feedback_outbox` in the same transaction as local `feedback_events`, `user_interactions`, and `user_job_interactions` persistence.
+- Delivery semantics: Attempt immediate forwarding to the pipeline after commit; mark the outbox row `sent` on success, or leave it `pending` with attempt count, error text, and backoff timestamp on failure.
+- Retry worker: Add `retry_model_feedback_outbox_once()` plus a gateway lifespan loop controlled by `FEEDBACK_OUTBOX_RETRY_ENABLED`, batch size, and retry interval environment variables.
+- Skipped option: Only creating an outbox row when immediate forwarding fails.
+- Reason skipped: A transactional outbox should record the intended external delivery before attempting it, so a crash after local commit does not lose feedback.
+- Risk and mitigation: This is at-least-once delivery; model services should tolerate duplicate feedback. The outbox stores attempt count and delivered timestamp for audit and replay control.

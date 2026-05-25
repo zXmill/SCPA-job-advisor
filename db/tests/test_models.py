@@ -26,6 +26,7 @@ from db.models import (
     JobRequiredSkill,
     JobSource,
     JobType,
+    ModelFeedbackOutbox,
     ProficiencyLevel,
     Skill,
     SkillCategory,
@@ -112,6 +113,7 @@ class TestTableNames:
             (DQNReplayArchive, "dqn_replay_archive"),
             (HybridWeights, "hybrid_weights"),
             (HybridRequestLog, "hybrid_request_log"),
+            (ModelFeedbackOutbox, "model_feedback_outbox"),
             (Skill, "skills"),
             (JobRequiredSkill, "job_required_skills"),
             (CertificationSkill, "certification_skills"),
@@ -135,6 +137,7 @@ class TestTableNames:
             "dqn_replay_archive",
             "hybrid_weights",
             "hybrid_request_log",
+            "model_feedback_outbox",
             "skills",
             "job_required_skills",
             "certification_skills",
@@ -316,6 +319,12 @@ class TestIndexes:
         indexes = self._get_index_names("user_interactions")
         assert "idx_interactions_user_time" in indexes
         assert "idx_interactions_created" in indexes
+
+    def test_model_feedback_outbox_indexes(self) -> None:
+        indexes = self._get_index_names("model_feedback_outbox")
+        assert "idx_model_feedback_outbox_status_next" in indexes
+        assert "idx_model_feedback_outbox_user_time" in indexes
+        assert "idx_model_feedback_outbox_job_time" in indexes
 
     def test_total_index_count(self) -> None:
         """Verify we have at least 15 custom indexes across all tables."""

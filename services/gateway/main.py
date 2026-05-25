@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import asyncio
 import os
 import time
 import uuid
@@ -92,6 +93,15 @@ HTTP_TIMEOUT_SECONDS = float(os.getenv("HTTP_TIMEOUT_SECONDS", "5"))
 HEALTH_TIMEOUT_SECONDS = float(os.getenv("HEALTH_TIMEOUT_SECONDS", "2"))
 P95_TARGET_MS = int(os.getenv("GATEWAY_P95_TARGET_MS", "150"))
 PUBLIC_GATEWAY_URL = os.getenv("PUBLIC_GATEWAY_URL", "http://localhost:8000").rstrip("/")
+FEEDBACK_OUTBOX_RETRY_ENABLED = os.getenv(
+    "FEEDBACK_OUTBOX_RETRY_ENABLED", "true"
+).lower() in {"1", "true", "yes"}
+FEEDBACK_OUTBOX_RETRY_INTERVAL_SECONDS = float(
+    os.getenv("FEEDBACK_OUTBOX_RETRY_INTERVAL_SECONDS", "30")
+)
+FEEDBACK_OUTBOX_RETRY_BATCH_SIZE = int(
+    os.getenv("FEEDBACK_OUTBOX_RETRY_BATCH_SIZE", "50")
+)
 LOGO_PROXY_ALLOWED_HOSTS = {"remotive.com", "www.remotive.com"}
 LOGO_PROXY_ALLOWED_HOSTS.update(
     {
@@ -159,6 +169,7 @@ SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=
 
 # ── HTTP client ──
 http_client: httpx.AsyncClient | None = None
+feedback_outbox_task: asyncio.Task | None = None
 
 # ── Password hashing ──
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -551,6 +562,123 @@ async def _pipeline_post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
         raise HTTPException(status_code=502, detail="pipeline unavailable") from exc
 
 
+def _feedback_delivery_error(exc: Exception) -> str:
+    if isinstance(exc, HTTPException):
+        return str(exc.detail)
+    return str(exc)
+
+
+async def _insert_model_feedback_outbox(
+    db: AsyncSession,
+    *,
+    user_id: Any,
+    job_id: uuid.UUID,
+    event_type: str,
+    payload: dict[str, Any],
+) -> int:
+    result = await db.execute(
+        text(
+            "INSERT INTO model_feedback_outbox ("
+            "user_id, job_id, event_type, payload, status, attempts, "
+            "next_attempt_at, created_at, updated_at"
+            ") VALUES ("
+            ":user_id, :job_id, :event_type, CAST(:payload AS jsonb), "
+            "'pending', 0, NOW(), NOW(), NOW()"
+            ") RETURNING id"
+        ),
+        {
+            "user_id": user_id,
+            "job_id": job_id,
+            "event_type": event_type,
+            "payload": json.dumps(payload),
+        },
+    )
+    return int(result.scalar_one())
+
+
+async def _mark_model_feedback_outbox_sent(
+    db: AsyncSession,
+    outbox_id: int,
+) -> None:
+    await db.execute(
+        text(
+            "UPDATE model_feedback_outbox SET "
+            "status = 'sent', attempts = attempts + 1, last_error = NULL, "
+            "delivered_at = NOW(), updated_at = NOW() "
+            "WHERE id = :id"
+        ),
+        {"id": outbox_id},
+    )
+    await db.commit()
+
+
+async def _mark_model_feedback_outbox_failed(
+    db: AsyncSession,
+    outbox_id: int,
+    exc: Exception,
+) -> None:
+    await db.execute(
+        text(
+            "UPDATE model_feedback_outbox SET "
+            "status = 'pending', attempts = attempts + 1, "
+            "last_error = :last_error, "
+            "next_attempt_at = NOW() + (LEAST(attempts + 1, 10) * INTERVAL '60 seconds'), "
+            "updated_at = NOW() "
+            "WHERE id = :id"
+        ),
+        {"id": outbox_id, "last_error": _feedback_delivery_error(exc)[:2000]},
+    )
+    await db.commit()
+
+
+async def retry_model_feedback_outbox_once(
+    db: AsyncSession,
+    *,
+    limit: int = FEEDBACK_OUTBOX_RETRY_BATCH_SIZE,
+) -> dict[str, int]:
+    rows = (
+        await db.execute(
+            text(
+                "SELECT id, payload FROM model_feedback_outbox "
+                "WHERE status = 'pending' AND next_attempt_at <= NOW() "
+                "ORDER BY created_at ASC, id ASC "
+                "LIMIT :limit"
+            ),
+            {"limit": limit},
+        )
+    ).mappings().all()
+
+    summary = {"attempted": 0, "sent": 0, "failed": 0}
+    for row in rows:
+        summary["attempted"] += 1
+        payload = row["payload"]
+        if isinstance(payload, str):
+            payload = json.loads(payload)
+        try:
+            await _pipeline_post("/feedback", payload)
+        except HTTPException as exc:
+            await _mark_model_feedback_outbox_failed(db, int(row["id"]), exc)
+            summary["failed"] += 1
+        else:
+            await _mark_model_feedback_outbox_sent(db, int(row["id"]))
+            summary["sent"] += 1
+    return summary
+
+
+async def _feedback_outbox_worker_loop() -> None:
+    while True:
+        await asyncio.sleep(FEEDBACK_OUTBOX_RETRY_INTERVAL_SECONDS)
+        try:
+            async with SessionLocal() as session:
+                summary = await retry_model_feedback_outbox_once(session)
+            if summary["attempted"]:
+                logger.info("feedback_outbox_retry summary=%s", summary)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # pragma: no cover - defensive background loop
+            logger.warning("feedback_outbox_retry_failed error=%s", exc)
+
+
 async def _invalidate_pipeline_user(user_id: Any) -> None:
     """Best-effort cache bust on the pipeline service.
 
@@ -857,13 +985,22 @@ async def _interaction_count_for_user(db: AsyncSession, user_id: Any) -> int:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    global http_client
+    global http_client, feedback_outbox_task
     timeout = httpx.Timeout(HTTP_TIMEOUT_SECONDS, connect=1.0)
     http_client = httpx.AsyncClient(timeout=timeout)
     logger.info("Gateway started pipeline_url=%s p95_target_ms=%s", PIPELINE_URL, P95_TARGET_MS)
+    if FEEDBACK_OUTBOX_RETRY_ENABLED:
+        feedback_outbox_task = asyncio.create_task(_feedback_outbox_worker_loop())
     try:
         yield
     finally:
+        if feedback_outbox_task is not None:
+            feedback_outbox_task.cancel()
+            try:
+                await feedback_outbox_task
+            except asyncio.CancelledError:
+                pass
+            feedback_outbox_task = None
         await http_client.aclose()
 
 
@@ -1500,6 +1637,21 @@ async def recommendation_feedback(
         "ncf_score": body.ncf_score,
         "dqn_score": body.dqn_score,
     }
+    event_payload = {
+        "user_id": uid,
+        "job_id": body.job_id,
+        "event": body.event,
+        "reward": reward,
+        "rank": body.rank,
+        "dwell_ms": body.dwell_ms,
+        "sbert_score": body.sbert_score,
+        "ncf_score": body.ncf_score,
+        "dqn_score": body.dqn_score,
+        "slate_job_ids": body.slate_job_ids,
+        "run_id": body.run_id,
+        "served_slate_id": body.served_slate_id or body.recommendation_id,
+    }
+    outbox_id: int | None = None
 
     try:
         await db.execute(
@@ -1564,30 +1716,26 @@ async def recommendation_feedback(
                 "dwell_seconds": body.dwell_ms / 1000.0 if body.dwell_ms else None,
             },
         )
+        outbox_id = await _insert_model_feedback_outbox(
+            db,
+            user_id=uid,
+            job_id=job_uuid,
+            event_type=body.event,
+            payload=event_payload,
+        )
         await db.commit()
     except Exception as exc:
         await db.rollback()
         logger.exception("feedback persistence failed user_id=%s job_id=%s", uid, body.job_id)
         raise HTTPException(status_code=500, detail="failed to persist feedback") from exc
 
-    event_payload = {
-        "user_id": uid,
-        "job_id": body.job_id,
-        "event": body.event,
-        "reward": reward,
-        "rank": body.rank,
-        "dwell_ms": body.dwell_ms,
-        "sbert_score": body.sbert_score,
-        "ncf_score": body.ncf_score,
-        "dqn_score": body.dqn_score,
-        "slate_job_ids": body.slate_job_ids,
-        "run_id": body.run_id,
-        "served_slate_id": body.served_slate_id or body.recommendation_id,
-    }
-
     try:
         pipeline_resp = await _pipeline_post("/feedback", event_payload)
-    except HTTPException:
+        if outbox_id is not None:
+            await _mark_model_feedback_outbox_sent(db, outbox_id)
+    except HTTPException as exc:
+        if outbox_id is not None:
+            await _mark_model_feedback_outbox_failed(db, outbox_id, exc)
         pipeline_resp = {"status": "queued"}
 
     return {"status": "ok", "pipeline": pipeline_resp}

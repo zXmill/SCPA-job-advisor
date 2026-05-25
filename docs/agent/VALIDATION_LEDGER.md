@@ -664,3 +664,80 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after marking `P2-002` done.
 - Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:15 +07
+- Task ID: `P2-002`
+- Command: `git commit -m "security: restrict cors origins"`
+- Result: pass
+- Summary: Created commit `04b0b91` with environment-aware CORS origin restrictions, Compose/.env wiring, tests, and durable state updates.
+- Related commit hash: `04b0b91`.
+
+## 2026-05-25 21:16 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording `P2-002` commit `04b0b91` and marking `P2-003` in progress.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:18 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest db\tests\test_models.py::TestTableNames::test_table_name db\tests\test_models.py::TestTableNames::test_all_tables_in_metadata db\tests\test_models.py::TestIndexes::test_model_feedback_outbox_indexes tests\test_feedback_outbox.py -q`
+- Result: fail
+- Summary: Expected TDD red failure: `ModelFeedbackOutbox` could not be imported from `db.models`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:21 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest db\tests\test_models.py::TestTableNames::test_table_name db\tests\test_models.py::TestTableNames::test_all_tables_in_metadata db\tests\test_models.py::TestIndexes::test_model_feedback_outbox_indexes tests\test_feedback_outbox.py -q`
+- Result: pass
+- Summary: `19 passed in 1.94s`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:22 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads`
+- Result: pass
+- Summary: Alembic reported `010_feedback_outbox (head)`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:22 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Upgraded from `009_reco_hot_indexes` to `010_feedback_outbox`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:22 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current`
+- Result: pass
+- Summary: Local database current revision is `010_feedback_outbox (head)`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:23 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini downgrade 009_reco_hot_indexes`
+- Result: pass
+- Summary: One-step downgrade dropped `model_feedback_outbox` and its indexes.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:23 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Re-applied `010_feedback_outbox` successfully after the downgrade check.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:27 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `321 passed, 1 warning in 93.07s`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:32 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after the post-compact recovery note.
+- Related commit hash: pending `feat: add durable feedback outbox`.

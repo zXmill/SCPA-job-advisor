@@ -806,3 +806,91 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only P2-002 files plus durable state files, inspect staged diff, and commit `security: restrict cors origins`.
+
+## 2026-05-25 21:16 +07 - P2-003 start
+
+### Active Task
+- `P2-003` - Durable feedback outbox.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked project files remain.
+- New task state changes: durable `docs/agent/` files updated to record `P2-002` commit `04b0b91` and mark `P2-003` in progress.
+
+### Previous Task Complete
+- Yes. `P2-002` committed as `04b0b91`.
+
+### Validation Still Needed
+- Inspect current gateway feedback persistence and pipeline feedback paths.
+- Inspect database models and current migration head.
+- Add focused outbox tests before implementation.
+- Run migration checks and full backend pytest after implementation.
+
+### Commands Run
+- `git commit -m "security: restrict cors origins"`
+- `git status --short --branch`
+- `git log --oneline -8`
+
+### Next Exact Action
+- Inspect current feedback persistence/forwarding paths, database models, migrations, and pipeline retry hooks before adding outbox tests.
+
+## 2026-05-25 21:27 +07 - P2-003 result
+
+### Active Task
+- `P2-003` is implemented, validated, and ready to commit.
+
+### What Changed
+- Added `model_feedback_outbox` ORM model and Alembic migration `010_feedback_outbox`.
+- Added outbox table indexes for pending retry scans and user/job audit paths.
+- Gateway feedback persistence now writes the outbox row transactionally with local feedback tables before attempting pipeline forwarding.
+- Immediate pipeline delivery marks the outbox row `sent`; failed delivery keeps it `pending` with attempts, error text, and retry backoff.
+- Added `retry_model_feedback_outbox_once()` and a gateway lifespan retry loop controlled by `FEEDBACK_OUTBOX_RETRY_*` environment settings.
+- Added `tests/test_feedback_outbox.py` and updated model tests/test truncation.
+
+### Validation Results
+- TDD red: focused outbox tests failed because `ModelFeedbackOutbox` did not exist.
+- Focused outbox/model tests: `19 passed`.
+- Alembic heads: `010_feedback_outbox (head)`.
+- Alembic upgrade head: passed.
+- Alembic current: `010_feedback_outbox (head)`.
+- Alembic downgrade to `009_reco_hot_indexes`: passed.
+- Alembic re-upgrade head: passed.
+- Full backend suite: `321 passed, 1 warning`.
+
+### Remaining Issues
+- `P2-004` DQN skill-path reframing is still pending.
+- One warning remains in the wrong-secret test because it intentionally signs a forged token with a short attacker-controlled secret.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P2-003 files plus durable state files, inspect staged diff, and commit `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:32 +07 - Post-compact recovery note
+
+### Active Task
+- `P2-003` - Durable feedback outbox.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked project files remain.
+- Current task changes: `db/models.py`, `db/migrations/010_feedback_outbox.py`, `db/tests/test_models.py`, `tests/conftest.py`, `tests/test_feedback_outbox.py`, `services/gateway/main.py`, and durable `docs/agent/` state files.
+
+### Previous Task Complete
+- Yes. Repository state and durable state agree that `P2-003` implementation and validation are complete, but the task commit has not been created yet.
+
+### Validation Still Needed
+- Re-parse `docs/agent/TASK_QUEUE.json` after this recovery note.
+- Inspect staged diff for exactly the P2-003 files and durable state files.
+- Commit `feat: add durable feedback outbox`.
+
+### Commands Run
+- `Get-Content -Raw AGENTS.md`
+- `Get-Content -Raw docs\agent\PROJECT_STATE.md`
+- `Get-Content -Raw docs\agent\TASK_QUEUE.json`
+- `Get-Content -Raw docs\agent\COMPACT_SNAPSHOT.md`
+- `Get-Content -Raw docs\agent\SESSION_REPORT.md`
+- `Get-Content -Raw docs\agent\DECISION_LOG.md`
+- `Get-Content -Raw docs\agent\VALIDATION_LEDGER.md`
+- `Get-Content -Raw docs\agent\FAILURE_LEDGER.md`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P2-003 files plus durable state files, inspect staged diff, and commit `feat: add durable feedback outbox`.

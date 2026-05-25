@@ -98,6 +98,7 @@ def _table_names() -> list[str]:
     return [
         "hybrid_request_log",
         "hybrid_weights",
+        "model_feedback_outbox",
         "dqn_replay_archive",
         "dqn_session_logs",
         "user_job_interactions",
