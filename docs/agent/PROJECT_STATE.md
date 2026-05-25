@@ -59,6 +59,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - SBERT: multilingual SentenceTransformer default `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; local fine-tuned artifact files exist under ignored `services/sbert/weights/fine_tuned_jupyter/`.
 - NCF: online NCF/NeuMF service with JSON and `.pt` artifacts under ignored `services/ncf/weights/` and report artifacts.
 - DQN: online skill-path DQN service with replay/policy artifacts under ignored `services/dqn/weights/` and report artifacts. It emits career milestone/skill actions and a compatibility rerank signal.
+- Calibration: deterministic learned logistic calibrator in `services/pipeline/calibration.py` over static baseline, SBERT, NCF, DQN, skill gap, skill alignment, recency, salary, location, and interaction-depth features. Smoke evaluation is saved at `reports/ml/calibration_layer_smoke.json`.
 - Evaluation and smoke artifacts exist under `reports/` and `notebooks/training_runs/`.
 
 ## Known Working Areas
@@ -67,7 +68,8 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Gateway CORS origins now default to localhost in development and reject empty or wildcard origins in production.
 - Gateway recommendation feedback now uses a durable database outbox with retry worker support for pipeline forwarding.
 - DQN learning-path responses now expose an explicit MDP contract: state is user profile, missing skills, and market demand; actions are skill/course/certificate/career milestones; reward is skill-gap reduction plus job-match lift.
-- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `324 passed, 1 warning` after P2-004.
+- Stage 5 aggregation now applies a learned logistic calibration layer while preserving `static_baseline_score` and ablation metadata.
+- Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `326 passed, 1 warning` after P2-005.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
@@ -81,7 +83,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P2-004` - reframe DQN as skill path recommender. Commit `34757e9`.
+`P2-005` - add learned recommendation calibration layer. Commit pending.
 
 ## Next Task
-`P2-005` - add learned recommendation calibration layer.
+`P3-FEAT-001` - skill taxonomy autocomplete.

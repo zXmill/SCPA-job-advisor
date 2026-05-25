@@ -853,3 +853,87 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after recording `P2-004` commit `34757e9` and marking `P2-005` in progress.
 - Related commit hash: pending state checkpoint.
+
+## 2026-05-25 21:57 +07
+- Task ID: `P2-005`
+- Command: `git commit -m "docs: update long-running agent checkpoint"`
+- Result: pass
+- Summary: Created state-only checkpoint `a80547b` before calibration layer implementation.
+- Related commit hash: `a80547b`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_calibration_layer.py tests\test_pipeline_telemetry.py -q`
+- Result: fail
+- Summary: Expected TDD red failure: aggregate summary lacked `calibrator`, `services.evaluation.calibration` did not exist, and pipeline telemetry still reported `static_baseline`.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_calibration_layer.py tests\test_pipeline_telemetry.py -q`
+- Result: pass
+- Summary: Focused calibration and telemetry contracts passed after adding the learned logistic calibrator.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_calibration_layer.py tests\test_pipeline_telemetry.py tests\test_recommendation_metrics.py tests\test_pipeline_contracts.py -q`
+- Result: pass
+- Summary: Focused calibration, telemetry, ranking-metrics, and pipeline-contract tests passed with `13 passed`.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -c "from services.evaluation.calibration import write_calibration_smoke_report; print(write_calibration_smoke_report())"`
+- Result: pass
+- Summary: Generated `reports/ml/calibration_layer_smoke.json`.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: fail
+- Summary: Full backend suite failed with 2 stale strategy assertions expecting pre-calibrator aggregate labels; 324 tests passed and 1 warning remained.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_e2e_pipeline.py::test_scrape_to_ranked_recommendations_e2e tests\test_online_recommender_learning.py::test_aggregate_uses_learned_scores_without_static_domain_cap -q`
+- Result: fail
+- Summary: Focused stale-strategy regression failed once because the raw logistic probability compressed a user-facing score below the old minimum threshold.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_e2e_pipeline.py::test_scrape_to_ranked_recommendations_e2e tests\test_online_recommender_learning.py::test_aggregate_uses_learned_scores_without_static_domain_cap -q`
+- Result: pass
+- Summary: Focused stale-strategy regressions passed with `2 passed` after blending a small static-baseline component into the served calibrated score.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -c "from services.evaluation.calibration import write_calibration_smoke_report; print(write_calibration_smoke_report())"`
+- Result: pass
+- Summary: Regenerated `reports/ml/calibration_layer_smoke.json` after the served-score blend change.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_calibration_layer.py tests\test_pipeline_telemetry.py tests\test_recommendation_metrics.py tests\test_pipeline_contracts.py tests\test_e2e_pipeline.py::test_scrape_to_ranked_recommendations_e2e tests\test_online_recommender_learning.py::test_aggregate_uses_learned_scores_without_static_domain_cap -q`
+- Result: pass
+- Summary: Expanded focused P2-005 suite passed with `15 passed`.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `326 passed, 1 warning in 94.17s`.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P2-005 validation passed.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.

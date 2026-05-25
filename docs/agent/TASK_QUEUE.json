@@ -589,14 +589,37 @@
         "tests/",
         "reports/ml/"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/pipeline/calibration.py",
+        "services/evaluation/calibration.py",
+        "services/pipeline/stages/stage_5_aggregate.py",
+        "services/pipeline/main.py",
+        "tests/test_calibration_layer.py",
+        "tests/test_pipeline_telemetry.py",
+        "tests/test_e2e_pipeline.py",
+        "tests/test_online_recommender_learning.py",
+        "reports/ml/calibration_layer_smoke.json",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/FAILURE_LEDGER.md",
+        "docs/agent/ARTIFACT_INDEX.md"
+      ],
       "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_calibration_layer.py tests\\test_pipeline_telemetry.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_calibration_layer.py tests\\test_pipeline_telemetry.py tests\\test_recommendation_metrics.py tests\\test_pipeline_contracts.py -q",
+        ".\\.venv\\Scripts\\python.exe -c \"from services.evaluation.calibration import write_calibration_smoke_report; print(write_calibration_smoke_report())\"",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_e2e_pipeline.py::test_scrape_to_ranked_recommendations_e2e tests\\test_online_recommender_learning.py::test_aggregate_uses_learned_scores_without_static_domain_cap -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_calibration_layer.py tests\\test_pipeline_telemetry.py tests\\test_recommendation_metrics.py tests\\test_pipeline_contracts.py tests\\test_e2e_pipeline.py::test_scrape_to_ranked_recommendations_e2e tests\\test_online_recommender_learning.py::test_aggregate_uses_learned_scores_without_static_domain_cap -q",
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_recommendation_metrics.py tests\\test_pipeline_contracts.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
+      "validation_status": "passed",
       "commit": "",
-      "notes": "Started after P2-004 commit. Add learned calibration/ranker layer while preserving the static baseline and existing response contract."
+      "notes": "Added deterministic learned logistic calibration over SBERT, NCF, DQN, skill gap, recency, salary, location, and interaction depth while preserving static baseline scores. Full backend validation passed; commit hash will be recorded in the next checkpoint."
     },
     {
       "id": "P3-FEAT-001",

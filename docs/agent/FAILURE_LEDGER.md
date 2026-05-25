@@ -35,3 +35,12 @@
 - Final fix if solved: Sequential retry passed with `5 passed`.
 - Related files: `tests/conftest.py`, `tests/test_jobs_upsert.py`.
 - Do not repeat notes: Do not run DB-backed pytest commands in parallel against the same local test database unless each process uses a separate `SCPA_TEST_DB`.
+
+## 2026-05-25 21:56 +07 - P2-005 stale aggregate strategy assertions
+- Error message: `AssertionError` because tests expected `hybrid_scores_with_skill_alignment` or `learned_scores_no_static_domain_cap` while the aggregate now reports `learned_logistic_calibrator_with_static_baseline`.
+- Command that caused it: `.\.venv\Scripts\python.exe -m pytest -q`.
+- Root cause: The learned calibration layer intentionally replaced the old strategy labels, but two existing tests still asserted the previous aggregate strategy strings.
+- Fix attempted: Update the E2E and online recommender tests to assert the learned calibrator strategy, calibrator metadata, and static baseline preservation. Also blend 15% of the static baseline into the served calibrated score so user-facing match percentages remain on the existing aggregate scale.
+- Final fix if solved: Full backend pytest passed with `326 passed, 1 warning`.
+- Related files: `tests/test_e2e_pipeline.py`, `tests/test_online_recommender_learning.py`, `services/pipeline/stages/stage_5_aggregate.py`.
+- Do not repeat notes: When changing strategy labels, update contract tests to assert durable capabilities rather than legacy display strings.

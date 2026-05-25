@@ -974,14 +974,75 @@
 - `git commit -m "refactor: reframe dqn as skill path recommender"`
 - `git status --short --branch`
 - `git log --oneline -10`
+- `git commit -m "docs: update long-running agent checkpoint"`
 
 ### Validation Results
 - P2-004 full backend validation remains `324 passed, 1 warning` from the final run before commit.
 - `docs/agent/TASK_QUEUE.json` parsed successfully after marking `P2-005` in progress.
+- State-only checkpoint committed as `a80547b`.
 
 ### Remaining Issues
 - `P2-005` implementation has not started yet.
 - Root repo remains dirty with pre-existing `README.md` and broad untracked project files.
 
 ### Next Exact Action
-- Validate `docs/agent/TASK_QUEUE.json`, commit this state-only checkpoint, then inspect the current aggregation and metrics code before writing calibration tests.
+- Inspect the current aggregation and metrics code before writing calibration tests.
+
+## 2026-05-25 21:56 +07 - Post-compact recovery note
+
+### Active Task
+- `P2-005` - Calibration layer.
+
+### Dirty Files
+- Pre-existing: `README.md` modified.
+- Pre-existing: broad untracked project files and directories remain.
+- Current task state changes: `docs/agent/COMPACT_SNAPSHOT.md`, `docs/agent/SESSION_REPORT.md`, and `docs/agent/VALIDATION_LEDGER.md` record the P2-005 checkpoint state.
+
+### Previous Task Complete
+- Yes. `P2-004` is complete and committed as `34757e9`.
+- The P2-005 state-only checkpoint is committed as `a80547b`.
+
+### Validation Still Needed
+- Add focused calibration tests and confirm the expected TDD red state.
+- Run focused recommendation metrics and pipeline contract tests after implementation.
+- Run full backend pytest before marking `P2-005` done.
+
+### Commands Run
+- `Get-Content -Raw AGENTS.md`
+- `Get-Content -Raw docs\agent\PROJECT_STATE.md`
+- `Get-Content -Raw docs\agent\TASK_QUEUE.json`
+- `Get-Content -Raw docs\agent\COMPACT_SNAPSHOT.md`
+- `Get-Content -Raw docs\agent\SESSION_REPORT.md`
+- `Get-Content -Raw docs\agent\DECISION_LOG.md`
+- `Get-Content -Raw docs\agent\VALIDATION_LEDGER.md`
+- `Get-Content -Raw docs\agent\FAILURE_LEDGER.md`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Inspect aggregation and evaluation helper code, then add focused P2-005 calibration tests before implementation.
+
+## 2026-05-25 21:56 +07 - P2-005 result
+
+### Active Task
+- `P2-005` is implemented, validated, and ready to commit.
+
+### What Changed
+- Added `services/pipeline/calibration.py` with a deterministic learned logistic calibrator.
+- Added `services/evaluation/calibration.py` and generated `reports/ml/calibration_layer_smoke.json`.
+- Updated aggregation to emit `calibrated_score`, `static_baseline_score`, calibrator metadata, and learned/static ablation scores.
+- Updated pipeline telemetry to report learned calibrator metadata after aggregation.
+- Added calibration tests and updated stale aggregate strategy tests.
+
+### Validation Results
+- TDD red confirmed missing calibrator summary, missing evaluation module, and static telemetry placeholder.
+- Focused calibration/telemetry tests passed: `3 passed`.
+- Expanded focused contracts passed: `15 passed`.
+- Full backend suite passed: `326 passed, 1 warning`.
+
+### Remaining Issues
+- The smoke report uses deterministic synthetic data and is not production performance evidence.
+- One warning remains in the intentional wrong-secret JWT test.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P2-005 files plus durable state files, inspect staged diff, and commit `feat: add learned recommendation calibration layer`.

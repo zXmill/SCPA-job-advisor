@@ -380,12 +380,17 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
     timings["calibrator"] = 0.0
     _record_stage_latency("calibrator", timings["calibrator"])
     stages["calibrator"] = {
-        "mode": "static_baseline",
+        "mode": "pending_aggregate_calibrator",
         "duration_ms": timings["calibrator"],
     }
 
     aggregated = await _stage("aggregate", timings, run_aggregate_stage(scrape.user, dqn_ranked.jobs))
     stages["aggregate"] = aggregated.summary
+    if isinstance(aggregated.summary.get("calibrator"), dict):
+        stages["calibrator"] = {
+            **aggregated.summary["calibrator"],
+            "duration_ms": timings["calibrator"],
+        }
     timings["total"] = round((time.perf_counter() - started) * 1000, 2)
     stages["telemetry"] = _telemetry_snapshot()
     fallback_flags: list[str] = []

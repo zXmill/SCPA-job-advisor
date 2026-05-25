@@ -24,3 +24,4 @@
 - `testing/archive/manual-debug/check_scrape.py`
 - `testing/archive/manual-debug/insert_scraped.py`
 - `testing/archive/manual-debug/scrape_1000.json`
+- `reports/ml/calibration_layer_smoke.json`

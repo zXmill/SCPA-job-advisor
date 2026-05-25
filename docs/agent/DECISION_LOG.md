@@ -210,3 +210,12 @@
 - Skipped option: Replacing the existing static aggregate score outright.
 - Reason skipped: The task explicitly requires keeping the static baseline, and existing tests/reports depend on the current hybrid score contract.
 - Risk and mitigation: Begin with deterministic train/evaluate smoke data and compare learned NDCG against the static baseline before claiming improvement.
+
+## 2026-05-25 21:56 +07 - P2-005 calibration design
+- Decision: Add a deterministic learned logistic calibrator in `services/pipeline/calibration.py` and keep the previous weighted aggregate as `static_baseline_score`.
+- Features: static baseline, SBERT score, NCF score, DQN signal, skill gap, skill alignment, recency, salary, location, and interaction depth.
+- Serving behavior: `final_score` is the learned calibrated score with a small static-baseline blend to preserve the existing match-percent scale; `ablation_scores` exposes both `static_baseline` and `learned_calibrator`.
+- Evaluation: Add a synthetic smoke fixture report at `reports/ml/calibration_layer_smoke.json` comparing NDCG@3 against the static baseline. The report is explicitly not production performance evidence.
+- Skipped option: Adding LightGBM or a heavier training dependency.
+- Reason skipped: The repo has no production labels yet for calibrator training; a pure-Python logistic smoke model is reviewable, deterministic, and sufficient to create the serving contract without adding dependency risk.
+- Risk and mitigation: Strategy label changes broke two stale tests; updated them to assert calibrator metadata and static baseline preservation, then reran focused and full backend validation.

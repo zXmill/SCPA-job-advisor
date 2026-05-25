@@ -3,7 +3,7 @@
 Updated: 2026-05-25 21:56 +07
 
 ## Current Objective
-Start `P2-005` learned calibration layer from a clean durable checkpoint.
+Commit completed `P2-005` learned calibration layer.
 
 ## Current Phase
 ml
@@ -12,7 +12,7 @@ ml
 P2-005
 
 ## Latest Commit Hash
-Root: `34757e9` (`refactor: reframe dqn as skill path recommender`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `a80547b` (`docs: update long-running agent checkpoint`). Latest product commit: `34757e9` (`refactor: reframe dqn as skill path recommender`). Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `34757e9` (`refactor: reframe dqn as skill path recommender`). Frontend ne
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current checkpoint changes: durable `docs/agent/` state files recording `P2-004` commit `34757e9` and starting `P2-005`.
+- Current task state changes: durable `docs/agent/` files recording checkpoint commit `a80547b` before P2-005 implementation.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -73,7 +73,7 @@ Root: `34757e9` (`refactor: reframe dqn as skill path recommender`). Frontend ne
 - `tests/test_feedback_outbox.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. P2-003 committed as `8ba2004`. P2-004 state checkpoint committed as `313f823`. P2-004 committed as `34757e9`. `P2-005` is in progress as a state-only checkpoint; implementation has not started.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. P1-PERF-001 committed as `f167a99`. P1-PERF-002 committed as `7ce8e79`. Survival checkpoint committed as `a9c1b46`. P1-PERF-003 committed as `742992a`. P1-OBS-001 committed as `0b2e3e5`. P2-001 committed as `dc5cc2c`. Survival checkpoint committed as `f9711cd`. P2-002 committed as `04b0b91`. P2-003 committed as `8ba2004`. P2-004 state checkpoint committed as `313f823`. P2-004 committed as `34757e9`. P2-005 state checkpoint committed as `a80547b`; P2-005 implementation and validation are complete and ready to commit.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -257,6 +257,14 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P2-004 final `TASK_QUEUE.json` parse passed.
 - P2-004 commit exists as `34757e9`.
 - P2-005 state-start `TASK_QUEUE.json` parse passed.
+- P2-005 state checkpoint exists as `a80547b`.
+- Post-compact recovery reads for all durable memory files.
+- Post-compact `git status --short --branch` and `git log --oneline -10`.
+- P2-005 TDD red confirmed missing calibrator summary, evaluation module, and telemetry update.
+- P2-005 focused calibration/telemetry tests passed: `3 passed`.
+- P2-005 expanded focused contracts passed: `15 passed`.
+- P2-005 full backend tests passed: `326 passed, 1 warning`.
+- P2-005 smoke report generated at `reports/ml/calibration_layer_smoke.json`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -272,4 +280,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Parse `docs/agent/TASK_QUEUE.json`, commit this state-only checkpoint, then inspect current aggregation and metrics code before writing P2-005 tests.
+Parse `docs/agent/TASK_QUEUE.json`, stage only P2-005 files plus durable state files, inspect staged diff, and commit `feat: add learned recommendation calibration layer`.

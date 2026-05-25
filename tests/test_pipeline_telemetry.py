@@ -42,7 +42,15 @@ async def test_pipeline_run_emits_stage_latency_telemetry(
     async def fake_aggregate(_user, jobs):
         return SimpleNamespace(
             ranked=[{**jobs[0], "final_score": 0.75, "ablation_scores": {"full": 0.75}}],
-            summary={"strategy": "unit"},
+            summary={
+                "strategy": "unit",
+                "calibrator": {
+                    "mode": "learned_logistic",
+                    "baseline": "static_weighted_hybrid",
+                    "model_version": "unit-calibrator",
+                    "feature_names": ["sbert_score", "ncf_score", "dqn_signal"],
+                },
+            },
         )
 
     monkeypatch.setattr(pipeline_main, "http_client", object())
@@ -65,4 +73,5 @@ async def test_pipeline_run_emits_stage_latency_telemetry(
         assert stats["p95_ms"] >= stats["p50_ms"]
 
     assert response.timings_ms["calibrator"] == 0.0
-    assert response.stages["calibrator"]["mode"] == "static_baseline"
+    assert response.stages["calibrator"]["mode"] == "learned_logistic"
+    assert response.stages["calibrator"]["baseline"] == "static_weighted_hybrid"
