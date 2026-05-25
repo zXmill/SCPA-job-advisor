@@ -339,3 +339,10 @@
 - UI contract: show required, matched, and missing skills plus the backend explanation and match percentage near the existing job description.
 - Skipped option: Adding a new standalone skill-gap route.
 - Reason skipped: Job-specific skill gaps are most useful in context of a job detail, and a new route would expand navigation and state scope for this child task.
+
+## 2026-05-25 23:48 +07 - P3-FEAT-005-FE frontend implementation decision
+- Decision: Add the skill-gap detail section to `frontend/src/app/jobs/[id]/page.tsx` and add a typed `getJobSkillGap` API helper.
+- Trade-off: The nested frontend repo had the job-detail route untracked, so the task commit adds the full route file; staging was limited to that file and `src/lib/api.ts`.
+- Skipped option: Failing the whole job page when skill-gap loading fails.
+- Reason skipped: Job details are still useful if the skill-gap endpoint is temporarily unavailable; the page renders an inline skill-gap error instead.
+- Risk and mitigation: Validated with frontend lint, build, dynamic route HTTP smoke, staged diff check, and a nested frontend commit.

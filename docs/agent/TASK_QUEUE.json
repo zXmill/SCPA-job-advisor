@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "frontend",
-  "current_task_id": "P3-FEAT-005-FE",
+  "current_task_id": "P3-FEAT-006",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1024,7 +1024,7 @@
       "phase": "frontend",
       "title": "Skill-gap detail page",
       "priority": "P3",
-      "status": "blocked",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P3-FEAT-004"
@@ -1036,6 +1036,12 @@
         "docs/agent/COMPACT_SNAPSHOT.md"
       ],
       "files_touched": [
+        "services/gateway/main.py",
+        "tests/test_skill_gap_detail.py",
+        "tests/conftest.py",
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/jobs/[id]/page.tsx",
+        "docs/agent/PROJECT_STATE.md",
         "docs/agent/TASK_QUEUE.json",
         "docs/agent/DECISION_LOG.md",
         "docs/agent/SESSION_REPORT.md",
@@ -1045,9 +1051,9 @@
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-005-BE and P3-FEAT-005-FE are done."
+      "validation_status": "passed",
+      "commit": "backend:f03c853; frontend:13fca88",
+      "notes": "Completed as separate backend and frontend child tasks."
     },
     {
       "id": "P3-FEAT-005-BE",
@@ -1089,7 +1095,7 @@
       "phase": "frontend",
       "title": "Skill-gap detail frontend",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "small",
       "depends_on": [
         "P3-FEAT-005-BE"
@@ -1098,14 +1104,23 @@
         "frontend/src/lib/api.ts",
         "frontend/src/app/jobs/[id]/page.tsx"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/jobs/[id]/page.tsx",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         "npm run lint",
         "npm run build"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Expose the backend skill-gap detail contract on the job detail surface after backend commit f03c853."
+      "validation_status": "passed",
+      "commit": "frontend:13fca88",
+      "notes": "Job detail page now renders the backend skill-gap contract with required, matched, and missing skills."
     },
     {
       "id": "P3-FEAT-006",

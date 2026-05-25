@@ -1556,3 +1556,29 @@
 
 ### Next Exact Action
 - Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then implement job detail skill-gap rendering against the backend contract.
+
+## 2026-05-25 23:48 +07 - P3-FEAT-005-FE result
+
+### Active Task
+- `P3-FEAT-005-FE` is implemented, validated, and committed in the nested frontend repository.
+
+### What Changed
+- Added `api.getJobSkillGap()` and typed skill-gap response interfaces.
+- Job detail page now fetches skill-gap detail with the job record.
+- Job detail page renders skill match percent, explanation summary, required skills, matched skills, and missing skills.
+- Skill-gap failures render inline without hiding the job details.
+- Committed the frontend child task in nested `frontend/` as `13fca88`.
+
+### Validation Results
+- `npm run lint` in `frontend/`: passed with 16 existing warnings and no errors.
+- `npm run build` in `frontend/`: passed.
+- Local dev server smoke: `GET http://127.0.0.1:3000/jobs/00000000-0000-0000-0000-000000000000` returned `200`.
+- `git -C frontend diff --cached --check`: passed before commit.
+
+### Remaining Issues
+- Existing frontend warnings remain.
+- `frontend/src/app/jobs/[id]/page.tsx` was previously untracked in the nested frontend repo, so the frontend commit adds the full route file.
+- `P3-FEAT-006` still needs backend/frontend child-task split before implementation.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.

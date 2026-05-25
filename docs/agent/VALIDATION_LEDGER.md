@@ -1462,3 +1462,45 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after recording P3-FEAT-005-BE commit `f03c853` and marking P3-FEAT-005-FE in progress.
 - Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:43 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 16 existing warnings and no errors after adding skill-gap detail frontend types and UI.
+- Related commit hash: `frontend:13fca88`.
+
+## 2026-05-25 23:44 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully and generated 12 static pages.
+- Related commit hash: `frontend:13fca88`.
+
+## 2026-05-25 23:45 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `Invoke-WebRequest -UseBasicParsing http://127.0.0.1:3000/jobs/00000000-0000-0000-0000-000000000000 -TimeoutSec 5`
+- Result: pass
+- Summary: Local frontend dev server responded with HTTP `200` for the dynamic job detail route.
+- Related commit hash: `frontend:13fca88`.
+
+## 2026-05-25 23:46 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `git -C frontend diff --cached --check`
+- Result: pass
+- Summary: Staged skill-gap frontend diff reported no whitespace errors.
+- Related commit hash: `frontend:13fca88`.
+
+## 2026-05-25 23:47 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `git -C frontend commit -m "feat: add skill-gap detail frontend"`
+- Result: pass
+- Summary: Created nested frontend commit `13fca88` with the skill-gap API helper and job detail UI.
+- Related commit hash: `frontend:13fca88`.
+
+## 2026-05-25 23:49 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-005-FE and parent P3-FEAT-005 done and pointing the next task at P3-FEAT-006.
+- Related commit hash: pending root checkpoint.
