@@ -257,53 +257,95 @@
 - Command: `.\.venv\Scripts\python.exe -c "import pathlib, yaml; yaml.safe_load(pathlib.Path('.github/workflows/ci.yml').read_text(encoding='utf-8')); print('workflow yaml ok')"`
 - Result: pass
 - Summary: Workflow YAML parsed successfully.
-- Related commit hash: pending CI commit.
+- Related commit hash: `7ee1e4d`.
 
 ## 2026-05-25 20:26 +07
 - Task ID: `P1-CI-001`
 - Command: `.\.venv\Scripts\python.exe -m pip check`
 - Result: pass
 - Summary: No broken requirements found.
-- Related commit hash: pending CI commit.
+- Related commit hash: `7ee1e4d`.
 
 ## 2026-05-25 20:26 +07
 - Task ID: `P1-CI-001`
 - Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads`
 - Result: pass
 - Summary: Alembic reports `008_feature_extension_foundation (head)`.
-- Related commit hash: pending CI commit.
+- Related commit hash: `7ee1e4d`.
 
 ## 2026-05-25 20:26 +07
 - Task ID: `P1-CI-001`
 - Command: `.\.venv\Scripts\python.exe scripts\verify_project.py --only import compile`
 - Result: pass
 - Summary: Import checks and compileall passed for services, scripts, and tests.
-- Related commit hash: pending CI commit.
+- Related commit hash: `7ee1e4d`.
 
 ## 2026-05-25 20:28 +07
 - Task ID: `P1-CI-001`
 - Command: `.\.venv\Scripts\python.exe -m pytest -q`
 - Result: pass
 - Summary: `304 passed, 11 warnings in 93.76s`.
-- Related commit hash: pending CI commit.
+- Related commit hash: `7ee1e4d`.
 
 ## 2026-05-25 20:29 +07
 - Task ID: `P1-CI-001`
 - Command: `npm run lint` in `frontend/`
 - Result: pass
 - Summary: Lint exited 0 with 18 warnings and no errors.
-- Related commit hash: pending CI commit.
+- Related commit hash: `7ee1e4d`.
 
 ## 2026-05-25 20:30 +07
 - Task ID: `P1-CI-001`
 - Command: `npm run build` in `frontend/`
 - Result: pass
 - Summary: Next.js 16.2.6 build compiled successfully, TypeScript completed, and 12 static pages generated.
-- Related commit hash: pending CI commit.
+- Related commit hash: `7ee1e4d`.
 
 ## 2026-05-25 20:30 +07
 - Task ID: `P1-CI-001`
 - Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
 - Result: pass
 - Summary: Durable task queue parsed successfully after marking P1-CI-001 done.
-- Related commit hash: pending CI commit.
+- Related commit hash: `7ee1e4d`.
+
+## 2026-05-25 20:32 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_sbert_job_embedding_cache.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. The encode stage had no `_job_text_hash` helper and reused stale job embeddings when only the job text changed.
+- Related commit hash: pending SBERT cache commit.
+
+## 2026-05-25 20:33 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_sbert_job_embedding_cache.py -q`
+- Result: pass
+- Summary: `2 passed in 0.04s`.
+- Related commit hash: pending SBERT cache commit.
+
+## 2026-05-25 20:33 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_caching.py -q`
+- Result: pass
+- Summary: `15 passed in 0.24s`.
+- Related commit hash: pending SBERT cache commit.
+
+## 2026-05-25 20:33 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_contracts.py -q`
+- Result: pass
+- Summary: `2 passed in 0.05s`.
+- Related commit hash: pending SBERT cache commit.
+
+## 2026-05-25 20:36 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `306 passed, 11 warnings in 91.17s`.
+- Related commit hash: pending SBERT cache commit.
+
+## 2026-05-25 20:36 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-PERF-001 done.
+- Related commit hash: pending SBERT cache commit.

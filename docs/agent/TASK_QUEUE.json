@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "security",
-  "current_task_id": "P1-CI-001",
+  "current_task_id": "P1-PERF-001",
   "tasks": [
     {
       "id": "INIT-001",
@@ -279,7 +279,7 @@
         "npm run build"
       ],
       "validation_status": "passed",
-      "commit": "pending: ci: add full validation checks",
+      "commit": "7ee1e4d",
       "notes": "Workflow now runs backend dependency install, pip check, import/compile verification, test DB prep, Alembic upgrade head, full pytest, frontend npm ci, lint, and build."
     },
     {
@@ -287,7 +287,7 @@
       "phase": "performance",
       "title": "SBERT embedding cache",
       "priority": "P1",
-      "status": "pending",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P1-CI-001"
@@ -297,13 +297,22 @@
         "db/models.py",
         "db/migrations/"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "services/pipeline/stages/stage_2_encode.py",
+        "tests/test_sbert_job_embedding_cache.py",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Cache job embeddings and invalidate when job text changes."
+      "validation_status": "passed",
+      "commit": "pending: perf: cache sbert job embeddings",
+      "notes": "SBERT service already had Redis text caching. Added pipeline-side job embedding text hashes so cached job embeddings are reused only when job text is unchanged and stale embeddings are recomputed."
     },
     {
       "id": "P1-PERF-002",

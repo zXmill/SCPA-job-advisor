@@ -441,3 +441,52 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only `.github/workflows/ci.yml` and durable state files, inspect staged diff, and commit `ci: add full validation checks`.
+
+## 2026-05-25 20:31 +07 - P1-PERF-001 start
+
+### Active Task
+- `P1-PERF-001` - SBERT embedding cache.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked repo files remain.
+- New task state changes: durable `docs/agent/` files updated to reconcile `P1-CI-001` as commit `7ee1e4d` and mark `P1-PERF-001` in progress.
+
+### Previous Task Complete
+- `P1-CI-001` committed as `7ee1e4d`.
+
+### Validation Still Needed
+- Inspect current SBERT cache behavior and tests.
+- Add or update focused cache tests before implementation.
+
+### Commands Run
+- `git commit -m "ci: add full validation checks"`
+- `git status --short --branch`
+- `git log --oneline -10`
+
+### Next Exact Action
+- Inspect `services/sbert/main.py` and cache-related tests, then choose the smallest test-first change for content-keyed job embedding caching.
+
+## 2026-05-25 20:36 +07 - P1-PERF-001 result
+
+### Active Task
+- `P1-PERF-001` is implemented and ready to commit.
+
+### What Changed
+- Added pipeline encode-stage `embedding_text_hash` generation.
+- Reused cached job embeddings only when their stored text hash matches the current job text.
+- Recomputed stale or missing job embeddings while preserving valid cached embeddings.
+- Added cache hit/miss counts to the encode-stage summary.
+- Added `tests/test_sbert_job_embedding_cache.py`.
+
+### Validation Results
+- TDD red: focused test failed because stale embeddings were reused and `_job_text_hash` did not exist.
+- Focused cache test: `2 passed`.
+- Existing SBERT cache tests: `15 passed`.
+- Pipeline contract tests: `2 passed`.
+- Full backend suite: `306 passed, 11 warnings`.
+
+### Remaining Issues
+- Existing pytest warnings about short test JWT keys remain.
+
+### Next Exact Action
+- Parse `docs/agent/TASK_QUEUE.json`, stage only P1-PERF-001 files and durable state files, inspect staged diff, and commit `perf: cache sbert job embeddings`.

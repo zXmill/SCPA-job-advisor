@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 20:30 +07
+Updated: 2026-05-25 20:36 +07
 
 ## Current Objective
-Commit the completed `P1-CI-001` CI hardening, then start `P1-PERF-001`.
+Commit the completed `P1-PERF-001` SBERT job embedding cache invalidation change, then start `P1-PERF-002`.
 
 ## Current Phase
 security
 
 ## Current Task ID
-P1-CI-001
+P1-PERF-001
 
 ## Latest Commit Hash
-Root: `c89bd82` (`docs: update long-running agent checkpoint`); pending commit `ci: add full validation checks`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
+Root: `7ee1e4d` (`ci: add full validation checks`); pending commit `perf: cache sbert job embeddings`. Frontend nested repo: `6e76e92` (`fix: resolve frontend hook order violation`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ Root: `c89bd82` (`docs: update long-running agent checkpoint`); pending commit `
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Current task changes: `.github/workflows/ci.yml` and durable `docs/agent/` state files.
+- Current task changes: `services/pipeline/stages/stage_2_encode.py`, `tests/test_sbert_job_embedding_cache.py`, and durable `docs/agent/` state files.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -50,9 +50,11 @@ Root: `c89bd82` (`docs: update long-running agent checkpoint`); pending commit `
 - `tests/test_red_team_failure_modes.py`
 - `tests/test_pipeline_execution_auth.py`
 - `.github/workflows/ci.yml`
+- `services/pipeline/stages/stage_2_encode.py`
+- `tests/test_sbert_job_embedding_cache.py`
 
 ## Current Implementation Status
-Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. `P1-CI-001` is implemented and validation passed; commit is pending.
+Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2b4f55`. P0-FE-001 committed in nested `frontend/` as `6e76e92`; root state checkpoint committed as `d1bb86b`. P0-002 safe cleanup committed as `7b6ce82`. P1-SEC-001 committed as `1392e58`. P1-SEC-002 committed as `be52d4f`. P1-SEC-003 committed as `8c4f9b1`. Survival checkpoint committed as `c89bd82`. P1-CI-001 committed as `7ee1e4d`. `P1-PERF-001` is implemented and validation passed; commit is pending.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -90,6 +92,11 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Read current `.github/workflows/ci.yml`, dependency files, frontend package scripts, and Alembic config.
 - Updated CI backend/frontend gates.
 - Ran P1-CI-001 validation commands.
+- P1-CI-001 commit: `git commit -m "ci: add full validation checks"`.
+- Inspected SBERT service cache, existing cache tests, and pipeline encode stage.
+- Added and verified TDD red job embedding cache invalidation tests.
+- Implemented text-hash validation for cached job embeddings in the encode stage.
+- Ran P1-PERF-001 focused and full validation commands.
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
@@ -126,6 +133,12 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - P1-CI-001 full backend tests passed: `304 passed, 11 warnings`.
 - P1-CI-001 frontend lint passed with 18 warnings.
 - P1-CI-001 frontend build passed.
+- P1-CI-001 commit exists as `7ee1e4d`.
+- P1-PERF-001 TDD red confirmed stale embedding reuse.
+- P1-PERF-001 focused cache tests passed: `2 passed`.
+- P1-PERF-001 existing SBERT cache tests passed: `15 passed`.
+- P1-PERF-001 pipeline contract tests passed: `2 passed`.
+- P1-PERF-001 full backend tests passed: `306 passed, 11 warnings`.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -139,4 +152,4 @@ Initializer docs were committed as `703c516`. Cleanup audit was committed as `b2
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only `.github/workflows/ci.yml` plus durable state files, inspect staged diff, and commit `ci: add full validation checks`.
+Run `python -m json.tool docs/agent/TASK_QUEUE.json`, stage only P1-PERF-001 files plus durable state files, inspect staged diff, and commit `perf: cache sbert job embeddings`.

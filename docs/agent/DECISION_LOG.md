@@ -79,3 +79,12 @@
 - Skipped option: Combining CI hardening with the previous security commits.
 - Reason skipped: CI changes are infrastructure work with different validation and should remain a separate checkpoint.
 - Risk and mitigation: `.github/workflows/ci.yml` is currently untracked in the root repo; stage only that workflow if it is changed.
+
+## 2026-05-25 20:31 +07 - P1-PERF-001 SBERT cache mini plan
+- Decision: Inspect existing SBERT encode/match paths and tests before changing cache behavior.
+- Expected files to touch: `services/sbert/main.py`, focused cache tests if needed, and durable `docs/agent/` state files.
+- Validation commands: focused SBERT/cache tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: cache job embeddings and invalidate when job text changes.
+- Skipped option: Adding a database-backed cache before inspecting existing service state.
+- Reason skipped: The current SBERT service may already have in-memory or Redis cache hooks; reuse local patterns before adding schema or infrastructure.
+- Risk and mitigation: Embedding cache keys must include text content and model/version dimensions so changed job text cannot return stale vectors.
