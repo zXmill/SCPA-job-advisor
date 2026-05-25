@@ -18,3 +18,10 @@
 - Decision: Use `reports/full_code_review_research_potential_report.md` as guidance only, then verify each claim against current files before product changes.
 - Reason: The user named the report as a reference and also said repository files are source of truth.
 - Next: Complete `INIT-001`, then start `P0-001` cleanup audit.
+
+## 2026-05-25 19:48 +07 - P0-001 cleanup audit mini plan
+- Decision: Perform a read-only repository cleanup audit before any safe cleanup.
+- Expected files to touch: `docs/agent/CLEANUP_AUDIT.md`, `docs/agent/TASK_QUEUE.json`, `docs/agent/DECISION_LOG.md`, `docs/agent/SESSION_REPORT.md`, `docs/agent/COMPACT_SNAPSHOT.md`, `docs/agent/VALIDATION_LEDGER.md`, and `docs/agent/PROJECT_STATE.md` if findings change known state.
+- Validation commands: `git status --short --branch`, plus JSON parse for `TASK_QUEUE.json`.
+- Skipped option: Moving or deleting files during the audit.
+- Risk and mitigation: The repo is mostly untracked, so classify conservatively and put ambiguous items under `Unsure`.

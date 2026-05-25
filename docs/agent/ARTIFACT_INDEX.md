@@ -18,3 +18,4 @@
 - `docs/agent/VALIDATION_LEDGER.md`
 - `docs/agent/FAILURE_LEDGER.md`
 - `docs/agent/ARTIFACT_INDEX.md`
+- `docs/agent/CLEANUP_AUDIT.md`

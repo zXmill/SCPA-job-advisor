@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "cleanup",
-  "current_task_id": "P0-001",
+  "current_task_id": "P0-002",
   "tasks": [
     {
       "id": "INIT-001",
@@ -39,7 +39,7 @@
         "git diff -- AGENTS.md docs/agent"
       ],
       "validation_status": "passed",
-      "commit": "pending: docs: initialize codex long-running project state",
+      "commit": "703c516",
       "notes": "Initializer docs only. JSON parse passed. Stage only these files because the repo was already dirty."
     },
     {
@@ -47,7 +47,7 @@
       "phase": "cleanup",
       "title": "Repository audit",
       "priority": "P0",
-      "status": "pending",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "INIT-001"
@@ -58,13 +58,22 @@
         "docs/agent/SESSION_REPORT.md",
         "docs/agent/COMPACT_SNAPSHOT.md"
       ],
-      "files_touched": [],
+      "files_touched": [
+        "docs/agent/CLEANUP_AUDIT.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/agent/ARTIFACT_INDEX.md"
+      ],
       "validation_commands": [
         "git status --short --branch"
       ],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Classify files only. Do not delete or move files in this task."
+      "validation_status": "passed",
+      "commit": "pending: docs: add cleanup audit",
+      "notes": "Read-only cleanup audit completed. Do not equate untracked with unused; most live source files are untracked in this repo."
     },
     {
       "id": "P0-002",

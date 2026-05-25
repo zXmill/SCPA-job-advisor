@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-25 19:45 +07
+Updated: 2026-05-25 19:58 +07
 
 ## Current Objective
-Commit the initialized long-running Codex workflow, then begin Phase 1 repository audit.
+Commit the completed read-only cleanup audit, then start conservative safe cleanup.
 
 ## Current Phase
 cleanup
 
 ## Current Task ID
-P0-001
+P0-002
 
 ## Latest Commit Hash
-`0c65c9d` before initializer docs.
+`703c516` (`docs: initialize codex long-running project state`).
 
 ## Current Git Branch
 `agent-run`
@@ -20,7 +20,7 @@ P0-001
 ## Dirty Files
 - Pre-existing: `README.md` modified.
 - Pre-existing: many untracked project files/directories, including `.github/`, `.gitignore`, `.env.example`, `docker-compose.yml`, `frontend/`, `services/`, `db/`, `tests/`, `docs/`, `reports/`, `notebooks/`, `data/`, and other root artifacts.
-- Initializer-created: `AGENTS.md`, `docs/agent/PROJECT_STATE.md`, `docs/agent/TASK_QUEUE.json`, `docs/agent/DECISION_LOG.md`, `docs/agent/SESSION_REPORT.md`, `docs/agent/COMPACT_SNAPSHOT.md`, `docs/agent/VALIDATION_LEDGER.md`, `docs/agent/FAILURE_LEDGER.md`, `docs/agent/ARTIFACT_INDEX.md`.
+- P0-001 complete but not yet committed: tracked `docs/agent/` state files changed and `docs/agent/CLEANUP_AUDIT.md` added.
 
 ## Files Changed This Session
 - `AGENTS.md`
@@ -32,9 +32,10 @@ P0-001
 - `docs/agent/VALIDATION_LEDGER.md`
 - `docs/agent/FAILURE_LEDGER.md`
 - `docs/agent/ARTIFACT_INDEX.md`
+- `docs/agent/CLEANUP_AUDIT.md`
 
 ## Current Implementation Status
-Initializer docs are created and JSON validation passed. A user interruption occurred before staging/commit, so recovery was performed. No product code changes have been made.
+Initializer docs were committed as `703c516`. `P0-001` cleanup audit is complete and ready to commit. No product code changes have been made.
 
 ## Commands Already Run
 - Memory registry search for SCPA.
@@ -46,11 +47,15 @@ Initializer docs are created and JSON validation passed. A user interruption occ
 - Initializer JSON validation with `python -m json.tool`.
 - Interruption recovery reads for all durable memory files.
 - Recovery `git status --short --branch` and `git log --oneline -10`.
+- Initializer commit: `git commit -m "docs: initialize codex long-running project state"`.
+- P0-001 repository scans for tracked/untracked/ignored files, generated artifacts, imports, and top-level layout.
 
 ## Validation Results
 - `docs/agent/TASK_QUEUE.json` parsed successfully with `python -m json.tool`.
 - `git status --short --branch` confirmed pre-existing dirty state plus new initializer files.
 - `git diff -- AGENTS.md docs\agent` produced no output because these paths were untracked at the time.
+- P0-001 `TASK_QUEUE.json` parse passed.
+- P0-001 `git status --short --branch` ran successfully.
 - Reference report records backend tests passing and frontend lint failing on 2026-05-25, but that evidence has not been freshly rerun here.
 
 ## Known Errors
@@ -67,4 +72,4 @@ Initializer docs are created and JSON validation passed. A user interruption occ
 - Do not claim tests pass without fresh validation.
 
 ## Next Exact Action
-Re-validate `docs/agent/TASK_QUEUE.json`, stage only `AGENTS.md` and `docs/agent/*`, inspect staged diff, and commit `docs: initialize codex long-running project state`.
+Stage only `docs/agent/CLEANUP_AUDIT.md` and modified `docs/agent/` state files, inspect staged diff, and commit `docs: add cleanup audit`.

@@ -73,3 +73,61 @@
 
 ### Next Exact Action
 - Re-validate `docs/agent/TASK_QUEUE.json`, stage only initializer files, inspect staged diff, and commit `docs: initialize codex long-running project state`.
+
+## 2026-05-25 19:48 +07 - P0-001 start
+
+### Active Task
+- `P0-001` - Repository audit.
+
+### Dirty Files
+- Pre-existing: `README.md` modified and broad untracked repo files remain.
+- New task state changes: tracked `docs/agent/` files modified; `docs/agent/CLEANUP_AUDIT.md` will be added.
+
+### Previous Task Complete
+- `INIT-001` committed as `703c516`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Run `git status --short --branch`.
+
+### Commands Run
+- `git status --short --branch`
+- `git log --oneline -10`
+- `git diff --cached --name-only`
+- `git diff --cached --check`
+- `git diff --cached --stat`
+- `git commit -m "docs: initialize codex long-running project state"`
+
+### Next Exact Action
+- Scan repository categories and create `docs/agent/CLEANUP_AUDIT.md` without moving or deleting files.
+
+## 2026-05-25 19:58 +07 - P0-001 result
+
+### Active Task
+- `P0-002` is the next active pointer after the audit commit.
+
+### What Changed
+- Added `docs/agent/CLEANUP_AUDIT.md`.
+- Updated durable state files for task progress, validation, and next action.
+
+### Commands Run
+- `git status --short`
+- `Get-ChildItem -Force`
+- `rg --files -g "!**/.venv/**" -g "!**/node_modules/**" -g "!**/.next/**" -g "!**/__pycache__/**"`
+- `git status --ignored --short`
+- generated-artifact scan across `reports`, `browser_screenshots`, `notebooks`, and `services`
+- `git ls-files`
+- reference scans for one-off scripts and evidence documents
+- `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- `git status --short --branch`
+- `git diff -- docs/agent`
+
+### Validation Results
+- `TASK_QUEUE.json` parsed successfully.
+- `git status --short --branch` completed and confirmed only docs/agent files from this task plus pre-existing dirty files.
+
+### Remaining Issues
+- Most app files remain untracked. P0-002 must stay conservative.
+
+### Next Exact Action
+- Stage only `docs/agent/CLEANUP_AUDIT.md` and modified `docs/agent/` state files, inspect staged diff, and commit `docs: add cleanup audit`.

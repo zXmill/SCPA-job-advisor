@@ -1,6 +1,6 @@
 # Project State
 
-Updated: 2026-05-25 19:40 +07
+Updated: 2026-05-25 19:58 +07
 
 ## Architecture Summary
 SCPA is a full-stack career recommendation platform. The public path is a Next.js frontend calling a FastAPI gateway. The gateway assembles user/profile/job data and forwards recommendation work to an internal pipeline. The pipeline orchestrates scraper candidates, SBERT semantic scoring, NCF/NeuMF affinity scoring, DQN career-action/rerank signals, and final aggregation.
@@ -78,10 +78,10 @@ Current `docker-compose.yml` publishes PostgreSQL, gateway, scraper, SBERT, NCF,
 
 ## Current Blockers
 - Dirty git state existed before this initializer: `README.md` modified and many project files untracked. Do not stage unrelated files.
-- Product changes are blocked until initializer docs/state are committed.
+- Most live project files remain untracked in git. Cleanup must not treat untracked files as unused.
 
 ## Last Completed Task
-`INIT-001` - initializer docs and durable agent memory created; docs-only validation passed.
+`P0-001` - repository cleanup audit created with conservative classifications and no file moves/deletes.
 
 ## Next Task
-Start `P0-001`: create `docs/agent/CLEANUP_AUDIT.md` and classify files without moving or deleting anything.
+Start `P0-002`: safe cleanup. Recommended first pass is limited to manual/debug archive candidates from `docs/agent/CLEANUP_AUDIT.md`.
