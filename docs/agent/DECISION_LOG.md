@@ -291,3 +291,11 @@
 - Skipped option: Blocking recommendation loading when the saved-list request fails.
 - Reason skipped: Recommendations are the primary page purpose; saved-state decoration should not hide recommendations if the saved-list call is temporarily unavailable.
 - Risk and mitigation: User actions still surface errors through an inline alert, and lint/build plus local `/recommendations` and `/profile` smoke checks passed after the change.
+
+## 2026-05-25 22:56 +07 - P3-FEAT-004 job alerts split and backend mini plan
+- Decision: Split job alerts into `P3-FEAT-004-BE` and `P3-FEAT-004-FE`, with the backend contract first.
+- Expected backend files to touch: `db/models.py`, a new Alembic migration under `db/migrations/`, `services/gateway/main.py`, `tests/test_job_alerts.py`, and durable `docs/agent/` state files.
+- Backend validation commands: focused job-alert API tests first, Alembic head/upgrade checks after migration work, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract target: authenticated users can create, list, update, and disable job alerts based on search/profile criteria without exposing another user's alerts.
+- Skipped option: Implementing browser-only alert preferences.
+- Reason skipped: Alerts need durable user state and will likely drive future notification or scheduled matching work.

@@ -1383,3 +1383,21 @@
 
 ### Next Exact Action
 - Parse `docs/agent/TASK_QUEUE.json`, stage only durable state files, inspect staged diff, and commit `docs: update long-running agent checkpoint`.
+
+## 2026-05-25 22:56 +07 - P3-FEAT-004 split
+
+### Active Task
+- `P3-FEAT-004-BE` - Job alerts backend.
+
+### What Changed
+- Split parent `P3-FEAT-004` into backend and frontend child tasks.
+- Marked `P3-FEAT-004-BE` in progress and left `P3-FEAT-004-FE` pending.
+- Recorded the backend mini plan in `DECISION_LOG.md`.
+
+### Validation Still Needed
+- Parse `docs/agent/TASK_QUEUE.json`.
+- Commit this state-only split checkpoint.
+- Inspect the current gateway, database model, and migration patterns before writing job-alert backend tests.
+
+### Next Exact Action
+- Validate `TASK_QUEUE.json`, commit `docs: update long-running agent checkpoint`, then add focused backend tests for authenticated job-alert persistence and isolation.

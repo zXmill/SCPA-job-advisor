@@ -1252,3 +1252,17 @@
 - Result: pass
 - Summary: Durable task queue parsed successfully after marking P3-FEAT-003 and P3-FEAT-003-FE done and pointing the next task at P3-FEAT-004.
 - Related commit hash: pending root checkpoint.
+
+## 2026-05-25 22:54 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `git commit -m "docs: update long-running agent checkpoint"`
+- Result: pass
+- Summary: Created root checkpoint `ce62692` recording nested frontend commit `ffa45b4` and completing P3-FEAT-003.
+- Related commit hash: `ce62692`.
+
+## 2026-05-25 22:56 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after splitting P3-FEAT-004 into backend/frontend child tasks and marking backend child in progress.
+- Related commit hash: pending state checkpoint.

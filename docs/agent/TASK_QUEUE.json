@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "frontend",
-  "current_task_id": "P3-FEAT-004",
+  "current_phase": "backend",
+  "current_task_id": "P3-FEAT-004-BE",
   "tasks": [
     {
       "id": "INIT-001",
@@ -916,21 +916,80 @@
       "phase": "frontend",
       "title": "Job alerts",
       "priority": "P3",
-      "status": "pending",
+      "status": "blocked",
       "scope": "medium",
       "depends_on": [
         "P3-FEAT-003"
       ],
-      "files_expected": [],
+      "files_expected": [
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md"
+      ],
+      "files_touched": [
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Feature parent split into backend and frontend child tasks. Mark done only after P3-FEAT-004-BE and P3-FEAT-004-FE are done."
+    },
+    {
+      "id": "P3-FEAT-004-BE",
+      "phase": "backend",
+      "title": "Job alerts backend",
+      "priority": "P3",
+      "status": "in_progress",
+      "scope": "small",
+      "depends_on": [
+        "P3-FEAT-003"
+      ],
+      "files_expected": [
+        "db/models.py",
+        "db/migrations/",
+        "services/gateway/main.py",
+        "tests/test_job_alerts.py"
+      ],
       "files_touched": [],
       "validation_commands": [
-        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_job_alerts.py -q",
+        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini heads",
+        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini upgrade head",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "not_run",
+      "commit": "",
+      "notes": "Create authenticated job-alert persistence and listing contracts before frontend integration."
+    },
+    {
+      "id": "P3-FEAT-004-FE",
+      "phase": "frontend",
+      "title": "Job alerts frontend",
+      "priority": "P3",
+      "status": "pending",
+      "scope": "small",
+      "depends_on": [
+        "P3-FEAT-004-BE"
+      ],
+      "files_expected": [
+        "frontend/src/lib/api.ts",
+        "frontend/src/app/profile/page.tsx"
+      ],
+      "files_touched": [],
+      "validation_commands": [
         "npm run lint",
         "npm run build"
       ],
       "validation_status": "not_run",
       "commit": "",
-      "notes": "Split backend/frontend subtasks before implementation."
+      "notes": "Expose job-alert creation and saved alert list after backend contracts are validated."
     },
     {
       "id": "P3-FEAT-005",
