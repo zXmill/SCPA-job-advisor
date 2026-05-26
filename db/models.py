@@ -1270,6 +1270,93 @@ class SkillGapSnapshot(Base):
     )
 
 
+class Experiment(Base):
+    """A/B experiment definition."""
+
+    __tablename__ = "experiments"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
+    name: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    variants: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, server_default=text("'[]'::jsonb"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), server_default=text("'draft'"), nullable=False
+    )
+    start_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    end_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    target_metric: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("NOW()"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("NOW()"), nullable=False
+    )
+
+    __table_args__ = (
+        Index("idx_experiments_status", "status"),
+        Index("idx_experiments_created", created_at.desc()),
+    )
+
+
+class ExperimentAssignment(Base):
+    """User-to-variant assignment for an experiment."""
+
+    __tablename__ = "experiment_assignments"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    experiment_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("experiments.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    variant_name: Mapped[str] = mapped_column(String(60), nullable=False)
+    assigned_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("NOW()"), nullable=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint("experiment_id", "user_id", name="idx_experiment_assignments_unique"),
+        Index("idx_experiment_assignments_variant", "experiment_id", "variant_name"),
+    )
+
+
+class ExperimentMetric(Base):
+    """Pre-aggregated metric snapshot for an experiment variant."""
+
+    __tablename__ = "experiment_metrics"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    experiment_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("experiments.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    variant_name: Mapped[str] = mapped_column(String(60), nullable=False)
+    metric_name: Mapped[str] = mapped_column(String(60), nullable=False)
+    value: Mapped[float] = mapped_column(Float, nullable=False)
+    sample_size: Mapped[int] = mapped_column(
+        Integer, server_default=text("0"), nullable=False
+    )
+    computed_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=text("NOW()"), nullable=False
+    )
+
+    __table_args__ = (
+        Index("idx_experiment_metrics_lookup", "experiment_id", "variant_name", "metric_name"),
+    )
+
+
 # ════════════════════════════════════════════════════════════════
 # Engine & Session Factories
 # ════════════════════════════════════════════════════════════════

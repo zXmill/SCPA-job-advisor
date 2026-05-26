@@ -335,6 +335,33 @@ class RecommendationFeedbackRequest(BaseModel):
     slate_job_ids: list[str] = Field(default_factory=list)
 
 
+class ExperimentVariant(BaseModel):
+    name: str = Field(..., min_length=1, max_length=60)
+    config: dict[str, Any] = Field(default_factory=dict)
+    weight: int = Field(50, ge=0, le=100)
+
+
+class CreateExperimentRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
+    description: str | None = None
+    variants: list[ExperimentVariant] = Field(..., min_length=2)
+    target_metric: str = Field("click_through_rate", pattern="^(click_through_rate|apply_rate|mean_dwell_ms)$")
+
+
+class UpdateExperimentRequest(BaseModel):
+    description: str | None = None
+    status: str | None = Field(default=None, pattern="^(draft|running|paused|completed)$")
+    end_at: str | None = None
+
+
+class TrackEventRequest(BaseModel):
+    experiment_id: str = Field(..., min_length=1)
+    event_type: str = Field(..., pattern="^(impression|click|save|apply|dwell|share)$")
+    job_id: str | None = None
+    dwell_ms: int = Field(0, ge=0)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 # ════════════════════════════════════════════════════════════════
 # Helpers
 # ════════════════════════════════════════════════════════════════
@@ -762,6 +789,84 @@ async def _invalidate_pipeline_user(user_id: Any) -> None:
 async def get_db() -> AsyncSession:
     async with SessionLocal() as session:
         yield session
+
+
+# ── A/B testing helpers ──
+
+def _pick_variant(variants: list[dict[str, Any]], user_id: str, experiment_id: str) -> dict[str, Any]:
+    """Deterministically assign a user to a variant using a hash of user_id + experiment_id.
+
+    Weights are normalized to percentages. The variant with the largest cumulative
+    weight that exceeds the hash percentile wins.
+    """
+    if not variants:
+        raise ValueError("variants list is empty")
+    total_weight = sum(v.get("weight", 0) for v in variants)
+    if total_weight <= 0:
+        return variants[0]
+    hash_input = f"{user_id}:{experiment_id}"
+    hash_value = hash(hash_input)
+    percentile = (hash_value % 10000) / 100.0
+    cumulative = 0.0
+    for variant in variants:
+        weight = variant.get("weight", 0)
+        cumulative += (weight / total_weight) * 100.0
+        if percentile <= cumulative:
+            return variant
+    return variants[-1]
+
+
+async def _get_active_experiments(db: AsyncSession) -> list[dict[str, Any]]:
+    result = await db.execute(
+        text(
+            """
+            SELECT id, name, variants, status, target_metric
+            FROM experiments
+            WHERE status = 'running'
+            AND (start_at IS NULL OR start_at <= NOW())
+            AND (end_at IS NULL OR end_at >= NOW())
+            ORDER BY created_at DESC
+            """
+        )
+    )
+    rows = result.mappings().all()
+    return [dict(row) for row in rows]
+
+
+async def _get_experiment_assignment(
+    db: AsyncSession, experiment_id: str, user_id: str
+) -> dict[str, Any] | None:
+    result = await db.execute(
+        text(
+            """
+            SELECT variant_name, assigned_at
+            FROM experiment_assignments
+            WHERE experiment_id = :experiment_id AND user_id = :user_id
+            """
+        ),
+        {"experiment_id": experiment_id, "user_id": user_id},
+    )
+    row = result.mappings().first()
+    return dict(row) if row else None
+
+
+async def _assign_user_to_variant(
+    db: AsyncSession, experiment_id: str, user_id: str, variant_name: str
+) -> dict[str, Any]:
+    await db.execute(
+        text(
+            """
+            INSERT INTO experiment_assignments (experiment_id, user_id, variant_name)
+            VALUES (:experiment_id, :user_id, :variant_name)
+            ON CONFLICT (experiment_id, user_id) DO UPDATE SET
+                variant_name = EXCLUDED.variant_name,
+                assigned_at = NOW()
+            """
+        ),
+        {"experiment_id": experiment_id, "user_id": user_id, "variant_name": variant_name},
+    )
+    await db.commit()
+    return {"experiment_id": experiment_id, "user_id": user_id, "variant_name": variant_name}
 
 
 def _create_access_token(user_id: str, role: str) -> str:
@@ -2902,3 +3007,340 @@ async def job_skill_gap(
     )
     await db.commit()
     return gap
+
+
+# ════════════════════════════════════════════════════════════════
+# A/B Testing and Monitoring Endpoints
+# ════════════════════════════════════════════════════════════════
+
+@app.post("/api/experiments")
+async def create_experiment(
+    body: CreateExperimentRequest,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="admin required")
+    result = await db.execute(
+        text(
+            """
+            INSERT INTO experiments (name, description, variants, target_metric)
+            VALUES (:name, :description, CAST(:variants AS jsonb), :target_metric)
+            RETURNING id, name, description, variants, status, target_metric, created_at
+            """
+        ),
+        {
+            "name": body.name,
+            "description": body.description or "",
+            "variants": json.dumps([v.model_dump() for v in body.variants]),
+            "target_metric": body.target_metric,
+        },
+    )
+    await db.commit()
+    row = result.mappings().first()
+    return dict(row) if row else {}
+
+
+@app.get("/api/experiments")
+async def list_experiments(
+    status: str | None = Query(default=None, pattern="^(draft|running|paused|completed)$"),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    await _require_user(db, token_payload)
+    where_clause = ""
+    params: dict[str, Any] = {"limit": limit, "offset": offset}
+    if status:
+        where_clause = "WHERE status = :status"
+        params["status"] = status
+    count_result = await db.execute(
+        text(f"SELECT COUNT(*) AS total FROM experiments {where_clause}"),
+        params,
+    )
+    total = count_result.mappings().first()["total"] if count_result else 0
+    result = await db.execute(
+        text(
+            f"""
+            SELECT id, name, description, variants, status, target_metric,
+                   start_at, end_at, created_at, updated_at
+            FROM experiments
+            {where_clause}
+            ORDER BY created_at DESC
+            LIMIT :limit OFFSET :offset
+            """
+        ),
+        params,
+    )
+    rows = result.mappings().all()
+    return {
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "experiments": [dict(row) for row in rows],
+    }
+
+
+@app.get("/api/experiments/{experiment_id}")
+async def get_experiment(
+    experiment_id: str,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    await _require_user(db, token_payload)
+    result = await db.execute(
+        text(
+            """
+            SELECT id, name, description, variants, status, target_metric,
+                   start_at, end_at, created_at, updated_at
+            FROM experiments
+            WHERE id = :experiment_id
+            """
+        ),
+        {"experiment_id": experiment_id},
+    )
+    row = result.mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="experiment not found")
+    return dict(row)
+
+
+@app.post("/api/experiments/{experiment_id}/start")
+async def start_experiment(
+    experiment_id: str,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="admin required")
+    result = await db.execute(
+        text(
+            """
+            UPDATE experiments
+            SET status = 'running', start_at = NOW(), updated_at = NOW()
+            WHERE id = :experiment_id
+            RETURNING id, name, status, start_at
+            """
+        ),
+        {"experiment_id": experiment_id},
+    )
+    await db.commit()
+    row = result.mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="experiment not found")
+    return dict(row)
+
+
+@app.post("/api/experiments/{experiment_id}/pause")
+async def pause_experiment(
+    experiment_id: str,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="admin required")
+    result = await db.execute(
+        text(
+            """
+            UPDATE experiments
+            SET status = 'paused', updated_at = NOW()
+            WHERE id = :experiment_id
+            RETURNING id, name, status
+            """
+        ),
+        {"experiment_id": experiment_id},
+    )
+    await db.commit()
+    row = result.mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="experiment not found")
+    return dict(row)
+
+
+@app.post("/api/experiments/{experiment_id}/complete")
+async def complete_experiment(
+    experiment_id: str,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="admin required")
+    result = await db.execute(
+        text(
+            """
+            UPDATE experiments
+            SET status = 'completed', end_at = NOW(), updated_at = NOW()
+            WHERE id = :experiment_id
+            RETURNING id, name, status, end_at
+            """
+        ),
+        {"experiment_id": experiment_id},
+    )
+    await db.commit()
+    row = result.mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="experiment not found")
+    return dict(row)
+
+
+@app.post("/api/experiments/{experiment_id}/assign")
+async def assign_experiment_variant(
+    experiment_id: str,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    user_id = str(user["id"])
+    existing = await _get_experiment_assignment(db, experiment_id, user_id)
+    if existing:
+        return {"experiment_id": experiment_id, "user_id": user_id, "variant_name": existing["variant_name"], "assigned_at": existing["assigned_at"]}
+    result = await db.execute(
+        text(
+            """
+            SELECT variants FROM experiments
+            WHERE id = :experiment_id AND status = 'running'
+            AND (start_at IS NULL OR start_at <= NOW())
+            AND (end_at IS NULL OR end_at >= NOW())
+            """
+        ),
+        {"experiment_id": experiment_id},
+    )
+    row = result.mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="experiment not found or not running")
+    variants = row["variants"]
+    if isinstance(variants, str):
+        variants = json.loads(variants)
+    variant = _pick_variant(variants, user_id, experiment_id)
+    await _assign_user_to_variant(db, experiment_id, user_id, variant["name"])
+    return {"experiment_id": experiment_id, "user_id": user_id, "variant_name": variant["name"]}
+
+
+@app.get("/api/experiments/{experiment_id}/metrics")
+async def get_experiment_metrics(
+    experiment_id: str,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    await _require_user(db, token_payload)
+    # Sample sizes per variant
+    sample_result = await db.execute(
+        text(
+            """
+            SELECT variant_name, COUNT(*) AS sample_size
+            FROM experiment_assignments
+            WHERE experiment_id = :experiment_id
+            GROUP BY variant_name
+            """
+        ),
+        {"experiment_id": experiment_id},
+    )
+    sample_rows = sample_result.mappings().all()
+    # Feedback events per variant
+    event_result = await db.execute(
+        text(
+            """
+            SELECT
+                (model_provenance->>'experiment_variant') AS variant_name,
+                event_type,
+                COUNT(*) AS event_count,
+                COALESCE(AVG(dwell_ms), 0) AS avg_dwell_ms
+            FROM feedback_events
+            WHERE model_provenance->>'experiment_id' = :experiment_id
+            GROUP BY variant_name, event_type
+            """
+        ),
+        {"experiment_id": experiment_id},
+    )
+    event_rows = event_result.mappings().all()
+    metrics: dict[str, Any] = {}
+    for row in sample_rows:
+        variant = row["variant_name"]
+        metrics[variant] = {
+            "sample_size": row["sample_size"],
+            "impressions": 0,
+            "clicks": 0,
+            "applies": 0,
+            "saves": 0,
+            "ctr_proxy": 0.0,
+            "apply_rate": 0.0,
+            "mean_dwell_ms": 0.0,
+        }
+    impressions: dict[str, int] = {}
+    clicks: dict[str, int] = {}
+    applies: dict[str, int] = {}
+    saves: dict[str, int] = {}
+    dwell_sums: dict[str, float] = {}
+    dwell_counts: dict[str, int] = {}
+    for row in event_rows:
+        variant = row["variant_name"] or "unknown"
+        event_type = row["event_type"]
+        count = row["event_count"]
+        avg_dwell = float(row["avg_dwell_ms"] or 0)
+        if event_type == "impression":
+            impressions[variant] = impressions.get(variant, 0) + count
+        elif event_type in {"click", "source_click"}:
+            clicks[variant] = clicks.get(variant, 0) + count
+        elif event_type == "apply":
+            applies[variant] = applies.get(variant, 0) + count
+        elif event_type == "save":
+            saves[variant] = saves.get(variant, 0) + count
+        if avg_dwell > 0:
+            dwell_sums[variant] = dwell_sums.get(variant, 0.0) + (avg_dwell * count)
+            dwell_counts[variant] = dwell_counts.get(variant, 0) + count
+    for variant in metrics:
+        metrics[variant]["impressions"] = impressions.get(variant, 0)
+        metrics[variant]["clicks"] = clicks.get(variant, 0)
+        metrics[variant]["applies"] = applies.get(variant, 0)
+        metrics[variant]["saves"] = saves.get(variant, 0)
+        imp = metrics[variant]["impressions"]
+        metrics[variant]["ctr_proxy"] = round(clicks.get(variant, 0) / imp, 4) if imp > 0 else 0.0
+        metrics[variant]["apply_rate"] = round(applies.get(variant, 0) / imp, 4) if imp > 0 else 0.0
+        total_dwell = dwell_sums.get(variant, 0.0)
+        total_dwell_count = dwell_counts.get(variant, 0)
+        metrics[variant]["mean_dwell_ms"] = round(total_dwell / total_dwell_count, 2) if total_dwell_count > 0 else 0.0
+    return {"experiment_id": experiment_id, "metrics": metrics}
+
+
+@app.post("/api/events/track")
+async def track_event(
+    body: TrackEventRequest,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    user = await _require_user(db, token_payload)
+    user_id = str(user["id"])
+    # Verify the user is assigned to this experiment
+    assignment = await _get_experiment_assignment(db, body.experiment_id, user_id)
+    if not assignment:
+        raise HTTPException(status_code=400, detail="user not assigned to this experiment")
+    # Insert a feedback event with experiment provenance
+    provenance = {
+        "experiment_id": body.experiment_id,
+        "experiment_variant": assignment["variant_name"],
+        **body.metadata,
+    }
+    await db.execute(
+        text(
+            """
+            INSERT INTO feedback_events (
+                event_type, user_id, job_id, dwell_ms, model_provenance
+            )
+            VALUES (:event_type, :user_id, :job_id, :dwell_ms, CAST(:provenance AS jsonb))
+            """
+        ),
+        {
+            "event_type": body.event_type,
+            "user_id": user_id,
+            "job_id": body.job_id,
+            "dwell_ms": body.dwell_ms,
+            "provenance": json.dumps(provenance),
+        },
+    )
+    await db.commit()
+    return {"status": "ok", "experiment_id": body.experiment_id, "variant_name": assignment["variant_name"]}
