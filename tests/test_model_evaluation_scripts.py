@@ -15,6 +15,7 @@ from scripts.eval.evaluate_sbert import evaluate_sbert
 from scripts.eval.evaluate_ncf import evaluate_ncf
 from scripts.eval.evaluate_dqn import evaluate_dqn
 from scripts.eval.evaluate_calibrator import evaluate_calibrator
+from scripts.eval.evaluate_finetuned_sbert import evaluate_finetuned_sbert
 
 
 pytestmark = [pytest.mark.anyio]
@@ -70,3 +71,81 @@ class TestEvaluateCalibrator:
         assert "ndcg_lift_at_3" in report
         assert "feature_importance" in report
         assert (output_dir / "calibrator_evaluation.json").exists()
+
+
+class TestEvaluateFinetunedSBERT:
+    async def test_evaluate_finetuned_sbert_runs_and_produces_report(self, tmp_path: Path) -> None:
+        from services.sbert.training.fine_tune_sbert import fine_tune_sbert
+
+        data_path = tmp_path / "indonesian_pairs.jsonl"
+        # Minimal dataset: 2 profiles with 1 positive + hard negative each
+        synthetic = [
+            {
+                "profile_id": "u-ti-01",
+                "job_id": "job-backend-001",
+                "profile_text": "Teknik Informatika Python FastAPI PostgreSQL Docker",
+                "job_text": "Backend Developer PT Teknologi Nusantara Jakarta Develop REST API microservices using Python FastAPI PostgreSQL Docker redis api",
+                "hard_negative_text": "Master of Ceremony PT Event Nusantara Jakarta Host corporate events moderate panel discussions english event hosting public speaking communication",
+                "profile_skills": ["python", "fastapi", "postgresql", "docker"],
+                "job_skills": ["python", "fastapi", "postgresql", "docker", "api"],
+                "label": 1.0,
+                "pair_kind": "positive",
+            },
+            {
+                "profile_id": "u-sasing-01",
+                "job_id": "job-mc-001",
+                "profile_text": "Sastra Inggris English public speaking content writing event host",
+                "job_text": "Master of Ceremony PT Event Nusantara Jakarta Host corporate events moderate panel discussions english event hosting public speaking communication",
+                "hard_negative_text": "Backend Developer PT Teknologi Nusantara Jakarta Develop REST API microservices using Python FastAPI PostgreSQL Docker redis api",
+                "profile_skills": ["english", "public speaking", "content writing", "event hosting"],
+                "job_skills": ["english", "event hosting", "public speaking", "communication"],
+                "label": 1.0,
+                "pair_kind": "positive",
+            },
+            {
+                "profile_id": "u-ti-01",
+                "job_id": "job-mc-001",
+                "profile_text": "Teknik Informatika Python FastAPI PostgreSQL Docker",
+                "job_text": "Master of Ceremony PT Event Nusantara Jakarta Host corporate events moderate panel discussions english event hosting public speaking communication",
+                "profile_skills": ["python", "fastapi", "postgresql", "docker"],
+                "job_skills": ["english", "event hosting", "public speaking", "communication"],
+                "label": 0.0,
+                "pair_kind": "negative",
+            },
+            {
+                "profile_id": "u-sasing-01",
+                "job_id": "job-backend-001",
+                "profile_text": "Sastra Inggris English public speaking content writing event host",
+                "job_text": "Backend Developer PT Teknologi Nusantara Jakarta Develop REST API microservices using Python FastAPI PostgreSQL Docker redis api",
+                "profile_skills": ["english", "public speaking", "content writing", "event hosting"],
+                "job_skills": ["python", "fastapi", "postgresql", "docker", "api"],
+                "label": 0.0,
+                "pair_kind": "negative",
+            },
+        ]
+        data_path.write_text("\n".join(json.dumps(r) for r in synthetic) + "\n", encoding="utf-8")
+
+        model_dir = tmp_path / "finetuned_test"
+        # Quick fine-tune for smoke test
+        fine_tune_sbert(
+            data_path,
+            model_dir,
+            base_model="paraphrase-multilingual-MiniLM-L12-v2",
+            epochs=1,
+            batch_size=2,
+        )
+
+        output_dir = tmp_path / "finetuned_sbert_eval"
+        report = evaluate_finetuned_sbert(
+            data_path,
+            model_dir,
+            output_dir,
+            k_values=(2,),
+        )
+        assert report["n_profiles"] == 2
+        assert "recall_at_2" in report
+        assert "mrr_at_2" in report
+        assert "ndcg_at_2" in report
+        assert "skill_gap_examples_count" in report
+        assert (output_dir / "finetuned_sbert_full_report.json").exists()
+        assert (output_dir / "skill_gap_examples.json").exists()

@@ -1527,6 +1527,39 @@
       "validation_status": "not_run",
       "commit": "",
       "notes": "Train logistic or LightGBM ranker and compare NDCG against static baseline."
+    },
+    {
+      "id": "P5-ML-006",
+      "phase": "ml",
+      "title": "Indonesian profile-job dataset and SBERT fine-tuning",
+      "priority": "P3",
+      "status": "done",
+      "scope": "large",
+      "depends_on": [
+        "P5-ML-002"
+      ],
+      "files_expected": [
+        "services/sbert/training/data/indonesian_profile_job_pairs.jsonl",
+        "services/sbert/training/indonesian_dataset.py",
+        "services/sbert/training/fine_tune_sbert.py",
+        "scripts/eval/evaluate_finetuned_sbert.py",
+        "tests/test_model_evaluation_scripts.py"
+      ],
+      "files_touched": [
+        "services/sbert/training/data/indonesian_profile_job_pairs.jsonl",
+        "services/sbert/training/indonesian_dataset.py",
+        "services/sbert/training/fine_tune_sbert.py",
+        "scripts/eval/evaluate_finetuned_sbert.py",
+        "scripts/eval/__init__.py",
+        "tests/test_model_evaluation_scripts.py"
+      ],
+      "validation_commands": [
+        "python -m pytest tests/test_model_evaluation_scripts.py -v",
+        "python -m services.sbert.training.fine_tune_sbert eval"
+      ],
+      "validation_status": "passed",
+      "commit": "",
+      "notes": "Built 89-record Indonesian dataset with 20 profiles and 24 jobs across academic disciplines. Fine-tuned paraphrase-multilingual-MiniLM-L12-v2 using MultipleNegativesRankingLoss. Evaluated with Recall@K, MRR@K, NDCG@K and qualitative skill-gap examples. All 386 backend tests pass."
     }
   ]
 }
