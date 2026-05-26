@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "ml",
-  "current_task_id": "P4-ADV-003",
+  "current_task_id": "P4-ADV-004",
   "tasks": [
     {
       "id": "INIT-001",
@@ -577,7 +577,7 @@
       "phase": "ml",
       "title": "Calibration layer",
       "priority": "P2",
-      "status": "in_progress",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P2-004"
@@ -1417,7 +1417,7 @@
       "phase": "ml",
       "title": "A/B testing and monitoring",
       "priority": "P3",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "large",
       "depends_on": [
         "P4-ADV-003"
