@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "ml",
-  "current_task_id": "P4-ADV-002",
+  "current_task_id": "P4-ADV-003",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1385,7 +1385,7 @@
       "phase": "ml",
       "title": "Market-aware skill path recommender",
       "priority": "P3",
-      "status": "pending",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P4-ADV-002"
@@ -1393,11 +1393,24 @@
       "files_expected": [
         "docs/ml/"
       ],
-      "files_touched": [],
-      "validation_commands": [],
-      "validation_status": "not_run",
-      "commit": "",
-      "notes": "Design doc first, then smoke implementation."
+      "files_touched": [
+        "docs/ml/MARKET_AWARE_SKILL_PATH.md",
+        "services/gateway/main.py",
+        "tests/test_market_aware_skill_path.py",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_market_aware_skill_path.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+      ],
+      "validation_status": "passed",
+      "commit": "pending",
+      "notes": "Design doc written. Gateway computes market demand from job_required_skills, passes it to DQN learning-path, returns it in response. Added GET /api/market-demand endpoint. Fixed _resolve_target_role to gracefully handle missing user_profiles table. Fixed gateway learning path to use DQN response key learning_path instead of steps. 4 passing tests. Full suite 361 passed."
     },
     {
       "id": "P4-ADV-004",

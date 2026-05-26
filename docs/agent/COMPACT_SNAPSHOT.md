@@ -9,10 +9,10 @@ Continue from the active task in TASK_QUEUE.json, which is now complete. Next ta
 frontend
 
 ## Current Task ID
-P4-ADV-002
+P4-ADV-003
 
 ## Latest Commit Hash
-Root: `3857086` (`feat: add certificate OCR design and smoke`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
+Root: pending (`feat: add market-aware skill path recommender`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
 
 ## Current Git Branch
 `agent-run`
@@ -33,10 +33,11 @@ Root: `3857086` (`feat: add certificate OCR design and smoke`). Backend: `45660f
 - `docs/agent/VALIDATION_LEDGER.md`
 
 ## Current Implementation Status
-- `P4-ADV-002` is implemented and validated.
-- Design doc at `docs/ml/CERTIFICATE_OCR.md`.
-- Gateway `POST /api/profile/certificates` supports PDF and image uploads, extracts text, parses cert name/issuer, looks up `certification_skills`, inserts `user_certifications`, and upserts into `user_skills`.
-- `P4-ADV-003` is the next pending task.
+- `P4-ADV-003` is implemented and validated.
+- Design doc at `docs/ml/MARKET_AWARE_SKILL_PATH.md`.
+- Gateway computes market demand from active job postings and passes it to DQN learning path.
+- `GET /api/market-demand` exposes demand data for frontend display.
+- Next pending task is in TASK_QUEUE.json.
 
 ## Commands Already Run
 - Frontend lint: `npm run lint` passed with 16 existing warnings, 0 errors.

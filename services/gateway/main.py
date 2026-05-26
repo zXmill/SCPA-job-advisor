@@ -1086,17 +1086,20 @@ async def _pipeline_profile_for_user(db: AsyncSession, user: dict[str, Any]) -> 
 async def _resolve_target_role(db: AsyncSession, user: dict[str, Any], requested: str | None = None) -> str:
     if requested:
         return requested
-    row = (
-        await db.execute(
-            text(
-                "SELECT target_role FROM user_profiles WHERE user_id = :uid "
-                "AND target_role IS NOT NULL LIMIT 1"
-            ),
-            {"uid": user["id"]},
-        )
-    ).mappings().first()
-    if row and row.get("target_role"):
-        return str(row["target_role"])
+    try:
+        row = (
+            await db.execute(
+                text(
+                    "SELECT target_role FROM user_profiles WHERE user_id = :uid "
+                    "AND target_role IS NOT NULL LIMIT 1"
+                ),
+                {"uid": user["id"]},
+            )
+        ).mappings().first()
+        if row and row.get("target_role"):
+            return str(row["target_role"])
+    except Exception:
+        pass
     return str(user.get("program_studi") or "Data Scientist")
 
 
@@ -2504,6 +2507,60 @@ async def create_applications(
 
 
 # ════════════════════════════════════════════════════════════════
+# Market Demand
+# ════════════════════════════════════════════════════════════════
+
+async def _compute_skill_market_demand(db: AsyncSession) -> dict[str, float]:
+    """Count how many active jobs require each skill and normalise to [0,1]."""
+    try:
+        rows = (
+            await db.execute(
+                text(
+                    "SELECT s.name, COUNT(*) AS job_count "
+                    "FROM job_required_skills jrs "
+                    "JOIN skills s ON jrs.skill_id = s.id "
+                    "JOIN jobs j ON jrs.job_id = j.id "
+                    "WHERE j.is_active = true "
+                    "GROUP BY s.name"
+                )
+            )
+        ).mappings().all()
+    except Exception:
+        return {}
+
+    if not rows:
+        return {}
+
+    counts = {str(row["name"]): int(row["job_count"]) for row in rows}
+    max_count = max(counts.values())
+    if max_count <= 0:
+        return {}
+    return {skill: round(min(1.0, count / max_count), 4) for skill, count in counts.items()}
+
+
+@app.get("/api/market-demand")
+async def market_demand(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+    limit: int = Query(default=20, ge=1, le=100),
+) -> dict[str, Any]:
+    """Return current skill market demand derived from active job postings."""
+    await _require_user(db, token_payload)
+    demand = await _compute_skill_market_demand(db)
+    max_count = max(demand.values()) if demand else 0.0
+    total = len(demand)
+    skills = [
+        {"skill": skill, "demand": score, "job_count": int(score * max_count * total) if max_count and total else 0}
+        for skill, score in sorted(demand.items(), key=lambda x: x[1], reverse=True)[:limit]
+    ]
+    return {
+        "skills": skills,
+        "total_skills": len(demand),
+        "computed_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+# ════════════════════════════════════════════════════════════════
 # Learning Path
 # ════════════════════════════════════════════════════════════════
 
@@ -2523,19 +2580,28 @@ async def learning_path(
     user_skills = {s["skill"] for s in skills}
 
     target_role = await _resolve_target_role(db, user)
+    market_demand = await _compute_skill_market_demand(db)
+
     dqn_url = os.getenv("DQN_URL", os.getenv("DQN_SERVICE_URL", "http://dqn:8004")).rstrip("/")
+    dqn_data: dict[str, Any] = {}
     try:
         dqn_resp = await _client().post(
             f"{dqn_url}/learning-path",
-            json={"user_id": uid, "current_skills": list(user_skills), "target_role": target_role},
+            json={
+                "user_id": uid,
+                "current_skills": list(user_skills),
+                "target_role": target_role,
+                "market_demand": market_demand,
+            },
             timeout=HTTP_TIMEOUT_SECONDS,
         )
         dqn_resp.raise_for_status()
         dqn_data = dqn_resp.json()
-        steps = dqn_data.get("steps", [])
     except httpx.HTTPError:
-        steps = []
+        pass
 
+    # DQN returns "learning_path"; map it to the frontend-expected "steps" shape.
+    steps = dqn_data.get("learning_path", [])
     if not steps:
         fallback = [
             {"skill": "Python", "priority": 1, "estimated_weeks": 4, "resources": ["Coursera Python for Everybody", "Real Python Tutorials"]},
@@ -2550,7 +2616,17 @@ async def learning_path(
         if not steps:
             steps = fallback[:3]
 
-    return {"steps": steps, "estimated_months": sum(s["estimated_weeks"] for s in steps) // 4}
+    # Attach market_demand scores to each step when available.
+    for step in steps:
+        skill = step.get("skill")
+        if skill and skill in market_demand:
+            step["market_demand"] = market_demand[skill]
+
+    return {
+        "steps": steps,
+        "estimated_months": sum(s.get("estimated_weeks", 0) for s in steps) // 4,
+        "market_demand": market_demand,
+    }
 
 
 # ════════════════════════════════════════════════════════════════

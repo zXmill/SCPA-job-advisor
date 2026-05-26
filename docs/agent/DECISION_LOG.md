@@ -422,3 +422,12 @@
 - Skipped option: Full DOCX support, LLM-based parsing, certificate verification against issuers.
 - Risk and mitigation: pytesseract requires external Tesseract binary; the endpoint returns pending status with a clear message when it is unavailable.
 
+
+## 2026-05-26 01:50 +07 - P4-ADV-003 market-aware skill path mini plan
+- Decision: Compute market demand from job_required_skills counts and pass it to the DQN learning-path endpoint.
+- Expected files to touch: docs/ml/MARKET_AWARE_SKILL_PATH.md, services/gateway/main.py, tests/test_market_aware_skill_path.py, and durable docs/agent/ state files.
+- Validation commands: focused pytest for market demand, full backend pytest, frontend lint.
+- Chosen approach: leverage the existing DQN market_demand contract that was already designed but never wired.
+- Discovered and fixed: gateway learning path was looking for DQN response key "steps" instead of "learning_path", causing it to always fall back to hardcoded skills.
+- Discovered and fixed: _resolve_target_role raised on missing user_profiles table instead of falling back gracefully.
+

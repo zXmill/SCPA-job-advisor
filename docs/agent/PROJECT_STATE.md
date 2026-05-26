@@ -86,6 +86,9 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Frontend recommendations page now supports sorting by reason filters (semantic fit, interaction fit, career signal, location fit, recency) in addition to match percent and recency. The active reason score is displayed in the card sidebar.
 - Gateway authenticated `POST /api/profile/cv` endpoint accepts PDF and TXT uploads, extracts text, scans for known skills from the taxonomy, upserts matched skills into `user_skills`, and records `cv_uploaded_at`.
 - Gateway authenticated `POST /api/profile/certificates` endpoint accepts PDF and image uploads, extracts text (PyPDF2 for PDFs, pytesseract for images when available), parses certificate name and issuer heuristically, looks up `certification_skills` for mapped skills, inserts `user_certifications` records, and upserts matched skills into `user_skills`.
+- Gateway `POST /api/learning-path` now computes real-time market demand from `job_required_skills` counts, passes it to the DQN service, and returns it in the response. Each step includes its `market_demand` score when available.
+- Gateway `GET /api/market-demand` endpoint returns top-N skills with demand scores and job counts derived from active job postings.
+- Gateway `_resolve_target_role` now gracefully handles the missing `user_profiles` table (existing pre-migration schema gap).
 - Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `348 passed, 1 warning` after P3-FEAT-007-BE.
 - Latest frontend validation after P3-FEAT-007-FE: `npm run lint` passed with 16 existing warnings, `npm run build` passed.
 - Latest backend validation after P4-ADV-001: `348 + 4 = 352 passed, 2 warnings`.
@@ -102,7 +105,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P4-ADV-002` - Certificate OCR design and smoke. Root commit pending.
+`P4-ADV-003` - Market-aware skill path recommender. Root commit pending.
 
 ## Next Task
-`P4-ADV-003` - Market-aware skill path recommender.
+Check TASK_QUEUE.json for next pending task.

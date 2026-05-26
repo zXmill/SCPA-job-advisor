@@ -1870,3 +1870,51 @@
 
 ### Next Exact Action
 - Stage P4-ADV-002 code and state files, inspect staged diff, commit `feat: add certificate OCR design and smoke`, then update state checkpoint.
+
+## 2026-05-26 01:40 +07 - Recovery note
+
+### Active Task
+- `P4-ADV-003` - Market-aware skill path recommender.
+
+### Previous Task Complete
+- `P4-ADV-002` committed as `3857086`. State checkpoint `ff0df67`.
+
+### Current State
+- Root repo `docs/agent/` state files still point `current_task_id` to `P4-ADV-002`.
+- Next task `P4-ADV-003` is pending.
+- Existing DQN learning path endpoint at `/api/learning-path` returns skill steps based on user profile and missing skills.
+- No market-demand signal is currently mixed into the learning path.
+
+### Validation Still Needed
+- Update state pointers to `P4-ADV-003`.
+- Explore existing DQN service and pipeline learning path stage.
+- Design how to inject market-demand (job frequency) into skill path ranking.
+
+### Next Exact Action
+- Transition state to P4-ADV-003, then explore existing learning path code and design market-aware enhancement.
+
+## 2026-05-26 02:00 +07 - P4-ADV-003 result
+
+### Active Task
+- `P4-ADV-003` - Market-aware skill path recommender.
+
+### What Changed
+- Added design doc `docs/ml/MARKET_AWARE_SKILL_PATH.md`.
+- Added `_compute_skill_market_demand` helper in gateway: queries `job_required_skills` joined with `skills` and `jobs`, counts skill frequency among active jobs, normalizes to [0,1].
+- Updated `/api/learning-path` to compute market demand and pass it to DQN `/learning-path` via the existing `market_demand` field.
+- Fixed gateway learning path to use DQN response key `learning_path` instead of `steps` (previously always fell back to hardcoded list).
+- Fixed `_resolve_target_role` to gracefully handle missing `user_profiles` table.
+- Added `GET /api/market-demand` endpoint returning top-N skills with demand scores and job counts.
+- Added `tests/test_market_aware_skill_path.py` with 4 passing tests.
+
+### Validation Results
+- `tests/test_market_aware_skill_path.py`: 4 passed.
+- Full backend suite: `361 passed, 2 warnings`.
+- Frontend lint: passed with 16 existing warnings, 0 errors.
+
+### Remaining Issues
+- Existing frontend lint warnings remain but do not fail lint.
+- PyPDF2 deprecation warning remains.
+
+### Next Exact Action
+- Stage P4-ADV-003 code and state files, inspect staged diff, commit `feat: add market-aware skill path recommender`, then update state checkpoint.
