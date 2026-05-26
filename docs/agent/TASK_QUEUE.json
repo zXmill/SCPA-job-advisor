@@ -1409,7 +1409,7 @@
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
       "validation_status": "passed",
-      "commit": "pending",
+      "commit": "118f763",
       "notes": "Design doc written. Gateway computes market demand from job_required_skills, passes it to DQN learning-path, returns it in response. Added GET /api/market-demand endpoint. Fixed _resolve_target_role to gracefully handle missing user_profiles table. Fixed gateway learning path to use DQN response key learning_path instead of steps. 4 passing tests. Full suite 361 passed."
     },
     {

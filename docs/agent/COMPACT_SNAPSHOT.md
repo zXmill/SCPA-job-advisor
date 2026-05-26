@@ -12,7 +12,7 @@ frontend
 P4-ADV-003
 
 ## Latest Commit Hash
-Root: pending (`feat: add market-aware skill path recommender`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
+Root: `118f763` (`feat: add market-aware skill path recommender`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
 
 ## Current Git Branch
 `agent-run`
