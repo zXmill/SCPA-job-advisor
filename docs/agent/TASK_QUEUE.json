@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "ml",
-  "current_task_id": "P5-ML-002",
+  "current_task_id": null,
   "tasks": [
     {
       "id": "INIT-001",
@@ -1457,7 +1457,7 @@
       "phase": "ml",
       "title": "Evaluate SBERT recommender",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P5-ML-001"
@@ -1476,7 +1476,7 @@
       "phase": "ml",
       "title": "Evaluate NeuMF recommender",
       "priority": "P3",
-      "status": "pending",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P5-ML-002"
@@ -1495,7 +1495,7 @@
       "phase": "ml",
       "title": "Evaluate DQN skill policy",
       "priority": "P3",
-      "status": "pending",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P5-ML-003"
@@ -1514,7 +1514,7 @@
       "phase": "ml",
       "title": "Evaluate recommendation calibrator",
       "priority": "P3",
-      "status": "pending",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P5-ML-004"
