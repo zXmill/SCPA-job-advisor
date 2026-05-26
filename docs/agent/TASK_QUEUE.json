@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "ml",
-  "current_task_id": "P5-ML-001",
+  "current_task_id": "P5-ML-002",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1436,7 +1436,7 @@
       "phase": "ml",
       "title": "ML inventory and training plan",
       "priority": "P3",
-      "status": "in_progress",
+      "status": "done",
       "scope": "medium",
       "depends_on": [
         "P4-ADV-004"
@@ -1457,7 +1457,7 @@
       "phase": "ml",
       "title": "Evaluate SBERT recommender",
       "priority": "P3",
-      "status": "pending",
+      "status": "in_progress",
       "scope": "large",
       "depends_on": [
         "P5-ML-001"
