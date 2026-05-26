@@ -1558,7 +1558,7 @@
         "python -m services.sbert.training.fine_tune_sbert eval"
       ],
       "validation_status": "passed",
-      "commit": "",
+      "commit": "54fd192",
       "notes": "Built 89-record Indonesian dataset with 20 profiles and 24 jobs across academic disciplines. Fine-tuned paraphrase-multilingual-MiniLM-L12-v2 using MultipleNegativesRankingLoss. Evaluated with Recall@K, MRR@K, NDCG@K and qualitative skill-gap examples. All 386 backend tests pass."
     }
   ]
