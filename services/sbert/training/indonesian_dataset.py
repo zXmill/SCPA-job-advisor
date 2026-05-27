@@ -574,6 +574,28 @@ def build_dataset() -> list[dict[str, Any]]:
     return records
 
 
+# ════════════════════════════════════════════════════════════════
+# Hybrid dataset (5K+ real Indonesia jobs)
+# ════════════════════════════════════════════════════════════════
+
+HYBRID_PATH = Path("services/sbert/training/data/indonesian_profile_job_pairs_hybrid.jsonl")
+
+
+def load_hybrid_dataset(path: Path | None = None) -> list[dict[str, Any]]:
+    """Load pre-built hybrid dataset from JSONL."""
+    path = path or HYBRID_PATH
+    if not path.exists():
+        raise FileNotFoundError(f"Hybrid dataset not found at {path}. Run build_hybrid_dataset_scpa.py first.")
+    records: list[dict[str, Any]] = []
+    with open(path, "r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            records.append(json.loads(line))
+    return records
+
+
 def write_dataset(records: list[dict[str, Any]], path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = [json.dumps(r, ensure_ascii=False, sort_keys=True) for r in records]
@@ -588,8 +610,18 @@ def main() -> int:
         type=Path,
         default=Path("services/sbert/training/data/indonesian_profile_job_pairs.jsonl"),
     )
+    parser.add_argument(
+        "--hybrid",
+        action="store_true",
+        help="Use hybrid dataset (5K+ real Indonesia records) instead of synthetic",
+    )
     args = parser.parse_args()
-    records = build_dataset()
+
+    if args.hybrid:
+        records = load_hybrid_dataset()
+    else:
+        records = build_dataset()
+
     write_dataset(records, args.output)
     split_counts = {"train": 0, "validation": 0, "test": 0}
     for r in records:
