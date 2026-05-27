@@ -105,7 +105,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P5-ML-007` - Fine-tuned SBERT checkpoint runtime integration. Root commit pending.
+`P5-ML-007` - Fine-tuned SBERT checkpoint runtime integration. Root commit `0313e8a`.
 
 ## Next Task
 Check TASK_QUEUE.json for next pending task.

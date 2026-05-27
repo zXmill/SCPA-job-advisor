@@ -1715,47 +1715,47 @@
 - Command: .\.venv\Scripts\python.exe -m py_compile services\sbert\main.py services\sbert\weights\validation.py services\pipeline\stages\stage_2_encode.py
 - Result: pass
 - Summary: SBERT service, artifact validator, and pipeline encode stage compiled successfully.
-- Related commit hash: pending.
+- Related commit hash: 0313e8a.
 
 ## 2026-05-27 22:55 +07
 - Task ID: P5-ML-007
 - Command: .\.venv\Scripts\python.exe test_sbert_load.py
 - Result: pass
 - Summary: Fine-tuned checkpoint loaded from `models\sbert-indonesian-hybrid-manual-research\best` with embedding dim 384 and fallback mode false.
-- Related commit hash: pending.
+- Related commit hash: 0313e8a.
 
 ## 2026-05-27 22:55 +07
 - Task ID: P5-ML-007
 - Command: validate_sbert_artifact(..., require_reload=True)
 - Result: pass
 - Summary: Artifact metadata valid, reloadable through transformers, `artifact_name=sbert-indonesian-hybrid-manual-research-best`, `embedding_dim=384`, fallback false.
-- Related commit hash: pending.
+- Related commit hash: 0313e8a.
 
 ## 2026-05-27 22:56 +07
 - Task ID: P5-ML-007
 - Command: .\.venv\Scripts\python.exe -m pytest tests\test_sbert_finetuned_runtime.py -q
 - Result: pass
 - Summary: 2 passed. Artifact metadata and runtime loading without fallback are covered.
-- Related commit hash: pending.
+- Related commit hash: 0313e8a.
 
 ## 2026-05-27 22:56 +07
 - Task ID: P5-ML-007
 - Command: .\.venv\Scripts\python.exe -m pytest tests\test_caching.py tests\test_sbert_job_embedding_cache.py -q
 - Result: pass
 - Summary: 17 passed. Existing SBERT cache/fallback behavior and pipeline job embedding cache remained intact.
-- Related commit hash: pending.
+- Related commit hash: 0313e8a.
 
 ## 2026-05-27 22:57 +07
 - Task ID: P5-ML-007
 - Command: docker compose config
 - Result: pass
 - Summary: Compose config parsed with dummy required secrets after the first run correctly failed due missing required env vars in the shell.
-- Related commit hash: pending.
+- Related commit hash: 0313e8a.
 
 ## 2026-05-27 23:00 +07
 - Task ID: P5-ML-007
 - Command: .\.venv\Scripts\python.exe -m pytest -q
 - Result: pass
 - Summary: Full backend suite passed with 389 passed and 3 warnings.
-- Related commit hash: pending.
+- Related commit hash: 0313e8a.
 

@@ -1609,7 +1609,7 @@
         ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
       ],
       "validation_status": "passed",
-      "commit": "pending",
+      "commit": "0313e8a",
       "notes": "Active SBERT runtime now loads models/sbert-indonesian-hybrid-manual-research/best with SBERT_MODEL_LOADER=transformers and exposes model_version sbert-indonesian-hybrid-manual-research-best. Pipeline stage 2 preserves the SBERT model_version. SCPAv2 was ignored."
     }
   ]
