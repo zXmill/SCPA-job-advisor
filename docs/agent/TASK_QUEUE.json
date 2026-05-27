@@ -1560,6 +1560,57 @@
       "validation_status": "passed",
       "commit": "54fd192",
       "notes": "Built 89-record Indonesian dataset with 20 profiles and 24 jobs across academic disciplines. Fine-tuned paraphrase-multilingual-MiniLM-L12-v2 using MultipleNegativesRankingLoss. Evaluated with Recall@K, MRR@K, NDCG@K and qualitative skill-gap examples. All 386 backend tests pass."
+    },
+    {
+      "id": "P5-ML-007",
+      "phase": "ml",
+      "title": "Integrate fine-tuned SBERT checkpoint into runtime",
+      "priority": "P1",
+      "status": "done",
+      "scope": "medium",
+      "depends_on": [
+        "P5-ML-006"
+      ],
+      "files_expected": [
+        "services/sbert/main.py",
+        "services/sbert/README.md",
+        "docker-compose.yml",
+        ".env.example",
+        "docs/MODELS.md",
+        "docs/ml/ML_INVENTORY.md",
+        "tests/"
+      ],
+      "files_touched": [],
+      "files_touched": [
+        ".env.example",
+        "docker-compose.yml",
+        "docs/MODELS.md",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/VALIDATION_LEDGER.md",
+        "docs/ml/ML_INVENTORY.md",
+        "services/pipeline/stages/stage_2_encode.py",
+        "services/sbert/README.md",
+        "services/sbert/main.py",
+        "services/sbert/requirements.txt",
+        "services/sbert/weights/validation.py",
+        "tests/test_sbert_finetuned_runtime.py"
+      ],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m py_compile services\\sbert\\main.py services\\sbert\\weights\\validation.py services\\pipeline\\stages\\stage_2_encode.py",
+        ".\\.venv\\Scripts\\python.exe test_sbert_load.py",
+        "validate_sbert_artifact(..., require_reload=True)",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_sbert_finetuned_runtime.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_caching.py tests\\test_sbert_job_embedding_cache.py -q",
+        "docker compose config",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json"
+      ],
+      "validation_status": "passed",
+      "commit": "pending",
+      "notes": "Active SBERT runtime now loads models/sbert-indonesian-hybrid-manual-research/best with SBERT_MODEL_LOADER=transformers and exposes model_version sbert-indonesian-hybrid-manual-research-best. Pipeline stage 2 preserves the SBERT model_version. SCPAv2 was ignored."
     }
   ]
 }

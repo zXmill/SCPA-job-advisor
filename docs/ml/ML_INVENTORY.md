@@ -12,12 +12,15 @@ Score semantic fit between a user profile text and job descriptions. Produces th
 | Artifact | Location | Status |
 |----------|----------|--------|
 | Base model weights | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (HuggingFace) | Available |
-| Fine-tuned checkpoint | `services/sbert/weights/fine_tuned_jupyter/` | Exists (notebook-trained) |
-| Similarity head | `services/sbert/training/` (trainable projection head) | Code complete |
+| Fine-tuned checkpoint | `models/sbert-indonesian-hybrid-manual-research/best` | Active runtime artifact |
+| Final checkpoint | `models/sbert-indonesian-hybrid-manual-research/final` | Saved notebook artifact |
+| Notebook metrics | `models/sbert-indonesian-hybrid-manual-research/artifacts/` | Available |
+| Legacy similarity head | `services/sbert/training/` (trainable projection head) | Smoke/training utility only |
 
 ### Architecture
 - Base encoder: `paraphrase-multilingual-MiniLM-L12-v2` (384-dim embeddings)
-- Optional fine-tuning: `SimilarityHead` projection with 2-layer MLP + ReLU + cosine similarity
+- Active fine-tuning: manual PyTorch loop with `MultipleNegativesRankingLoss` in `notebooks/03_sbert_fine_tuning_hybrid_research_manual_v3.ipynb`
+- Serving backend: `transformers` `AutoTokenizer` + `AutoModel` with mean pooling and L2 normalization over the fine-tuned checkpoint
 - Fallback: deterministic token overlap + category activation (for tests/offline)
 
 ### Hyperparameters
@@ -25,26 +28,30 @@ Score semantic fit between a user profile text and job descriptions. Produces th
 |-----------|-------|--------|
 | Embedding dim | 384 | Base model |
 | Projection hidden dim | 384 | `SimilarityHead` |
-| Learning rate | 0.002 | `train_sbert.py` |
-| Weight decay | 1e-4 | `train_sbert.py` |
-| Training steps | 20 | `train_sbert.py` default |
-| Loss | MSE | `train_sbert.py` |
-| Optimizer | AdamW | `train_sbert.py` |
+| Learning rate | 2e-5 | fine-tuning notebook |
+| Weight decay | 0.01 | fine-tuning notebook |
+| Epochs | 3 | fine-tuning notebook |
+| Batch size | 8 | fine-tuning notebook |
+| Max sequence length | 256 | fine-tuning notebook and service env |
+| Loss | MultipleNegativesRankingLoss | fine-tuning notebook |
+| Optimizer | AdamW | fine-tuning notebook |
 
 ### Training Entry Point
-```bash
-python -m services.sbert.training.train_sbert --data pairs.jsonl --output-dir ./sbert_output --steps 20
+```text
+notebooks/03_sbert_fine_tuning_hybrid_research_manual_v3.ipynb
 ```
 
 ### Evaluation Entry Point
-- `POST /match/semantic` (service endpoint)
+- `POST /encode` (pipeline stage 2 active endpoint)
+- `POST /match/semantic` (direct semantic scoring endpoint)
 - `tests/test_sbert_hard_negative_mining.py`
+- `tests/test_sbert_finetuned_runtime.py`
 - `services/evaluation/ablation.py` (for ablation studies)
 
 ### Status
-- Production-ready with fallback
-- Fine-tuning pipeline exists but uses deterministic embeddings in local training (not real SBERT embeddings)
-- Needs real domain data for production fine-tuning
+- Active runtime uses the fine-tuned SentenceTransformer checkpoint from `models/sbert-indonesian-hybrid-manual-research/best`
+- Runtime fallback is explicit test/offline mode only through `SBERT_FORCE_FALLBACK=1`
+- Current notebook evidence: validation triplet accuracy `0.997455`, test triplet accuracy `0.997396`, test NDCG@5 `0.511467`, test Recall@5 `0.626459`
 
 ---
 

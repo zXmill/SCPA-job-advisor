@@ -90,7 +90,7 @@ async def run_encode_stage(
         summary={
             "scored": len(score_by_index),
             "embedded_jobs": len(job_embeddings),
-            "model_version": "embedding-cosine",
+            "model_version": embedding_data.get("model_version") or "embedding-cosine",
             "model_name": embedding_data.get("model_name"),
             "embedding_dim": embedding_data.get("embedding_dim"),
             "fallback_mode": bool(embedding_data.get("fallback_mode", False)),

@@ -431,3 +431,11 @@
 - Discovered and fixed: gateway learning path was looking for DQN response key "steps" instead of "learning_path", causing it to always fall back to hardcoded skills.
 - Discovered and fixed: _resolve_target_role raised on missing user_profiles table instead of falling back gracefully.
 
+## 2026-05-27 22:42 +07 - P5-ML-007 fine-tuned SBERT integration mini plan
+- Decision: Promote the fine-tuned SentenceTransformer checkpoint from `models/sbert-indonesian-hybrid-manual-research/best` into the active SBERT service path.
+- Expected files to touch: `services/sbert/main.py`, `services/sbert/README.md`, `docker-compose.yml`, `.env.example`, `docs/MODELS.md`, `docs/ml/ML_INVENTORY.md`, tests, and durable `docs/agent/` state files.
+- Validation commands: artifact validation/reload smoke, focused SBERT tests, Docker Compose config, and JSON validation for `TASK_QUEUE.json`.
+- Chosen approach: keep the pipeline contract unchanged because it already calls SBERT `/encode`; update the SBERT service default path, Docker mount, health metadata, docs, and regression tests.
+- Skipped option: Reading or wiring anything from `SCPAv2`.
+- Reason skipped: The user explicitly said `SCPAv2` failed and should be ignored; the usable checkpoint is already under the current SCPA repo.
+

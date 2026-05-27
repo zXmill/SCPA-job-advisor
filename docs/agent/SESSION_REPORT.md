@@ -61,3 +61,21 @@ All pending tasks from the task queue have been completed:
 Final test count: **386 passed, 2 warnings**
 Branch: `agent-run`
 
+## Task Completion: P5-ML-007 (Fine-tuned SBERT Runtime Integration)
+
+### What was done
+- Integrated the checkpoint from `notebooks/03_sbert_fine_tuning_hybrid_research_manual_v3.ipynb` by making the SBERT service load `models/sbert-indonesian-hybrid-manual-research/best`.
+- Added a `transformers` serving loader with SentenceTransformer-compatible mean pooling and L2 normalization to avoid importing the notebook/training stack in service runtime.
+- Docker Compose now mounts the fine-tuned `best` checkpoint into `/app/weights/sbert` and sets `SBERT_MODEL_LOADER=transformers`.
+- SBERT `/health`, `/metrics`, `/match/semantic`, and `/encode` now expose the active `model_version`.
+- Pipeline stage 2 now preserves the SBERT `model_version` in its stage summary.
+- Updated model docs and ML inventory to point to the active fine-tuned artifact, metrics, and runtime path.
+- Added `tests/test_sbert_finetuned_runtime.py` for artifact metadata and real runtime loading without fallback.
+- Ignored `SCPAv2` as requested.
+
+### Validation
+- Artifact reload smoke: passed, `sbert-indonesian-hybrid-manual-research-best`, dim 384, fallback false.
+- Focused SBERT runtime tests: `2 passed`.
+- SBERT cache and pipeline job embedding cache tests: `17 passed`.
+- Docker Compose config: passed with dummy required env vars.
+- Full backend suite: `389 passed, 3 warnings`.

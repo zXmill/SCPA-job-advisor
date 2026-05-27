@@ -35,7 +35,7 @@ Key variables from `.env.example`, Docker Compose, and service code:
 - Gateway/frontend: `PUBLIC_GATEWAY_URL`, `NEXT_PUBLIC_API_URL`, `PIPELINE_URL`, `HTTP_TIMEOUT_SECONDS`, `CORS_ALLOW_ORIGINS`, `CORS_ALLOWED_ORIGINS`.
 - Pipeline/model URLs: `SCRAPER_URL`, `SBERT_URL`, `NCF_URL`, `DQN_URL`, `PIPELINE_USE_DB_CANDIDATES`, `PIPELINE_CANDIDATE_POOL_LIMIT`.
 - Scraper: `SCRAPER_SEED_URLS`, `SCRAPER_INDONESIA_ONLY`, `SCRAPER_SAMPLE_ONLY`, `SCRAPER_MAX_URLS_PER_RUN`, `SCRAPER_CONCURRENCY`, source enable flags.
-- ML: `MODEL_NAME`, `MODEL_DIR`, `SBERT_ENABLE_TRANSFORMER`, `SBERT_FORCE_FALLBACK`, `EMBEDDING_CACHE_TTL`, `DQN_*`, `CONTINUAL_TRAINING_*`.
+- ML: `MODEL_NAME`, `MODEL_DIR`, `SBERT_ENABLE_TRANSFORMER`, `SBERT_MODEL_LOADER`, `SBERT_MAX_SEQ_LENGTH`, `SBERT_FORCE_FALLBACK`, `EMBEDDING_CACHE_TTL`, `DQN_*`, `CONTINUAL_TRAINING_*`.
 
 ## Ports
 - Frontend: 3000 when run by Next.js.
@@ -56,7 +56,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Current Alembic head after P3-FEAT-004-BE is `011_job_alerts`. Local upgrade, one-step downgrade to `010_feedback_outbox`, and re-upgrade passed on 2026-05-25.
 
 ## ML Model Inventory
-- SBERT: multilingual SentenceTransformer default `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; local fine-tuned artifact files exist under ignored `services/sbert/weights/fine_tuned_jupyter/`.
+- SBERT: active runtime loads the fine-tuned checkpoint at `models/sbert-indonesian-hybrid-manual-research/best` with `SBERT_MODEL_LOADER=transformers`, exposes `model_version=sbert-indonesian-hybrid-manual-research-best`, and keeps deterministic fallback only for explicit test/offline mode.
 - NCF: online NCF/NeuMF service with JSON and `.pt` artifacts under ignored `services/ncf/weights/` and report artifacts.
 - DQN: online skill-path DQN service with replay/policy artifacts under ignored `services/dqn/weights/` and report artifacts. It emits career milestone/skill actions and a compatibility rerank signal.
 - Calibration: deterministic learned logistic calibrator in `services/pipeline/calibration.py` over static baseline, SBERT, NCF, DQN, skill gap, skill alignment, recency, salary, location, and interaction-depth features. Smoke evaluation is saved at `reports/ml/calibration_layer_smoke.json`.
@@ -91,7 +91,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Gateway `_resolve_target_role` now gracefully handles the missing `user_profiles` table (existing pre-migration schema gap).
 - Latest local backend validation: `.\.venv\Scripts\python.exe -m pytest -q` passed with `348 passed, 1 warning` after P3-FEAT-007-BE.
 - Latest frontend validation after P3-FEAT-007-FE: `npm run lint` passed with 16 existing warnings, `npm run build` passed.
-- Latest backend validation after P4-ADV-001: `348 + 4 = 352 passed, 2 warnings`.
+- Latest backend validation after P5-ML-007: `.\.venv\Scripts\python.exe -m pytest -q` passed with `389 passed, 3 warnings`.
 - Route, model, migration, and test surfaces are discoverable from current files.
 
 ## Known Broken Areas
@@ -105,7 +105,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - `frontend/` is a nested Git repository. Frontend code fixes must be committed inside `frontend/` as well as recorded in root `docs/agent/`.
 
 ## Last Completed Task
-`P4-ADV-003` - Market-aware skill path recommender. Root commit pending.
+`P5-ML-007` - Fine-tuned SBERT checkpoint runtime integration. Root commit pending.
 
 ## Next Task
 Check TASK_QUEUE.json for next pending task.

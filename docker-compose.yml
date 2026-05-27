@@ -75,10 +75,12 @@ services:
     environment:
       SERVICE_PORT: "8002"
       SBERT_ENABLE_TRANSFORMER: "1"
+      SBERT_MODEL_LOADER: transformers
+      SBERT_MAX_SEQ_LENGTH: "256"
       MODEL_NAME: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
       MODEL_DIR: /app/weights/sbert
     volumes:
-      - weights:/app/weights
+      - ./models/sbert-indonesian-hybrid-manual-research/best:/app/weights/sbert:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health', timeout=2).read()"]
