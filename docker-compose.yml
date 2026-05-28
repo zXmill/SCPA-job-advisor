@@ -16,13 +16,15 @@ services:
       start_period: 10s
 
   gateway:
-    build: ./services/gateway
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
     ports:
-      - "8000:8000"
+      - "9000:8000"
     environment:
       PIPELINE_URL: http://pipeline:8005
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?INTERNAL_SERVICE_TOKEN required}
-      HTTP_TIMEOUT_SECONDS: "5"
+      HTTP_TIMEOUT_SECONDS: "15"
       GATEWAY_P95_TARGET_MS: "150"
       DATABASE_URL: ${GATEWAY_DATABASE_URL:?GATEWAY_DATABASE_URL required}
       PUBLIC_GATEWAY_URL: ${PUBLIC_GATEWAY_URL:-http://localhost:8000}
