@@ -1876,75 +1876,75 @@
 - Command: docker compose build gateway
 - Result: pass
 - Summary: Gateway image built; direct gateway context transfer was 286.56KB after `.dockerignore`.
-- Related commit hash: pending.
+- Related commit hash: b747954.
 
 ## 2026-05-31 10:34 +07
 - Task ID: DEBUG-ULT-001
 - Command: docker run --rm ... scpa-gateway python -c "import services.gateway.main as gateway; print(gateway.app.title)"
 - Result: pass
 - Summary: Gateway package import smoke passed inside the image.
-- Related commit hash: pending.
+- Related commit hash: b747954.
 
 ## 2026-05-31 10:36 +07
 - Task ID: DEBUG-ULT-001
 - Command: docker compose up -d --build gateway
 - Result: fail
 - Summary: Gateway built, but pipeline became unhealthy with `ModuleNotFoundError: No module named 'services'`.
-- Related commit hash: pending.
+- Related commit hash: b747954.
 
 ## 2026-05-31 10:39 +07
 - Task ID: DEBUG-ULT-001
 - Command: docker compose up -d --build gateway
 - Result: pass
 - Summary: Gateway and dependencies built and started after pipeline package-entrypoint repair.
-- Related commit hash: pending.
+- Related commit hash: b747954.
 
 ## 2026-05-31 10:40 +07
 - Task ID: DEBUG-ULT-001
 - Command: .\.venv\Scripts\python.exe -m alembic -c alembic.ini current
 - Result: fail
 - Summary: Live database was reachable but at `001_initial_schema`, below repo head.
-- Related commit hash: pending.
+- Related commit hash: b747954.
 
 ## 2026-05-31 10:41 +07
 - Task ID: DEBUG-ULT-001
 - Command: .\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head
 - Result: pass
 - Summary: Live database migrations applied through `012_ab_testing_and_monitoring`.
-- Related commit hash: pending.
+- Related commit hash: b747954.
 
 ## 2026-05-31 10:41 +07
 - Task ID: DEBUG-ULT-001
 - Command: .\.venv\Scripts\python.exe -m alembic -c alembic.ini current
 - Result: pass
 - Summary: Live database reports `012_ab_testing_and_monitoring (head)`.
-- Related commit hash: pending.
+- Related commit hash: b747954.
 
 ## 2026-05-31 10:42 +07
 - Task ID: DEBUG-ULT-001
 - Command: docker compose up -d --build
 - Result: pass
 - Summary: Full project-level compose build/up passed.
-- Related commit hash: pending.
+- Related commit hash: b747954.
 
 ## 2026-05-31 10:43 +07
 - Task ID: DEBUG-ULT-001
 - Command: docker compose ps; Invoke-WebRequest http://127.0.0.1:9000/health; Invoke-WebRequest http://127.0.0.1:9000/ready
 - Result: pass
 - Summary: All services healthy; gateway health and readiness passed on port 9000.
-- Related commit hash: pending.
+- Related commit hash: b747954.
 
 ## 2026-05-31 10:46 +07
 - Task ID: DEBUG-ULT-001
 - Command: .\.venv\Scripts\python.exe scripts\debug\selenium_full_audit.py --output reports\debug\browser --headless --email <demo-email> --password <redacted> --settle-seconds 7
 - Result: pass
 - Summary: Final authenticated browser audit passed with 9 pages, 0 console errors, 0 network failures, 0 blank pages, and 0 hydration errors.
-- Related commit hash: pending.
+- Related commit hash: b747954.
 
 ## 2026-05-31 10:47 +07
 - Task ID: DEBUG-ULT-001
 - Command: rg "password123|access_token|Authorization|Bearer |eyJ" reports\debug\browser scripts\debug\selenium_full_audit.py
 - Result: pass
 - Summary: No password, token, authorization header, or JWT-like strings found in browser artifacts/harness.
-- Related commit hash: pending.
+- Related commit hash: b747954.
 

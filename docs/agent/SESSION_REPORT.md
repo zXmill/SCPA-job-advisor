@@ -157,3 +157,4 @@ Branch: `agent-run`
 - `docker compose ps`, gateway `/health`, and gateway `/ready` passed.
 - Live Alembic database was upgraded from `001_initial_schema` to `012_ab_testing_and_monitoring (head)`.
 - Final Selenium audit against the rebuilt runtime passed with 0 console errors, 0 network failures, 0 blank pages, and 0 hydration errors.
+- Commit: `b747954` (`fix: repair docker runtime packaging`).

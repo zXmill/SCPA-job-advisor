@@ -39,7 +39,7 @@ Validation:
 
 ## FIX-DOCKER-RUNTIME-BUILD
 
-Status: implemented, full compose build/up passed, current runtime healthy.
+Status: committed in `b747954`, full compose build/up passed, current runtime healthy.
 
 Related hypotheses: `H1-DOCKER-GATEWAY-REQ`, `H2-DOCKER-CONTEXT`, `H3-DOCKER-GATEWAY-CMD`, and discovered `H5-DOCKER-PIPELINE-PACKAGE`.
 

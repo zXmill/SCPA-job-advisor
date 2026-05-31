@@ -12,7 +12,7 @@ Docker/runtime fixed; broader audit remaining
 DEBUG-ULT-001
 
 ## Latest Commit Hash
-Root: `342edb0` (`fix: persist recommendation served slates`).
+Root: `b747954` (`fix: repair docker runtime packaging`).
 
 ## Current Git Branch
 `agent-run`
@@ -64,6 +64,7 @@ Root: `342edb0` (`fix: persist recommendation served slates`).
 - Full `docker compose up -d --build` passes and all services are healthy.
 - Live DB has been migrated to Alembic head `012_ab_testing_and_monitoring`.
 - Final authenticated Selenium audit passes against the rebuilt current runtime.
+- Docker/runtime fix committed as `b747954`.
 - `morph-mcp` was requested but is not exposed as a callable tool in this session.
 
 ## Commands Already Run

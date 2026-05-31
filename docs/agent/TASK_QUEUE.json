@@ -1691,8 +1691,8 @@
         ".\\.venv\\Scripts\\python.exe scripts\\debug\\selenium_full_audit.py --output reports\\debug\\browser --headless --email <demo-email> --password <redacted> --settle-seconds 7"
       ],
       "validation_status": "passed",
-      "commit": "342edb0",
-      "notes": "Initialization commit 0b55041; baseline/hypotheses commit 1fb59e5; Selenium harness commit 2ad62bc; served-slate fix commit 342edb0. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass. Fixed gateway requirements/context/CMD Docker failures and pipeline package-entrypoint Docker failure. Selenium authenticated browser audit found recommendation feedback 500 from missing served_slates row; current source persists served_slates/served_slate_items before returning recommendations. Focused, adjacent, and full backend tests pass. Full compose build/up, health/ready probes, Alembic upgrade head, and final Selenium audit pass. Docker/runtime fix commit is pending."
+      "commit": "342edb0, b747954",
+      "notes": "Initialization commit 0b55041; baseline/hypotheses commit 1fb59e5; Selenium harness commit 2ad62bc; served-slate fix commit 342edb0; Docker/runtime fix commit b747954. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass. Fixed gateway requirements/context/CMD Docker failures and pipeline package-entrypoint Docker failure. Selenium authenticated browser audit found recommendation feedback 500 from missing served_slates row; current source persists served_slates/served_slate_items before returning recommendations. Focused, adjacent, and full backend tests pass. Full compose build/up, health/ready probes, Alembic upgrade head, and final Selenium audit pass."
     }
   ]
 }

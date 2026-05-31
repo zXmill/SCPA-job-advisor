@@ -132,6 +132,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Full `docker compose up -d --build` passes; postgres, scraper, SBERT, NCF, DQN, pipeline, and gateway are healthy.
 - Live database migration validation: `alembic upgrade head` passed and `alembic current` reports `012_ab_testing_and_monitoring (head)`.
 - Final authenticated Selenium audit against the rebuilt runtime passed with 9 pages, 0 console errors, 0 network failures, 0 blank pages, and 0 hydration errors.
+- Commit: `b747954` (`fix: repair docker runtime packaging`).
 
 ## Next Task
-Continue `DEBUG-ULT-001`: commit Docker/runtime fix and evidence, then continue remaining API/model/security audits.
+Continue `DEBUG-ULT-001`: continue remaining API/model/security audits.
