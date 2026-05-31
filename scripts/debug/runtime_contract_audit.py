@@ -839,11 +839,12 @@ def audit_recommendations_cancellation(
     add_check(
         scenario,
         "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
-        "targeted recommendations navigation scenario captures cancellation signal",
-        bool(canceled),
+        "targeted recommendations navigation scenario stays stable during rapid navigation",
+        not state["timeout_texts"],
         canceled_request_count=len(canceled),
         canceled_urls=[event.get("url", "") for event in canceled[:8]],
         throttle_enabled=throttle_enabled,
+        timeout_texts=state["timeout_texts"],
     )
     add_check(
         scenario,
