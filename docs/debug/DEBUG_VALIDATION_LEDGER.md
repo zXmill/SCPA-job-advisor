@@ -1,6 +1,6 @@
 # Debug Validation Ledger
 
-Updated: 2026-05-31 21:41 +07
+Updated: 2026-06-01 02:34 +07
 
 | Timestamp | Command | Result | Related ID | Summary |
 | --- | --- | --- | --- | --- |
@@ -99,3 +99,11 @@ Updated: 2026-05-31 21:41 +07
 | 2026-05-31 21:38 +07 | `rg -n "<redacted secret-patterns>" reports/debug/runtime_contract scripts/debug/runtime_contract_audit.py` | pass | SECRET-SCAN | No demo password, demo email, token, bearer header, refresh token, or JWT-like value found in final runtime artifacts or harness. |
 | 2026-05-31 21:40 +07 | `git -C frontend commit -m "fix: harden runtime fetch cancellation contract"` | pass | BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC | Created nested frontend fix commit `7f746fe`. |
 | 2026-05-31 21:41 +07 | `git commit -m "fix: allow local production frontend CORS origin"` | pass | BUG-RUNTIME-PROD-CORS-LOCALHOST-3001 | Created root gateway/config fix commit `305391e`. |
+| 2026-06-01 02:34 +07 | `git log --oneline -25`; `git status --short --branch`; required debug docs and nested frontend git state reads | pass | DATA-QUALITY-PRODUCT-UI-001 | Recovered from repository state. Latest root commit is `f6c97cc`; previous runtime-contract pass is complete; repo remains dirty with unrelated pre-existing files. |
+| 2026-06-01 02:34 +07 | `node C:\Users\ACER\.codex\skills\impeccable\scripts\context.mjs`; read `reference/product.md` | pass | IMPECCABLE-DATA-QUALITY-UI | Product UI context loaded for frontend quality decisions. |
+| 2026-06-01 02:34 +07 | `docker compose ps` | pass | DATA-QUALITY-RUNTIME | Local Docker runtime is up and services are healthy. |
+| 2026-06-01 02:34 +07 | `Invoke-WebRequest http://localhost:9000/api/skills/search?q=s&limit=20` | fail | BUG-DATA-SKILL-AUTOCOMPLETE-SPARSE | Returned only `SQL` and `English`, confirming sparse suggestions. |
+| 2026-06-01 02:34 +07 | `Invoke-WebRequest http://localhost:9000/api/skills/search?q=machine&limit=20`; `q=data` | fail | BUG-DATA-SKILL-AUTOCOMPLETE-SPARSE | Both returned empty result sets. |
+| 2026-06-01 02:34 +07 | `docker compose exec -T postgres psql ... select count(*) from skills` | fail | BUG-DATA-SKILL-AUTOCOMPLETE-SPARSE | Runtime `skills` table contains only 3 rows: English, Python, SQL. |
+| 2026-06-01 02:34 +07 | `Invoke-WebRequest http://localhost:9000/api/jobs?page=1&limit=5` | fail | BUG-DATA-JOB-DESCRIPTION-SHALLOW | Returned short sample-like job descriptions and no structured detail fields. |
+| 2026-06-01 02:34 +07 | `docker compose exec -T postgres psql ... jobs shallow description summary` | fail | BUG-DATA-JOB-DESCRIPTION-SHALLOW | Runtime DB has 2645 jobs, 2614 with descriptions under 200 characters. |

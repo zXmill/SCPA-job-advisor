@@ -1,6 +1,6 @@
 # Debug Evidence
 
-Updated: 2026-05-31 21:41 +07
+Updated: 2026-06-01 02:34 +07
 
 ## Bootstrap Evidence
 - Repository cwd: `E:\TUGAS AKHIR\SCPA`.
@@ -172,3 +172,27 @@ Updated: 2026-05-31 21:41 +07
   - Gateway restart checks passed in dev and prod; gateway became healthy and the jobs page retained no permanent timeout state.
 - Final artifact paths: `reports/debug/runtime_contract/runtime_contract_report.md`, `summary.json`, `network.ndjson`, `console.ndjson`, `gateway_logs.ndjson`, `screenshots/`, and `dom_snapshots/`.
 - Final secret scan over `reports/debug/runtime_contract` and `scripts/debug/runtime_contract_audit.py` found no demo password, demo email, token value, bearer header, refresh token, or JWT-like value.
+
+## Data Quality Product UI Recovery Evidence
+- `git log --oneline -25` on 2026-06-01 02:34 +07 shows latest root commit `f6c97cc docs: record runtime contract debugging evidence`.
+- `git status --short --branch` confirms branch `agent-run` remains dirty with pre-existing unrelated modified/untracked files. These must not be staged.
+- `git -C frontend log --oneline -10` shows latest nested frontend commit `7f746fe fix: harden runtime fetch cancellation contract`.
+- `git -C frontend status --short --branch` confirms nested frontend still has pre-existing dirty/untracked files.
+- `impeccable` product context was loaded from `PRODUCT.md` and `reference/product.md` was read for product UI quality rules.
+- User screenshots show a blue ring overlapping theme toggle and skill input. Current code confirms `frontend/src/components/AppLayout.tsx` renders `custom-cursor-dot` and `custom-cursor-ring`, and `frontend/src/app/globals.css` gives the ring fixed positioning and `z-index: 9998`.
+- Live Docker runtime is up: `docker compose ps` shows postgres, gateway, scraper, sbert, ncf, dqn, and pipeline healthy.
+- Live skill search evidence:
+  - `GET http://localhost:9000/api/skills/search?q=s&limit=20` returned only `SQL` and `English`.
+  - `GET http://localhost:9000/api/skills/search?q=machine&limit=20` returned `[]`.
+  - `GET http://localhost:9000/api/skills/search?q=data&limit=20` returned `[]`.
+  - PostgreSQL `skills` count is `3`, with rows `English`, `Python`, and `SQL`.
+- Live job data evidence:
+  - `GET http://localhost:9000/api/jobs?page=1&limit=5` returned short sample-like descriptions and sample-like company rows.
+  - PostgreSQL jobs summary: `total_jobs=2645`, `missing_source_url=12`, `shallow_desc=2614`, and `distinct_fingerprints=2645`.
+  - Example rows include short descriptions around 130 to 181 characters and `match_data.skills` arrays with no structured required/preferred skill fields.
+- Static code evidence:
+  - `services/scraper/main.py::scrape_run` returns `sample()` when no seed URLs are configured or when no unique jobs are found.
+  - `services/pipeline/stages/stage_1_scrape.py` returns `FALLBACK_JOBS` on failure and when scraper jobs are empty.
+  - `scripts/run_full_pipeline.py` imports and merges `scripts.sample_dataset` into pipeline jobs and calls scraper `/sample`.
+  - `services/pipeline/pipeline/extractors/skills.py` contains a small hand list plus fake generated `Skill 001` to `Skill 429`.
+  - `services/gateway/main.py::_job_skill_gap` builds required skills only from `match_data.skills`.

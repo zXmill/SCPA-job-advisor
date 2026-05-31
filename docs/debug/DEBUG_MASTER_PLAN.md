@@ -1,19 +1,28 @@
 # Ultimate Debugging Master Plan
 
-Updated: 2026-05-31 21:41 +07
+Updated: 2026-06-01 02:34 +07
 
 ## Session
-- Task ID: RUNTIME-CONTRACT-DEBUG-001
+- Task ID: DATA-QUALITY-PRODUCT-UI-001
 - Branch: agent-run
-- Active Phase: Bounded Full-Stack Runtime Contract Debugging Pass complete.
+- Active Phase: Real-data job description, skill taxonomy, skill-gap context, and product UI evidence/fix pass.
 
 ## Active Task
-Runtime fetch, timeout, cancellation, auth/session, gateway contract, and UI state consistency defects have been reproduced, fixed where confirmed, and validated in dev and production-mode browser audits.
+Investigate and remediate user-confirmed product-quality defects where job detail descriptions are too shallow, skill extraction/gap has too little context, skill autocomplete is too sparse, runtime paths still use sample jobs, and a global custom cursor ring looks like a stuck loader over controls.
 
 ## Next Exact Action
-Stop this phase after final documentation commit. Next unfinished debugging work should resume from repository state and select a new bounded phase; do not continue into taxonomy, scraper, ML training, or broad frontend redesign from this runtime pass.
+Commit the docs-only evidence update, then apply scoped product fixes in this order: custom cursor overlay, runtime sample fallback removal/purge path, rich job description storage/parser/API/frontend contract, real skill taxonomy baseline/search.
+
+## Data Quality Evidence Status
+- User supplied manual screenshots of shallow job detail, 0% skill gap with one generic required skill, sparse skill autocomplete, and blue ring overlay around theme/skill controls.
+- Live API confirmed `/api/skills/search?q=s&limit=20` returns only `SQL` and `English`.
+- Live API confirmed `/api/skills/search?q=machine&limit=20` and `q=data` return empty results.
+- Live PostgreSQL confirmed `2645` jobs and `2614` shallow descriptions under 200 characters.
+- Current code confirms runtime sample/fallback paths in scraper, pipeline stage 1, and full pipeline scripts.
+- Current code confirms `custom-cursor-ring` with high z-index is rendered across product UI surfaces.
 
 ## Runtime Audit Status
+- Complete in `f6c97cc`; retained here as prior phase context.
 - Harness commit: `0bb7c54 test: add runtime contract browser audit`.
 - Bootstrap fix commit: `745ac6f test: fix runtime audit storage bootstrap`.
 - Harness hardening commit: `812da0c test: harden runtime contract browser audit`.
@@ -33,12 +42,16 @@ Stop this phase after final documentation commit. Next unfinished debugging work
 - Theme product fix was not made because final runtime evidence did not reproduce a stuck spinner or persistence defect.
 
 ## Guardrails
-- Do not start broad award-style frontend redesign during this bounded runtime pass.
-- Do not fix P2 suggestions (performance, duplication, dead code) unless they are a prerequisite for a confirmed runtime-contract fix.
+- Do not use or generate sample job data for runtime job catalog fixes.
+- Do not scrape LinkedIn or any other site in a way that violates terms, robots restrictions, or the existing scraper allowlist/SSRF contract.
+- If real source access is blocked, return controlled empty/degraded results and document the blocker instead of fabricating jobs.
+- Keep sample datasets only for explicit test/evaluation paths unless the user later asks to remove all test fixtures too.
+- Do not start ML training or model redesign.
+- Do not start broad unrelated frontend redesign.
+- Do not fix P2 suggestions unless needed for these confirmed P0/P1 data quality defects.
 - Do not commit unrelated dirty files.
 - Keep commits scoped by finding.
 - No `git add .`.
-- Do not start ML training, scraper redesign, taxonomy work, job-description enrichment, or unrelated feature work.
 
 ## Previous Work
 - FIX-API-FEEDBACK-SLATE, FIX-DOCKER-RUNTIME-BUILD, FIX-API-RUNTIME-GUARDS are all committed (342edb0, b747954, 6366b67).

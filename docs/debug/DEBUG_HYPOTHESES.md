@@ -1,8 +1,65 @@
 # Debug Hypotheses
 
-Updated: 2026-05-31 21:20 +07
+Updated: 2026-06-01 02:34 +07
 
 Status: generated from static inventory and baseline validation, reconciled after served-slate/Docker fixes, and updated after gateway API runtime probing. Fixes are allowed only after the related reproduction evidence is recorded.
+
+## Data Quality Product UI Hypotheses
+
+### H-DATA-JOB-DESCRIPTION-SHALLOW
+Hypothesis: scraper and pipeline runtime paths store listing-card summaries instead of detail-page descriptions, and the database/API contract cannot preserve structured job sections.
+
+Expected: real scraped jobs keep source URL, full `description_text`, parsed sections, responsibilities, requirements, nice-to-have, seniority, employment type, job function, industry, and extracted skills when source detail is legally and technically available.
+
+Actual: confirmed. Live DB has `2614` shallow descriptions under 200 characters out of `2645` jobs. Current schema has no rich job-description columns. Gateway job detail returns only `description` plus legacy `match_data.skills`.
+
+Test: add parser/storage/API tests and run a real-data scrape path that refuses sample fallback.
+
+Evidence location: `docs/debug/DATA_QUALITY_FINDINGS.md`.
+
+### H-DATA-SAMPLE-JOBS-IN-RUNTIME
+Hypothesis: production/runtime scraper and pipeline paths silently use local sample/fallback jobs when real scraping is unavailable.
+
+Expected: runtime returns controlled empty/degraded results unless real configured sources return jobs; sample data is restricted to explicit test/evaluation flows.
+
+Actual: confirmed in current code. `scrape_run` calls `sample()`, pipeline stage 1 returns `FALLBACK_JOBS`, and full pipeline merges `data/sample` jobs.
+
+Test: focused tests should verify no configured source yields empty/degraded output, not fake jobs, while explicit test-only fixture paths remain available for tests.
+
+Evidence location: `docs/debug/DATA_QUALITY_FINDINGS.md`.
+
+### H-DATA-SKILL-TAXONOMY-SPARSE
+Hypothesis: skill autocomplete is sparse because the runtime `skills` table is tiny and the production extractor uses a fake generated taxonomy instead of an authorized real taxonomy.
+
+Expected: common skill queries return several real-world suggestions with aliases, category, source, and confidence metadata.
+
+Actual: confirmed. Live `skills` table contains only three rows and API queries for `machine` and `data` return empty results. Current extractor contains fake generated `Skill 001` entries.
+
+Test: taxonomy builder/search tests for `s`, `machine`, `data`, `docker`, `kubernetes`, `english`, `credit`, `airflow`, `terraform`, `komunikasi`, and `analisis`.
+
+Evidence location: `docs/debug/DATA_QUALITY_FINDINGS.md`.
+
+### H-DATA-SKILL-GAP-LOW-CONTEXT
+Hypothesis: skill gap is inaccurate because it reads only `match_data.skills` from shallow scraped text instead of rich required/preferred/extracted skill fields.
+
+Expected: skill gap prioritizes required skills from parsed sections, then preferred/extracted skills, and uses legacy `match_data.skills` only as a fallback.
+
+Actual: confirmed statically. `_job_skill_gap` selects `match_data` only; user screenshot shows a one-skill gap for a Data Scientist role.
+
+Test: focused skill-gap test with a rich job row containing required/preferred/extracted skill fields.
+
+Evidence location: `docs/debug/DATA_QUALITY_FINDINGS.md`.
+
+### H-FE-CURSOR-RING-LOADER-CONFUSION
+Hypothesis: the reported stuck theme/loading spinner is actually the global custom cursor ring overlay rendered above product controls.
+
+Expected: product controls use normal cursor behavior and do not show decorative blue circular overlays.
+
+Actual: strongly confirmed by screenshots and code. `custom-cursor-ring` is fixed, blue, high z-index, and expands over buttons/inputs.
+
+Test: remove or disable the custom cursor on product app surfaces; use Selenium screenshots around theme toggle and skill input.
+
+Evidence location: `docs/debug/DATA_QUALITY_FINDINGS.md`.
 
 ## Runtime Contract Hypotheses
 
