@@ -1,6 +1,6 @@
 # Code Review Remediation Plan
 
-Updated: 2026-05-31 20:29 +07
+Updated: 2026-05-31 20:34 +07
 
 ## Review Context
 - Branch: `agent-run`
@@ -17,11 +17,10 @@ Updated: 2026-05-31 20:29 +07
    - Added `test_rotation_marks_jti_as_used_in_redis` and `test_reused_refresh_token_after_rotation_fails`
    - Validation: 22 tests passed
 
-2. **R-2: Hot-path index migration uses non-concurrent DDL** 🔴 **REOPENED**
-   - Created follow-up migration `db/migrations/013_hot_indexes_concurrent.py`
-   - Current migration emits `CREATE INDEX CONCURRENTLY IF NOT EXISTS`, but it changes isolation level after Alembic has opened a transaction.
-   - Runtime evidence: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` fails with `sqlalchemy.exc.InvalidRequestError: isolation_level may not be altered unless rollback() or commit() is called first`.
-   - Required fix: use Alembic's non-transactional DDL pattern, then rerun `alembic upgrade head` and `alembic current`.
+2. **R-2: Hot-path index migration uses non-concurrent DDL** ✅ **FIXED**
+   - Updated `db/migrations/009_reco_hot_indexes.py` to build/drop hot indexes with PostgreSQL `CONCURRENTLY` inside Alembic `autocommit_block()`.
+   - Updated `db/migrations/013_hot_indexes_concurrent.py` as an idempotent repair migration for databases that reached `012` before the 009 deploy-safety fix.
+   - Validation: `alembic downgrade 012_ab_testing_and_monitoring`, `alembic upgrade head`, `alembic current`, and `alembic heads` all pass.
 
 3. **R-3: Gateway startup blocks on non-critical ML services** ✅ **FIXED**
    - Removed `depends_on: pipeline: condition: service_healthy` from gateway's compose block
@@ -65,7 +64,7 @@ Updated: 2026-05-31 20:29 +07
 - Dead code cleanup (_job_has_indonesia_signal, _get_active_experiments, DEFAULT_SKILL_TAXONOMY dead issue, TokenManager refresh methods)
 
 ## Rejected / Stale
-None. All P0/P1 findings were confirmed against current source. R-2 is reopened because migration validation failed after the previous docs marked it complete.
+None. All P0/P1 findings were confirmed against current source and fixed.
 
 ## Commit Log
 1. `docs/debug/COMPACT_RECOVERY.md`, `docs/debug/DEBUG_MASTER_PLAN.md`, `docs/debug/CODE_REVIEW_REMEDIATION_PLAN.md` — reconciliation
@@ -82,9 +81,15 @@ None. All P0/P1 findings were confirmed against current source. R-2 is reopened 
 - `docker compose config --quiet && docker compose config --services` → pass
 - `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current` → current database remains at `012_ab_testing_and_monitoring`
 - `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` → fail on `013_hot_indexes_concurrent` autocommit handling
+- `.\.venv\Scripts\python.exe -m py_compile db\migrations\009_reco_hot_indexes.py db\migrations\013_hot_indexes_concurrent.py` → pass
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` after fix → pass
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini downgrade 012_ab_testing_and_monitoring` → pass
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` after downgrade → pass
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current` → `013_hot_indexes_concurrent (head)`
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads` → `013_hot_indexes_concurrent (head)`
 
 ## Current Active Task
-Fix R-2 only: update `db/migrations/013_hot_indexes_concurrent.py` to use Alembic `autocommit_block()` correctly for concurrent index create/drop.
+Complete. All P0/P1 remediation findings have been triaged, fixed or deferred by scope, validated, documented, and committed.
 
 ## Next Exact Action
-Patch migration 013, run `py_compile`, `alembic upgrade head`, `alembic current`, `alembic heads`, and commit the product fix separately from this state reconciliation.
+Stop per the remediation pass stop condition. Do not start P2 cleanup or unrelated runtime debugging in this phase.

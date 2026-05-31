@@ -1,6 +1,6 @@
 # Debug Database Report
 
-Updated: 2026-05-31 20:29 +07
+Updated: 2026-05-31 20:34 +07
 
 Status: running Docker PostgreSQL schema reconciled to repo head after API runtime probe found drift.
 
@@ -33,6 +33,6 @@ Status: running Docker PostgreSQL schema reconciled to repo head after API runti
 - Test cleanup now truncates `feedback_events`, `served_slate_items`, and `served_slates` to keep DB tests isolated.
 
 ## Code Review Remediation Migration Finding
-- R-2 is reopened. `013_hot_indexes_concurrent` is the Alembic head, but the local database remains at `012_ab_testing_and_monitoring`.
-- `alembic upgrade head` fails inside `013_hot_indexes_concurrent.py` because the migration calls `conn.execution_options(isolation_level="AUTOCOMMIT")` after Alembic has initialized a transaction.
-- Required fix: use Alembic's `autocommit_block()` for `CREATE INDEX CONCURRENTLY` and any concurrent downgrade DDL, then rerun `upgrade head` and `current`.
+- R-2 is fixed. `009_reco_hot_indexes.py` now creates/drops hot indexes with PostgreSQL concurrent DDL inside Alembic `autocommit_block()`, so fresh deployments do not create these indexes with long write-blocking index builds.
+- `013_hot_indexes_concurrent.py` is retained as an idempotent repair migration for databases already at `012`; it now uses `autocommit_block()` correctly and does not drop 009-owned indexes on downgrade.
+- Validation passed: `upgrade head`, `downgrade 012_ab_testing_and_monitoring`, `upgrade head`, `current`, and `heads`.

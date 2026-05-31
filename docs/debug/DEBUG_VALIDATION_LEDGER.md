@@ -1,6 +1,6 @@
 # Debug Validation Ledger
 
-Updated: 2026-05-31 20:29 +07
+Updated: 2026-05-31 20:34 +07
 
 | Timestamp | Command | Result | Related ID | Summary |
 | --- | --- | --- | --- | --- |
@@ -77,3 +77,9 @@ Updated: 2026-05-31 20:29 +07
 | 2026-05-31 20:29 +07 | `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current` | pass | REMEDIATION-02 | Current database revision is `012_ab_testing_and_monitoring`, not migration head. |
 | 2026-05-31 20:29 +07 | `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads` | pass | REMEDIATION-02 | Repo head remains `013_hot_indexes_concurrent (head)`. |
 | 2026-05-31 20:29 +07 | `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` | fail | REMEDIATION-02 | Migration 013 fails because it alters isolation level after Alembic has initialized a transaction. |
+| 2026-05-31 20:31 +07 | `.\.venv\Scripts\python.exe -m py_compile db\migrations\009_reco_hot_indexes.py db\migrations\013_hot_indexes_concurrent.py` | pass | REMEDIATION-02 | Migration files compile after concurrent DDL fix. |
+| 2026-05-31 20:32 +07 | `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` | pass | REMEDIATION-02 | Migration 013 applied successfully after using Alembic `autocommit_block()`. |
+| 2026-05-31 20:32 +07 | `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current`; `heads` | pass | REMEDIATION-02 | Database and repo both report `013_hot_indexes_concurrent (head)`. |
+| 2026-05-31 20:33 +07 | `docker compose config --quiet` | pass | REMEDIATION-03,04,05 | Compose remains valid after remediation. |
+| 2026-05-31 20:33 +07 | `.\.venv\Scripts\python.exe -m pytest tests/test_security.py tests/test_saved_jobs_skip.py tests/test_market_aware_skill_path.py -q` | pass | REMEDIATION-01,06,07,08 | Focused remediation regression suite passed: 32 passed, 1 warning. |
+| 2026-05-31 20:34 +07 | `.\.venv\Scripts\python.exe -m alembic -c alembic.ini downgrade 012_ab_testing_and_monitoring`; `upgrade head`; `current`; `heads` | pass | REMEDIATION-02 | Downgrade/upgrade smoke passed; current database is back at `013_hot_indexes_concurrent (head)`. |

@@ -1,6 +1,6 @@
 # Debug Evidence
 
-Updated: 2026-05-31 20:29 +07
+Updated: 2026-05-31 20:34 +07
 
 ## Bootstrap Evidence
 - Repository cwd: `E:\TUGAS AKHIR\SCPA`.
@@ -100,3 +100,15 @@ Updated: 2026-05-31 20:29 +07
 - `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current` reported current database revision `012_ab_testing_and_monitoring`.
 - `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` failed while running `013_hot_indexes_concurrent`.
 - Failure root evidence: `sqlalchemy.exc.InvalidRequestError: This connection has already initialized a SQLAlchemy Transaction() object via begin() or autobegin; isolation_level may not be altered unless rollback() or commit() is called first.`
+
+## Code Review Remediation Final Evidence
+- Product fix commit: `6f49402 db: make recommendation hot indexes deploy safe`.
+- `db/migrations/009_reco_hot_indexes.py` now creates and drops the hot jobs/application indexes with `CREATE/DROP INDEX CONCURRENTLY` inside Alembic `autocommit_block()`.
+- `db/migrations/013_hot_indexes_concurrent.py` now uses `autocommit_block()` and acts as an idempotent repair migration for databases that reached `012` before the 009 change.
+- `.\.venv\Scripts\python.exe -m py_compile db\migrations\009_reco_hot_indexes.py db\migrations\013_hot_indexes_concurrent.py` passed.
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` passed after the fix.
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini downgrade 012_ab_testing_and_monitoring` passed.
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` passed after the downgrade smoke.
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current` reported `013_hot_indexes_concurrent (head)`.
+- `.\.venv\Scripts\python.exe -m pytest tests/test_security.py tests/test_saved_jobs_skip.py tests/test_market_aware_skill_path.py -q` passed with 32 tests and 1 warning.
+- `docker compose config --quiet` passed.

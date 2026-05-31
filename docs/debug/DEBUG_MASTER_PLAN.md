@@ -1,6 +1,6 @@
 # Ultimate Debugging Master Plan
 
-Updated: 2026-05-31 20:29 +07
+Updated: 2026-05-31 20:34 +07
 
 ## Session
 - Task ID: CODE-REVIEW-REMEDIATION-001
@@ -8,10 +8,10 @@ Updated: 2026-05-31 20:29 +07
 - Active Phase: Code Review Remediation Pass — deploy safety and data-signal integrity.
 
 ## Active Task
-Repair the reopened R-2 deploy-safe index migration finding. Current source uses concurrent index DDL, but the migration fails because it changes isolation level after Alembic has opened a transaction.
+Complete. The P0/P1 code review remediation pass is closed after the R-2 deploy-safe migration repair.
 
 ## Next Exact Action
-Patch `db/migrations/013_hot_indexes_concurrent.py` to use Alembic `autocommit_block()` for `CREATE INDEX CONCURRENTLY` and concurrent downgrade drops, then run migration validation.
+Stop per the phase instructions. Resume a new phase only if requested.
 
 ## Guardrails
 - Do not fix P2 suggestions (performance, duplication, dead code) unless they are a prerequisite for a P0/P1 fix.
