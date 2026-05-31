@@ -485,6 +485,23 @@ def _job_has_indonesia_signal(job: dict[str, Any]) -> bool:
     return any(term in haystack for term in INDONESIA_JOB_TERMS)
 
 
+def _coerce_posted_at(value: Any) -> datetime:
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str) and value.strip():
+        raw_value = value.strip()
+        if raw_value.endswith("Z"):
+            raw_value = f"{raw_value[:-1]}+00:00"
+        try:
+            parsed = datetime.fromisoformat(raw_value)
+            if parsed.tzinfo is not None:
+                return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+            return parsed
+        except ValueError:
+            logger.warning("Invalid posted_at timestamp from pipeline: %s", value)
+    return datetime.now()
+
+
 async def _upsert_jobs_to_db(db: AsyncSession, ranked: list[dict[str, Any]]) -> None:
     """Bulk upsert recommended jobs into the database, handling ENUM mapping."""
     db_jobs_params = []
@@ -509,7 +526,7 @@ async def _upsert_jobs_to_db(db: AsyncSession, ranked: list[dict[str, Any]]) -> 
             "employment_mode": clean_employment_mode(item.get("employment_mode")),
             "description": item.get("description") or None,
             "experience_level": clean_experience_level(item.get("experience_level")),
-            "posted_at": item.get("posted_at") or datetime.now(),
+            "posted_at": _coerce_posted_at(item.get("posted_at")),
             "source": clean_job_source(item.get("source")),
             "is_active": item.get("is_active", True),
             "match_data": json.dumps({
@@ -2718,7 +2735,7 @@ async def create_applications(
     uid = user["id"]
     created_ids: list[str] = []
     for job_id in body.job_ids:
-        db_job_uuid = to_uuid(job_id)
+        db_job_uuid = await _require_job_uuid(db, job_id)
         app_id = str(uuid.uuid4())
         await db.execute(
             text(
@@ -2981,8 +2998,22 @@ async def recommendation_feedback(
     user = await _require_user(db, token_payload)
     uid = str(user["id"])
 
-    job_uuid = to_uuid(body.job_id)
+    job_uuid = await _require_job_uuid(db, body.job_id)
     slate_uuid = _coerce_uuid(body.served_slate_id or body.recommendation_id)
+    if (body.served_slate_id or body.recommendation_id) and slate_uuid is None:
+        raise HTTPException(status_code=400, detail="Invalid served slate ID")
+    if slate_uuid is not None:
+        slate_row = (
+            await db.execute(
+                text(
+                    "SELECT id FROM served_slates "
+                    "WHERE id = :slate_id AND user_id = :user_id"
+                ),
+                {"slate_id": slate_uuid, "user_id": uuid.UUID(uid)},
+            )
+        ).mappings().first()
+        if not slate_row:
+            raise HTTPException(status_code=404, detail="Served slate not found")
     reward = _feedback_reward(body.event, body.dwell_ms)
     metadata = {
         "recommendation_id": body.recommendation_id,

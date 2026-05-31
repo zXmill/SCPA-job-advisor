@@ -117,3 +117,39 @@ async def test_feedback_after_recommendations_uses_persisted_served_slate(
         )
     ).scalar_one()
     assert feedback_count == 1
+
+
+async def test_feedback_with_unknown_served_slate_returns_404(
+    client,
+    db_session: AsyncSession,
+) -> None:
+    """Invalid slate IDs must be rejected before they hit the FK constraint."""
+    registration = await _register(client)
+    headers = _auth_header(registration["access_token"])
+    job_id = uuid.uuid4()
+    missing_slate_id = uuid.uuid4()
+
+    await db_session.execute(
+        text(
+            "INSERT INTO jobs (id, title, company, posted_at, is_active) "
+            "VALUES (:id, 'Runtime Probe Job', 'SCPA Test', NOW(), true)"
+        ),
+        {"id": job_id},
+    )
+    await db_session.commit()
+
+    response = await client.post(
+        "/api/recommendations/feedback",
+        headers=headers,
+        json={
+            "job_id": str(job_id),
+            "recommendation_id": str(missing_slate_id),
+            "served_slate_id": str(missing_slate_id),
+            "event": "impression",
+            "rank": 0,
+            "slate_job_ids": [str(job_id)],
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Served slate not found"
