@@ -1,6 +1,6 @@
 # Debug Evidence
 
-Updated: 2026-05-31 21:09 +07
+Updated: 2026-05-31 21:20 +07
 
 ## Bootstrap Evidence
 - Repository cwd: `E:\TUGAS AKHIR\SCPA`.
@@ -135,3 +135,15 @@ Updated: 2026-05-31 21:09 +07
 - Dev gateway restart evidence: `docker compose restart gateway` returned success; gateway recovered healthy and jobs page retained no timeout state.
 - Production-mode evidence: blocked because login automation did not submit successfully; production-mode runtime contract remains unverified.
 - First audit captured 0 canceled request events, so user-observed canceled fetches still require targeted reproduction.
+
+## Runtime Contract Reproduction Evidence
+- Harness hardening commit: `812da0c test: harden runtime contract browser audit`.
+- Second audit command: `.\.venv\Scripts\python.exe scripts\debug\runtime_contract_audit.py --mode both --dev-url http://localhost:3000 --prod-url http://localhost:3001 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --restart-gateway --exercise-actions --settle-seconds 3`.
+- Second audit result: failed overall with 4 failed checks, 3 canceled request events, and 2 production CORS console errors.
+- Secret scan: `rg -n "password123|access_token|refresh_token|Authorization|Bearer |eyJ...|budi@example.com" reports/debug/runtime_contract scripts/debug/runtime_contract_audit.py` returned no matches.
+- Dev recommendations reproduction: network trace shows `/api/recommendations` loading failed with `net::ERR_ABORTED`; final DOM contained `Pencocokan AI memakan waktu terlalu lama. Coba lagi sebentar.` and `Coba Lagi`.
+- Dev jobs reproduction: targeted filter run captured canceled `GET /api/jobs?experience=entry&page=1&limit=25` and `GET /api/jobs?experience=mid&page=1&limit=25`, then successful `GET /api/jobs?experience=senior&page=1&limit=25` status 200. Final DOM still contained `Permintaan kehabisan waktu. Coba lagi.` and `Coba Lagi`.
+- Dev auth/session evidence: 6 `/api/auth/me` requests across 4 full navigations; final UI did not retain timeout text.
+- Dev theme evidence: repeated toggle passed after harness hardening; after clicks and reload, `data-theme=dark`, `colorScheme=dark`, and `localStorage.scpa_theme=dark`.
+- Dev gateway restart evidence: passed after second run.
+- Production-mode evidence: login reached `/api/auth/login`, but CORS preflight returned without `Access-Control-Allow-Origin` for origin `http://localhost:3001`; Chrome blocked the request.

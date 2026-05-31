@@ -1,6 +1,6 @@
 # Debug Hypotheses
 
-Updated: 2026-05-31 21:09 +07
+Updated: 2026-05-31 21:20 +07
 
 Status: generated from static inventory and baseline validation, reconciled after served-slate/Docker fixes, and updated after gateway API runtime probing. Fixes are allowed only after the related reproduction evidence is recorded.
 
@@ -11,9 +11,9 @@ Hypothesis: the frontend API client classifies browser `AbortError` as a 408 tim
 
 Expected: Abort/cancel is tracked separately from real timeout and cannot set final error state after a newer success.
 
-Actual: current `frontend/src/lib/api.ts` maps `AbortError` to `ApiError(408, 'Permintaan kehabisan waktu...')`; first runtime audit captured 0 canceled request events, so targeted cancellation reproduction is still required.
+Actual: confirmed. Current `frontend/src/lib/api.ts` maps `AbortError` to `ApiError(408, 'Permintaan kehabisan waktu...')`, and page code maps any `controller.signal.aborted` to timeout UI. Second runtime audit captured canceled jobs/recommendation requests and final false timeout UI.
 
-Test: run Selenium runtime-contract audit with jobs/recommendations request cancellation and inspect final DOM state.
+Test: fix current-request guards and rerun Selenium runtime-contract audit with jobs/recommendations cancellation.
 
 Evidence location: `reports/debug/runtime_contract/`.
 
@@ -22,7 +22,7 @@ Hypothesis: auth provider initialization or route navigation repeatedly calls `/
 
 Expected: authenticated state stabilizes with minimal `/api/auth/me` calls; dependent requests do not cascade into timeout UI.
 
-Actual: first runtime audit counted 6 `/api/auth/me` requests across 4 fast navigated routes in dev mode; production-mode evidence is still blocked by login automation.
+Actual: confirmed in dev. Runtime audit counted 6 `/api/auth/me` requests across 4 full navigated routes. Dashboard and profile also call `api.getMe()` in page data fetches, adding avoidable duplication on top of auth-provider refresh.
 
 Test: audit reload and fast navigation scenarios with request counts and final UI state.
 
@@ -33,7 +33,7 @@ Hypothesis: recommendation and learning-path routes can exceed frontend timeout 
 
 Expected: endpoint timeout policy matches gateway/model latency and returns controlled degraded state.
 
-Actual: manual recommendation timeout text observed; first dev audit did not show recommendation timeout after successful response. Previous model hypothesis noted SBERT p95 near 15s gateway timeout.
+Actual: partially confirmed as frontend cancellation handling. Second dev audit showed `/api/recommendations` canceled after about 15 seconds and final timeout UI. Model/gateway latency may still influence how often the timeout path is reached, but stale/cancel handling is the confirmed UI defect.
 
 Test: capture recommendation/learning-path request durations, gateway logs, and UI state in dev and production frontend modes.
 
@@ -44,7 +44,7 @@ Hypothesis: theme mounted/persistence behavior leaves the toggle icon or loading
 
 Expected: icon and `localStorage.scpa_theme` agree after repeated toggles and reload with no hydration warning.
 
-Actual: first dev audit observed no stuck spinner or hydration warning, but theme persistence failed because `localStorage.scpa_theme` remained null after repeated clicks and reload.
+Actual: stale after harness hardening. Second dev audit observed no stuck spinner, persisted `localStorage.scpa_theme=dark`, and no hydration warning. No product fix is currently justified for the theme toggle.
 
 Test: Selenium repeated-click scenario with screenshots and DOM/localStorage capture.
 

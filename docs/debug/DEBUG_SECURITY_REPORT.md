@@ -1,6 +1,6 @@
 # Debug Security Report
 
-Updated: 2026-05-31 09:12 +07
+Updated: 2026-05-31 21:20 +07
 
 Status: baseline static/test evidence recorded; active runtime probes pending.
 
@@ -22,3 +22,9 @@ Status: baseline static/test evidence recorded; active runtime probes pending.
 - Confirm gateway `/pipeline/run` is admin-only while pipeline `/pipeline/run` requires internal token.
 - Confirm production CORS and missing/weak JWT secret fail-fast behavior in process-level smoke tests.
 - Confirm scraper URL endpoint blocks unsafe redirect/private IP behavior in runtime, not just unit tests.
+
+## Runtime Contract CORS Evidence
+- Local production-mode frontend audit at `http://localhost:3001` was blocked by browser CORS when calling `http://localhost:9000/api/auth/login`.
+- Console evidence: Chrome reported no `Access-Control-Allow-Origin` for origin `http://localhost:3001`.
+- Current root cause: development CORS defaults and compose env include `http://localhost:3000,http://localhost:8000` but omit the documented local production-mode frontend origin `http://localhost:3001`.
+- This is a local runtime contract fix, not a weakening of production CORS. Production wildcard/empty-origin rejection remains required.

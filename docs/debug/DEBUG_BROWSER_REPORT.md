@@ -1,6 +1,6 @@
 # Debug Browser Report
 
-Updated: 2026-05-31 21:09 +07
+Updated: 2026-05-31 21:20 +07
 
 Status: route-level Selenium/Chrome audit passed against rebuilt Docker runtime. A bounded runtime-contract audit is now active because manual browser inspection found user-visible timeout/cancellation issues not covered by the prior harness.
 
@@ -76,6 +76,18 @@ Status: route-level Selenium/Chrome audit passed against rebuilt Docker runtime.
 - Dev gateway-restart scenario: passed; gateway became healthy and jobs page did not retain a timeout state.
 - Production-mode scenarios: blocked by login automation failure; not accepted as product evidence yet.
 - Canceled request events captured: 0. A targeted cancellation scenario is still required to test the user-observed DevTools cancellation pattern.
+
+## Runtime Contract Audit Run 2
+- Command: `python scripts/debug/runtime_contract_audit.py --mode both --dev-url http://localhost:3000 --prod-url http://localhost:3001 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --restart-gateway --exercise-actions --settle-seconds 3`.
+- Result: failed overall with 4 failed checks, 3 canceled request events, and 2 production CORS console errors.
+- Dev jobs scenario: normal load still passed.
+- Dev recommendations scenario: failed; `/api/recommendations` was canceled with `net::ERR_ABORTED` and final UI showed `Pencocokan AI memakan waktu terlalu lama. Coba lagi sebentar.`
+- Dev targeted jobs cancellation: failed; canceled `/api/jobs?experience=entry...` and `/api/jobs?experience=mid...` were captured, a later `/api/jobs?experience=senior...` response was 200, but final UI showed `Permintaan kehabisan waktu. Coba lagi.`
+- Dev targeted recommendations navigation: final UI recovered with recommendation cards and no timeout; this did not capture canceled events.
+- Dev auth/session: still failed bounded `/api/auth/me` count with 6 requests across 4 full navigations.
+- Dev theme toggle: passed; no stuck spinner, persisted `scpa_theme=dark`, and no hydration warning.
+- Dev gateway restart: passed.
+- Production-mode login: blocked by CORS preflight from `http://localhost:3001` to `http://localhost:9000/api/auth/login`.
 
 ## Artifact Files
 - `reports/debug/browser/browser_audit.md`

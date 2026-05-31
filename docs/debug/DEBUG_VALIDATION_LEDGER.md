@@ -1,6 +1,6 @@
 # Debug Validation Ledger
 
-Updated: 2026-05-31 21:09 +07
+Updated: 2026-05-31 21:20 +07
 
 | Timestamp | Command | Result | Related ID | Summary |
 | --- | --- | --- | --- | --- |
@@ -87,3 +87,5 @@ Updated: 2026-05-31 21:09 +07
 | 2026-05-31 20:52 +07 | `node C:\Users\ACER\.codex\skills\impeccable\scripts\context.mjs`; read `reference/product.md`; inspect frontend CSS/API/auth/theme files | pass | IMPECCABLE-RUNTIME-UI | Product UI context loaded. Broad redesign deferred by active phase scope; runtime UI correctness remains in scope. |
 | 2026-05-31 21:04 +07 | `python scripts\debug\runtime_contract_audit.py --mode both --dev-url http://localhost:3000 --prod-url http://localhost:3001 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --restart-gateway --exercise-actions --settle-seconds 3` | fail | RUNTIME-CONTRACT-DEBUG-001 | First audit produced artifacts under `reports/debug/runtime_contract/`; dev jobs/recommendations/gateway restart passed, dev auth/session and theme persistence failed, and production-mode scenarios were blocked by login automation. |
 | 2026-05-31 21:09 +07 | `.\.venv\Scripts\python.exe -m py_compile scripts\debug\runtime_contract_audit.py` | pass | RUNTIME-CONTRACT-DEBUG-001 | Runtime contract audit harness compiles after bootstrap fix. |
+| 2026-05-31 21:17 +07 | `.\.venv\Scripts\python.exe scripts\debug\runtime_contract_audit.py --mode both --dev-url http://localhost:3000 --prod-url http://localhost:3001 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --restart-gateway --exercise-actions --settle-seconds 3` | fail | RUNTIME-CONTRACT-DEBUG-001 | Second audit reproduced stale cancellation false timeout in jobs and recommendations, confirmed theme toggle passes, confirmed auth/me redundancy, and found production-mode CORS block for `localhost:3001`. |
+| 2026-05-31 21:20 +07 | `rg -n "password123|access_token|refresh_token|Authorization|Bearer |eyJ...|budi@example.com" reports/debug/runtime_contract scripts/debug/runtime_contract_audit.py` | pass | SECRET-SCAN | No demo password, demo email, token, bearer header, authorization header, refresh token, or JWT-like string found in runtime contract reports or harness. |

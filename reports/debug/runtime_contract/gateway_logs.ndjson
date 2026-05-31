@@ -1,0 +1,300 @@
+{"timestamp": "2026-05-31T14:17:51.126541+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:58076 - \"POST /api/learning-path HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.126541+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://dqn:8004/learning-path \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.126541+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:58084 - \"POST /api/learning-path HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.126541+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:58064 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.126541+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:58064 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.126541+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:58064 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.126541+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:58064 - \"OPTIONS /api/jobs?page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.126541+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:58064 - \"GET /api/jobs?page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.126541+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: GET https://media.licdn.com/dms/image/v2/D560BAQES67UOuKCEXw/company-logo_100_100/B56ZX4J2E.GoAQ-/0/1743625085609?e=2147483647&v=beta&t=iT8HrHlfh4KAqQjElEZEeDDQlZd9yz1vhAno5Ndnkqw \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.126541+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: GET https://media.licdn.com/dms/image/v2/D4E0BAQHAnKFB3xoVLw/company-logo_100_100/company-logo_100_100/0/1719817296589/zurich_insurance_company_ltd_logo?e=2147483647&v=beta&t=yIqPUFXrmKvU45KGW22WaJteBPy8hQUHTYuFyud9VFc \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.126541+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:58102 - \"GET /api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FD560BAQES67UOuKCEXw%2Fcompany-logo_100_100%2FB56ZX4J2E.GoAQ-%2F0%2F1743625085609%3Fe%3D2147483647%26v%3Dbeta%26t%3DiT8HrHlfh4KAqQjElEZEeDDQlZd9yz1vhAno5Ndnkqw&company=Life%20at%20RBMSoft HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.127084+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:58098 - \"GET /api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FD4E0BAQHAnKFB3xoVLw%2Fcompany-logo_100_100%2Fcompany-logo_100_100%2F0%2F1719817296589%2Fzurich_insurance_company_ltd_logo%3Fe%3D2147483647%26v%3Dbeta%26t%3DyIqPUFXrmKvU45KGW22WaJteBPy8hQUHTYuFyud9VFc&company=Zurich%20Insurance HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:44124 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:59332 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:36454 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:36462 - \"OPTIONS /api/jobs/saved HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:36462 - \"GET /api/jobs/saved HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:36454 - \"POST /api/recommendations HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:36454 - \"OPTIONS /api/recommendations/feedback HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:36462 - \"POST /api/recommendations/feedback HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: GET https://media.licdn.com/dms/image/v2/C560BAQH5oWQP8Q7hdw/company-logo_100_100/company-logo_100_100/0/1630651283418/practical_devsecops_logo?e=2147483647&v=beta&t=ZJPBsEu2heYfFQObQ3UGeNW30_lpTEIgEUKsz64BYvU \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.128148+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:36472 - \"GET /api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FC560BAQH5oWQP8Q7hdw%2Fcompany-logo_100_100%2Fcompany-logo_100_100%2F0%2F1630651283418%2Fpractical_devsecops_logo%3Fe%3D2147483647%26v%3Dbeta%26t%3DZJPBsEu2heYfFQObQ3UGeNW30_lpTEIgEUKsz64BYvU&company=Practical%20DevSecOps HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.128693+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: GET https://media.licdn.com/dms/image/v2/C560BAQG12pQe_GvUbQ/company-logo_100_100/company-logo_100_100/0/1651050740774/quantumblack_logo?e=2147483647&v=beta&t=LsjC3n_z0oZwm3edrcHQ5HFJG4Mfz3r05TxYLgeXWR8 \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.128693+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:36484 - \"GET /api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FC560BAQG12pQe_GvUbQ%2Fcompany-logo_100_100%2Fcompany-logo_100_100%2F0%2F1651050740774%2Fquantumblack_logo%3Fe%3D2147483647%26v%3Dbeta%26t%3DLsjC3n_z0oZwm3edrcHQ5HFJG4Mfz3r05TxYLgeXWR8&company=QuantumBlack%2C%20AI%20by%20McKinsey HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.129685+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:45442 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.129685+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.129685+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:50866 - \"POST /api/recommendations/feedback HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.129685+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.129685+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:50866 - \"POST /api/recommendations/feedback HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.129685+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: GET https://media.licdn.com/dms/image/v2/D560BAQEGLWHBZmzzcA/company-logo_100_100/B56ZYzlx2LHEAY-/0/1744622264274/crossinghurdles_logo?e=2147483647&v=beta&t=1OM5cqz9v87L6uTSe2nKqbGcsAXbKTfCK6rnGpN_Wzk \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.129685+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44692 - \"GET /api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FD560BAQEGLWHBZmzzcA%2Fcompany-logo_100_100%2FB56ZYzlx2LHEAY-%2F0%2F1744622264274%2Fcrossinghurdles_logo%3Fe%3D2147483647%26v%3Dbeta%26t%3D1OM5cqz9v87L6uTSe2nKqbGcsAXbKTfCK6rnGpN_Wzk&company=Crossing%20Hurdles HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:58678 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:50866 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44700 - \"GET /api/applications HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44704 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://dqn:8004/learning-path \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44694 - \"POST /api/learning-path HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44694 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44704 - \"OPTIONS /api/profile/completeness HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44694 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44708 - \"OPTIONS /api/job-alerts HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44700 - \"GET /api/applications HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44718 - \"GET /api/jobs/saved HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44704 - \"GET /api/profile/completeness HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44708 - \"GET /api/job-alerts HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 1, 'sent': 0, 'failed': 1}"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44708 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44704 - \"GET /api/jobs/saved HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44704 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44704 - \"GET /api/jobs?page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44704 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:59254 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:59238 - \"GET /api/applications HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://dqn:8004/learning-path \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:59262 - \"POST /api/learning-path HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44704 - \"POST /api/recommendations HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:52348 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:44704 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:38064 - \"GET /api/applications HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://dqn:8004/learning-path \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:38072 - \"POST /api/learning-path HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:38080 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:38080 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:38080 - \"GET /api/jobs?page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Shutting down"}
+{"timestamp": "2026-05-31T14:17:51.130230+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Waiting for application shutdown."}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Application shutdown complete."}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Finished server process [1]"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Started server process [1]"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Waiting for application startup."}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:Gateway started pipeline_url=http://pipeline:8005 p95_target_ms=150"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Application startup complete."}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42880 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42886 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42886 - \"GET /api/jobs?page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:37750 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:36558 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 3, 'sent': 0, 'failed': 3}"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:44792 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:56790 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 1, 'sent': 0, 'failed': 1}"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:33662 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:52620 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 9, 'sent': 0, 'failed': 9}"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:41212 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.130841+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:59662 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 4, 'sent': 0, 'failed': 4}"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:47006 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:49324 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 3, 'sent': 0, 'failed': 3}"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:40292 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:33300 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 1, 'sent': 0, 'failed': 1}"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:57670 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:48490 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:43436 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:46796 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:60734 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:34946 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 1, 'sent': 0, 'failed': 1}"}
+{"timestamp": "2026-05-31T14:17:51.131376+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:37810 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:57284 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:46154 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:50776 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 2, 'sent': 0, 'failed': 2}"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:59786 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:39494 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 1, 'sent': 0, 'failed': 1}"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:47798 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:46574 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:44888 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:46096 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:42480 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:41724 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:60972 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:35140 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:47048 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 1, 'sent': 0, 'failed': 1}"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:41784 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.131904+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:59244 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132406+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:51060 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132406+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:47878 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132406+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.132406+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.132406+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 2, 'sent': 0, 'failed': 2}"}
+{"timestamp": "2026-05-31T14:17:51.132406+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:35242 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132406+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:44954 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132406+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.132406+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.132406+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 2, 'sent': 0, 'failed': 2}"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:40524 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:56184 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 1, 'sent': 0, 'failed': 1}"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:38456 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:51186 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42734 - \"OPTIONS /api/auth/login HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | WARNING:passlib.handlers.bcrypt:(trapped) error reading bcrypt version"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | Traceback (most recent call last):"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  |   File \"/usr/local/lib/python3.11/site-packages/passlib/handlers/bcrypt.py\", line 620, in _load_backend_mixin"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  |     version = _bcrypt.__about__.__version__"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  |               ^^^^^^^^^^^^^^^^^"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | AttributeError: module 'bcrypt' has no attribute '__about__'"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42734 - \"POST /api/auth/login HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42734 - \"OPTIONS /api/recommendations HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42742 - \"OPTIONS /api/applications HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42742 - \"OPTIONS /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42746 - \"OPTIONS /api/learning-path HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42742 - \"OPTIONS /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42772 - \"OPTIONS /api/learning-path HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://dqn:8004/learning-path \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://dqn:8004/learning-path \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.132952+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42778 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.133489+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42778 - \"OPTIONS /api/jobs?page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.133489+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42778 - \"GET /api/jobs?page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.133489+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: GET https://media.licdn.com/dms/image/v2/D4E0BAQHAnKFB3xoVLw/company-logo_100_100/company-logo_100_100/0/1719817296589/zurich_insurance_company_ltd_logo?e=2147483647&v=beta&t=yIqPUFXrmKvU45KGW22WaJteBPy8hQUHTYuFyud9VFc \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.133489+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: GET https://media.licdn.com/dms/image/v2/D560BAQES67UOuKCEXw/company-logo_100_100/B56ZX4J2E.GoAQ-/0/1743625085609?e=2147483647&v=beta&t=iT8HrHlfh4KAqQjElEZEeDDQlZd9yz1vhAno5Ndnkqw \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.133489+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42780 - \"GET /api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FD4E0BAQHAnKFB3xoVLw%2Fcompany-logo_100_100%2Fcompany-logo_100_100%2F0%2F1719817296589%2Fzurich_insurance_company_ltd_logo%3Fe%3D2147483647%26v%3Dbeta%26t%3DyIqPUFXrmKvU45KGW22WaJteBPy8hQUHTYuFyud9VFc&company=Zurich%20Insurance HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.134586+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:42784 - \"GET /api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FD560BAQES67UOuKCEXw%2Fcompany-logo_100_100%2FB56ZX4J2E.GoAQ-%2F0%2F1743625085609%3Fe%3D2147483647%26v%3Dbeta%26t%3DiT8HrHlfh4KAqQjElEZEeDDQlZd9yz1vhAno5Ndnkqw&company=Life%20at%20RBMSoft HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:38244 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:33152 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47332 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47336 - \"OPTIONS /api/jobs/saved HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47336 - \"GET /api/jobs/saved HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:34836 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:35168 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47088 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47088 - \"GET /api/jobs?page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47088 - \"OPTIONS /api/jobs?experience=entry&page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47088 - \"GET /api/jobs?experience=entry&page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47104 - \"OPTIONS /api/jobs?experience=mid&page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47104 - \"GET /api/jobs?experience=mid&page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47088 - \"OPTIONS /api/jobs?experience=senior&page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47088 - \"GET /api/jobs?experience=senior&page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47088 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47116 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47104 - \"GET /api/applications HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://dqn:8004/learning-path \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:47106 - \"POST /api/learning-path HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:40110 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.135942+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 9, 'sent': 0, 'failed': 9}"}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:54852 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:54866 - \"GET /api/jobs/saved HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:36562 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:49430 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:49432 - \"GET /api/jobs/saved HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:39708 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 500 Internal Server Error\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:feedback_outbox_retry summary={'attempted': 5, 'sent': 0, 'failed': 5}"}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39872 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39874 - \"GET /api/jobs/saved HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39872 - \"POST /api/recommendations HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.136550+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39872 - \"OPTIONS /api/recommendations/feedback HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.137189+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback \"HTTP/1.1 422 Unprocessable Entity\""}
+{"timestamp": "2026-05-31T14:17:51.137189+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39872 - \"POST /api/recommendations/feedback HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.137189+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: GET https://media.licdn.com/dms/image/v2/C560BAQG12pQe_GvUbQ/company-logo_100_100/company-logo_100_100/0/1651050740774/quantumblack_logo?e=2147483647&v=beta&t=LsjC3n_z0oZwm3edrcHQ5HFJG4Mfz3r05TxYLgeXWR8 \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.137189+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: GET https://media.licdn.com/dms/image/v2/C560BAQH5oWQP8Q7hdw/company-logo_100_100/company-logo_100_100/0/1630651283418/practical_devsecops_logo?e=2147483647&v=beta&t=ZJPBsEu2heYfFQObQ3UGeNW30_lpTEIgEUKsz64BYvU \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.137189+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39634 - \"GET /api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FC560BAQG12pQe_GvUbQ%2Fcompany-logo_100_100%2Fcompany-logo_100_100%2F0%2F1651050740774%2Fquantumblack_logo%3Fe%3D2147483647%26v%3Dbeta%26t%3DLsjC3n_z0oZwm3edrcHQ5HFJG4Mfz3r05TxYLgeXWR8&company=QuantumBlack%2C%20AI%20by%20McKinsey HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.137806+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39628 - \"GET /api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FC560BAQH5oWQP8Q7hdw%2Fcompany-logo_100_100%2Fcompany-logo_100_100%2F0%2F1630651283418%2Fpractical_devsecops_logo%3Fe%3D2147483647%26v%3Dbeta%26t%3DZJPBsEu2heYfFQObQ3UGeNW30_lpTEIgEUKsz64BYvU&company=Practical%20DevSecOps HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:58858 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39872 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39664 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://dqn:8004/learning-path \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39648 - \"POST /api/learning-path HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39638 - \"GET /api/applications HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39638 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39638 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39664 - \"OPTIONS /api/profile/completeness HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39666 - \"OPTIONS /api/job-alerts HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39648 - \"GET /api/applications HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39676 - \"GET /api/jobs/saved HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39664 - \"GET /api/profile/completeness HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39666 - \"GET /api/job-alerts HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39666 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39664 - \"GET /api/jobs/saved HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39664 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39664 - \"GET /api/jobs?page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:39664 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:36892 - \"GET /api/applications HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:36916 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://dqn:8004/learning-path \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:36906 - \"POST /api/learning-path HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:47370 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:38954 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:38970 - \"GET /api/applications HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:38974 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://dqn:8004/learning-path \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:38972 - \"POST /api/learning-path HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.138875+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:38972 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:38972 - \"GET /api/jobs?page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run \"HTTP/1.1 200 OK\""}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Shutting down"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Waiting for application shutdown."}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Application shutdown complete."}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Finished server process [1]"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Started server process [1]"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Waiting for application startup."}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:scpa.gateway:Gateway started pipeline_url=http://pipeline:8005 p95_target_ms=150"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Application startup complete."}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:45894 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:45904 - \"GET /api/auth/me HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:45904 - \"GET /api/jobs?page=1&limit=25 HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:41832 - \"GET /health HTTP/1.1\" 200 OK"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     172.18.0.1:45904 - \"OPTIONS /api/auth/login HTTP/1.1\" 400 Bad Request"}
+{"timestamp": "2026-05-31T14:17:51.139385+00:00", "service": "gateway", "line": "gateway-1  | INFO:     127.0.0.1:33228 - \"GET /health HTTP/1.1\" 200 OK"}

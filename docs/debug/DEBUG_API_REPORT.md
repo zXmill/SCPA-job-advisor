@@ -1,6 +1,6 @@
 # Debug API Report
 
-Updated: 2026-05-31 15:20 +07
+Updated: 2026-05-31 21:20 +07
 
 Status: gateway API runtime probes completed and fixed; final rebuilt-runtime probe passed with 83/83 cases and 0 HTTP 5xx responses.
 
@@ -31,6 +31,7 @@ Status: gateway API runtime probes completed and fixed; final rebuilt-runtime pr
 - Authenticated Selenium audit found `POST /api/recommendations/feedback` returns HTTP 500 during impression tracking.
 - Gateway log root cause: `feedback_events.slate_id` violates the FK to `served_slates.id`; the gateway returns a new `recommendation_id`/served slate ID to the frontend but does not persist the corresponding `served_slates` row before feedback arrives.
 - Final authenticated Selenium audit after the served-slate and Docker/runtime fixes reports 0 network failures; recommendation feedback no longer returns HTTP 500 in the browser path.
+- Runtime-contract audit run 2 found local production-mode frontend at `http://localhost:3001` cannot call gateway `POST /api/auth/login` because the gateway dev CORS defaults and compose default env allow `localhost:3000`/`localhost:8000` but not `localhost:3001`.
 
 ## API Runtime Probe: 2026-05-31
 - Harness: `scripts/debug/api_runtime_probe.py`.

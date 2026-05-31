@@ -1,6 +1,6 @@
 # Debug Frontend Report
 
-Updated: 2026-05-31 21:09 +07
+Updated: 2026-05-31 21:20 +07
 
 Status: static/lint/build checks completed, route-level browser audit passed, and runtime-contract browser checks are active.
 
@@ -62,3 +62,11 @@ Status: static/lint/build checks completed, route-level browser audit passed, an
 - Auth/session check failed with 6 `/api/auth/me` requests during fast navigation across 4 routes.
 - Theme check failed persistence after reload: the audit saw `data-theme=light` and `localStorage.scpa_theme=null` after repeated clicks and reload, while no spinner or hydration warning remained.
 - Production-mode frontend checks were blocked by login automation and must be rerun after harness hardening.
+
+## Runtime Contract Audit Run 2
+- Confirmed frontend stale cancellation bug: `frontend/src/app/analytics/page.tsx` and `frontend/src/app/recommendations/page.tsx` both treat `controller.signal.aborted` as a user-facing timeout and clear current data without proving the aborted request is still current.
+- Jobs reproduction: targeted filter cancellation captured 2 canceled jobs requests, then a successful jobs response, but final UI remained a timeout/retry state.
+- Recommendations reproduction: `/api/recommendations` canceled with `net::ERR_ABORTED` and final UI remained the recommendation timeout message.
+- Theme defect is not currently confirmed after harness hardening; repeated clicks persisted `scpa_theme=dark` and no spinner/hydration warning appeared.
+- Auth/session redundancy is partially frontend-caused: full navigation remounts the auth provider, and dashboard/profile also call `api.getMe()` for page data.
+- Production-mode frontend is blocked by gateway CORS, not by a browser automation failure.
