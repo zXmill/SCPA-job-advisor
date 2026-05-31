@@ -65,7 +65,7 @@ def test_full_pipeline_flags_invalid_interactions_but_still_exports_reports(tmp_
     assert Path(summary["reports"]["recommendations_json"]).exists()
 
 
-def test_full_pipeline_can_force_sample_only_scraper_fallback(tmp_path: Path) -> None:
+def test_full_pipeline_refuses_sample_job_fallback_when_scraper_is_skipped(tmp_path: Path) -> None:
     sample_dir = _copy_sample(tmp_path)
 
     summary = asyncio.run(
@@ -79,11 +79,11 @@ def test_full_pipeline_can_force_sample_only_scraper_fallback(tmp_path: Path) ->
         )
     )
 
-    assert summary["status"] == "ok"
+    assert summary["status"] == "empty_input"
     assert summary["scraper"]["status"] == "skipped"
     assert summary["candidate_jobs"]["scraped_jobs"] == 0
-    assert summary["candidate_jobs"]["merged_jobs"] == 9
-    assert summary["recommendations"]
+    assert summary["candidate_jobs"]["merged_jobs"] == 0
+    assert summary["recommendations"] == {}
 
 
 def test_scraper_handles_zero_partial_duplicate_and_blocked_sources(monkeypatch: pytest.MonkeyPatch) -> None:

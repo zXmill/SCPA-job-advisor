@@ -51,6 +51,7 @@ INTERNAL_SERVICE_TOKEN_HEADER = "X-Internal-Service-Token"
 HTTP_TIMEOUT_SECONDS = float(os.getenv("HTTP_TIMEOUT_SECONDS", "5"))
 DEFAULT_JOB_LIMIT = int(os.getenv("PIPELINE_JOB_LIMIT", "20"))
 CANDIDATE_POOL_LIMIT = int(os.getenv("PIPELINE_CANDIDATE_POOL_LIMIT", "250"))
+SCRAPE_REFRESH_LIMIT = max(1, int(os.getenv("PIPELINE_SCRAPE_REFRESH_LIMIT", "10")))
 SCRAPE_TARGET = int(os.getenv("JOBS_TARGET", "2000"))
 P95_TARGET_MS = int(os.getenv("PIPELINE_P95_TARGET_MS", "150"))
 CONTINUAL_TRAINING_ENABLED = os.getenv("CONTINUAL_TRAINING_ENABLED", "true").lower() in {"1", "true", "yes"}
@@ -237,7 +238,7 @@ async def _run_scrape_embedding_cycle(refresh_jobs: bool = True) -> dict[str, An
         profile={"program_studi": "mixed", "jurusan": "mixed", "skills": []},
         interaction_count=0,
         refresh_jobs=refresh_jobs,
-        limit=SCRAPE_TARGET,
+        limit=min(SCRAPE_TARGET, SCRAPE_REFRESH_LIMIT),
     )
     encoded = await run_encode_stage(http_client, SBERT_URL, scrape.user, scrape.jobs)
     JOB_CACHE[:] = encoded.jobs
@@ -325,6 +326,7 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
     started = time.perf_counter()
     output_limit = min(int(request.limit or DEFAULT_JOB_LIMIT), 100)
     candidate_limit = max(output_limit, CANDIDATE_POOL_LIMIT)
+    scrape_limit = min(candidate_limit, SCRAPE_REFRESH_LIMIT)
 
     scrape = await _stage(
         "scrape",
@@ -336,7 +338,7 @@ async def run_pipeline(request: PipelineRunRequest) -> PipelineRunResponse:
             profile=request.profile,
             interaction_count=request.interaction_count,
             refresh_jobs=request.refresh_jobs,
-            limit=candidate_limit,
+            limit=scrape_limit,
         ),
     )
     stages["scrape"] = scrape.summary

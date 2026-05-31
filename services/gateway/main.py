@@ -29,19 +29,15 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from pydantic import BaseModel, Field
 from services.shared.auth import validate_jwt_secret
+from services.shared.job_description import parse_job_description
+from services.shared.skill_taxonomy import (
+    default_skill_taxonomy,
+    normalize_skill_term,
+)
 from sqlalchemy import Text as SqlText
 from sqlalchemy import bindparam, text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
-try:
-    from services.pipeline.pipeline.extractors.skills import SKILL_ALIASES
-except ImportError:  # pragma: no cover - only used in minimal gateway deployments
-    SKILL_ALIASES = {
-        "Python": {"python", "py"},
-        "SQL": {"sql"},
-        "English": {"english", "bahasa inggris"},
-    }
 
 try:
     from PyPDF2 import PdfReader
@@ -216,34 +212,33 @@ pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # ── Auth scheme ──
 bearer_scheme = HTTPBearer(auto_error=False)
 
-SKILL_SEARCH_MAX_ROWS = 500
-
-
-def _default_skill_category(skill_name: str) -> str:
-    lower = skill_name.lower()
-    if lower in {"english"}:
-        return "linguistic"
-    if lower in {"public speaking"}:
-        return "soft"
-    return "technical"
-
-
-DEFAULT_SKILL_TAXONOMY: tuple[dict[str, Any], ...] = tuple(
-    {
-        "name": name,
-        "category": _default_skill_category(name),
-        "aliases": sorted({str(alias).lower() for alias in aliases}),
-    }
-    for name, aliases in sorted(SKILL_ALIASES.items())
-)
+SKILL_SEARCH_MAX_ROWS = 20_000
+DEFAULT_SKILL_TAXONOMY: tuple[dict[str, Any], ...] = tuple(default_skill_taxonomy())
+SKILL_SEARCH_PRIORITY = {
+    "SQL": -50,
+    "Statistics": -45,
+    "Software Engineering": -42,
+    "Python": -40,
+    "Machine Learning": -40,
+    "Data Analysis": -40,
+    "Data Science": -40,
+    "Data Engineering": -40,
+    "Docker": -35,
+    "Kubernetes": -35,
+    "English": -35,
+    "Communication": -35,
+    "Credit Scoring": -35,
+}
 
 _SEED_SKILL_STMT = text(
     """
-    INSERT INTO skills (name, category, aliases, frequency, updated_at)
-    VALUES (:name, :category, :aliases, 1, NOW())
+    INSERT INTO skills (name, category, aliases, source, confidence, frequency, updated_at)
+    VALUES (:name, :category, :aliases, :source, :confidence, 1, NOW())
     ON CONFLICT (name) DO UPDATE SET
         category = EXCLUDED.category,
         aliases = EXCLUDED.aliases,
+        source = EXCLUDED.source,
+        confidence = EXCLUDED.confidence,
         updated_at = NOW()
     """
 ).bindparams(bindparam("aliases", type_=ARRAY(SqlText())))
@@ -281,6 +276,8 @@ class SkillSearchItem(BaseModel):
     name: str
     category: str
     aliases: list[str] = Field(default_factory=list)
+    source: str = "local"
+    confidence: float = 1.0
 
 
 class SkillSearchResponse(BaseModel):
@@ -478,6 +475,117 @@ def _parse_match_data(value: Any) -> dict[str, Any]:
     return {}
 
 
+def _clean_text_or_none(value: Any, *, max_length: int | None = None) -> str | None:
+    text_value = " ".join(str(value or "").split())
+    if not text_value:
+        return None
+    if max_length is not None:
+        return text_value[:max_length]
+    return text_value
+
+
+def _string_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        raw_values = [value]
+    elif isinstance(value, (list, tuple, set)):
+        raw_values = list(value)
+    else:
+        raw_values = [value]
+
+    seen: set[str] = set()
+    cleaned: list[str] = []
+    for raw_value in raw_values:
+        display = _clean_text_or_none(raw_value)
+        if not display:
+            continue
+        key = display.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        cleaned.append(display)
+    return cleaned
+
+
+def _coerce_optional_datetime(value: Any) -> datetime | None:
+    if value in (None, ""):
+        return None
+    if isinstance(value, datetime):
+        return value.astimezone(timezone.utc).replace(tzinfo=None) if value.tzinfo else value
+    if isinstance(value, str):
+        raw_value = value.strip()
+        if raw_value.endswith("Z"):
+            raw_value = f"{raw_value[:-1]}+00:00"
+        try:
+            parsed = datetime.fromisoformat(raw_value)
+        except ValueError:
+            return None
+        return parsed.astimezone(timezone.utc).replace(tzinfo=None) if parsed.tzinfo else parsed
+    return None
+
+
+def _rich_job_fields(item: dict[str, Any]) -> dict[str, Any]:
+    raw_description_html = item.get("raw_description_html")
+    description_text = item.get("description_text") or item.get("description")
+    parsed = parse_job_description(
+        str(description_text or ""),
+        str(raw_description_html) if raw_description_html else None,
+    )
+    parsed_fields = parsed.as_dict()
+
+    description_sections = item.get("description_sections")
+    if not isinstance(description_sections, dict):
+        description_sections = parsed.description_sections
+
+    responsibilities = _string_list(item.get("responsibilities")) or parsed.responsibilities
+    requirements = _string_list(item.get("requirements")) or parsed.requirements
+    nice_to_have = _string_list(item.get("nice_to_have")) or parsed.nice_to_have
+    benefits = _string_list(item.get("benefits")) or parsed.benefits
+    required_skills = (
+        _string_list(item.get("required_skills"))
+        or _string_list(item.get("required_skill_names"))
+    )
+    preferred_skills = (
+        _string_list(item.get("preferred_skills"))
+        or _string_list(item.get("preferred_skill_names"))
+    )
+    extracted_skills = (
+        _string_list(item.get("extracted_skills"))
+        or _string_list(item.get("extracted_skill_names"))
+        or _string_list(item.get("skills"))
+        or _string_list(item.get("tags"))
+    )
+
+    return {
+        **parsed_fields,
+        "raw_description_html": raw_description_html or parsed.raw_description_html,
+        "description_text": parsed.description_text or _clean_text_or_none(description_text) or "",
+        "description_sections": description_sections,
+        "responsibilities": responsibilities,
+        "requirements": requirements,
+        "nice_to_have": nice_to_have,
+        "benefits": benefits,
+        "seniority_level": _clean_text_or_none(item.get("seniority_level"), max_length=128)
+        or parsed.seniority_level,
+        "employment_type": _clean_text_or_none(item.get("employment_type"), max_length=128)
+        or parsed.employment_type,
+        "job_function": _clean_text_or_none(item.get("job_function"), max_length=255)
+        or parsed.job_function,
+        "industry": _clean_text_or_none(item.get("industry"), max_length=255)
+        or parsed.industry,
+        "education_level": _clean_text_or_none(item.get("education_level"), max_length=255)
+        or parsed.education_level,
+        "years_experience_min": item.get("years_experience_min") or parsed.years_experience_min,
+        "years_experience_max": item.get("years_experience_max") or parsed.years_experience_max,
+        "required_skill_names": required_skills,
+        "preferred_skill_names": preferred_skills,
+        "extracted_skill_names": extracted_skills,
+        "source_url": item.get("source_url") or item.get("url") or None,
+        "source_updated_at": _coerce_optional_datetime(item.get("source_updated_at")),
+    }
+
+
 def _job_has_indonesia_signal(job: dict[str, Any]) -> bool:
     host = urlparse(str(job.get("source_url") or "")).hostname or ""
     if host.lower() in INDONESIA_JOB_HOSTS:
@@ -513,6 +621,9 @@ async def _upsert_jobs_to_db(db: AsyncSession, ranked: list[dict[str, Any]]) -> 
         jid = str(item.get("id", ""))
         if not jid:
             continue
+        rich_fields = _rich_job_fields(item)
+        source_url = rich_fields["source_url"]
+        skill_values = rich_fields["required_skill_names"] or rich_fields["extracted_skill_names"]
         db_jobs_params.append({
             "id": to_uuid(jid),
             "title": item.get("title") or "Untitled Job",
@@ -529,39 +640,99 @@ async def _upsert_jobs_to_db(db: AsyncSession, ranked: list[dict[str, Any]]) -> 
             "salary_text": item.get("salary_text") or None,
             "employment_mode": clean_employment_mode(item.get("employment_mode")),
             "description": item.get("description") or None,
+            "raw_description_html": rich_fields["raw_description_html"],
+            "description_text": rich_fields["description_text"],
+            "description_sections": json.dumps(rich_fields["description_sections"]),
+            "responsibilities": rich_fields["responsibilities"],
+            "requirements": rich_fields["requirements"],
+            "nice_to_have": rich_fields["nice_to_have"],
+            "benefits": rich_fields["benefits"],
+            "seniority_level": rich_fields["seniority_level"],
+            "employment_type": rich_fields["employment_type"],
+            "job_function": rich_fields["job_function"],
+            "industry": rich_fields["industry"],
+            "education_level": rich_fields["education_level"],
+            "years_experience_min": rich_fields["years_experience_min"],
+            "years_experience_max": rich_fields["years_experience_max"],
+            "required_skill_names": rich_fields["required_skill_names"],
+            "preferred_skill_names": rich_fields["preferred_skill_names"],
+            "extracted_skill_names": rich_fields["extracted_skill_names"],
+            "source_url": source_url,
+            "source_updated_at": rich_fields["source_updated_at"],
             "experience_level": clean_experience_level(item.get("experience_level")),
             "posted_at": _coerce_posted_at(item.get("posted_at")),
             "source": clean_job_source(item.get("source")),
             "is_active": item.get("is_active", True),
             "match_data": json.dumps({
-                "skills": item.get("skills") or item.get("tags") or [],
-                "source_url": item.get("source_url") or item.get("url") or None,
+                "skills": skill_values,
+                "required_skills": rich_fields["required_skill_names"],
+                "preferred_skills": rich_fields["preferred_skill_names"],
+                "extracted_skills": rich_fields["extracted_skill_names"],
+                "source_url": source_url,
             })
         })
     if not db_jobs_params:
         return
     try:
+        job_upsert_stmt = text("""
+            INSERT INTO jobs (
+                id, title, company, company_logo, location, type, min_salary, max_salary,
+                salary_currency, salary_text, employment_mode, description,
+                raw_description_html, description_text, description_sections,
+                responsibilities, requirements, nice_to_have, benefits,
+                seniority_level, employment_type, job_function, industry, education_level,
+                years_experience_min, years_experience_max, required_skill_names,
+                preferred_skill_names, extracted_skill_names, source_url, source_updated_at,
+                experience_level, posted_at, source, is_active, match_data
+            ) VALUES (
+                :id, :title, :company, :company_logo, :location, :type, :min_salary, :max_salary,
+                :salary_currency, :salary_text, :employment_mode, :description,
+                :raw_description_html, :description_text, CAST(:description_sections AS jsonb),
+                :responsibilities, :requirements, :nice_to_have, :benefits,
+                :seniority_level, :employment_type, :job_function, :industry, :education_level,
+                :years_experience_min, :years_experience_max, :required_skill_names,
+                :preferred_skill_names, :extracted_skill_names, :source_url, :source_updated_at,
+                :experience_level, :posted_at, :source, :is_active, CAST(:match_data AS jsonb)
+            ) ON CONFLICT (id) DO UPDATE SET
+                title = EXCLUDED.title,
+                company = EXCLUDED.company,
+                company_logo = EXCLUDED.company_logo,
+                location = EXCLUDED.location,
+                description = EXCLUDED.description,
+                raw_description_html = COALESCE(EXCLUDED.raw_description_html, jobs.raw_description_html),
+                description_text = COALESCE(NULLIF(EXCLUDED.description_text, ''), jobs.description_text),
+                description_sections = COALESCE(EXCLUDED.description_sections, jobs.description_sections),
+                responsibilities = EXCLUDED.responsibilities,
+                requirements = EXCLUDED.requirements,
+                nice_to_have = EXCLUDED.nice_to_have,
+                benefits = EXCLUDED.benefits,
+                seniority_level = COALESCE(EXCLUDED.seniority_level, jobs.seniority_level),
+                employment_type = COALESCE(EXCLUDED.employment_type, jobs.employment_type),
+                job_function = COALESCE(EXCLUDED.job_function, jobs.job_function),
+                industry = COALESCE(EXCLUDED.industry, jobs.industry),
+                education_level = COALESCE(EXCLUDED.education_level, jobs.education_level),
+                years_experience_min = COALESCE(EXCLUDED.years_experience_min, jobs.years_experience_min),
+                years_experience_max = COALESCE(EXCLUDED.years_experience_max, jobs.years_experience_max),
+                required_skill_names = EXCLUDED.required_skill_names,
+                preferred_skill_names = EXCLUDED.preferred_skill_names,
+                extracted_skill_names = EXCLUDED.extracted_skill_names,
+                source_url = COALESCE(EXCLUDED.source_url, jobs.source_url),
+                source_updated_at = COALESCE(EXCLUDED.source_updated_at, jobs.source_updated_at),
+                salary_text = COALESCE(EXCLUDED.salary_text, jobs.salary_text),
+                source = EXCLUDED.source,
+                is_active = EXCLUDED.is_active,
+                match_data = EXCLUDED.match_data
+        """).bindparams(
+            bindparam("responsibilities", type_=ARRAY(SqlText())),
+            bindparam("requirements", type_=ARRAY(SqlText())),
+            bindparam("nice_to_have", type_=ARRAY(SqlText())),
+            bindparam("benefits", type_=ARRAY(SqlText())),
+            bindparam("required_skill_names", type_=ARRAY(SqlText())),
+            bindparam("preferred_skill_names", type_=ARRAY(SqlText())),
+            bindparam("extracted_skill_names", type_=ARRAY(SqlText())),
+        )
         await db.execute(
-            text("""
-                INSERT INTO jobs (
-                    id, title, company, company_logo, location, type, min_salary, max_salary,
-                    salary_currency, salary_text, employment_mode, description, experience_level,
-                    posted_at, source, is_active, match_data
-                ) VALUES (
-                    :id, :title, :company, :company_logo, :location, :type, :min_salary, :max_salary,
-                    :salary_currency, :salary_text, :employment_mode, :description, :experience_level,
-                    :posted_at, :source, :is_active, :match_data
-                ) ON CONFLICT (id) DO UPDATE SET
-                    title = EXCLUDED.title,
-                    company = EXCLUDED.company,
-                    company_logo = EXCLUDED.company_logo,
-                    location = EXCLUDED.location,
-                    description = EXCLUDED.description,
-                    salary_text = COALESCE(EXCLUDED.salary_text, jobs.salary_text),
-                    source = EXCLUDED.source,
-                    is_active = EXCLUDED.is_active,
-                    match_data = EXCLUDED.match_data
-            """),
+            job_upsert_stmt,
             db_jobs_params
         )
         await db.commit()
@@ -693,6 +864,7 @@ async def _persist_served_slate(
 
 def _map_pipeline_job(item: dict[str, Any]) -> dict[str, Any]:
     """Map pipeline job item to gateway-compatible Job dictionary."""
+    rich_fields = _rich_job_fields(item)
     return {
         "id": str(item.get("id", "")),
         "title": item.get("title") or "",
@@ -709,11 +881,29 @@ def _map_pipeline_job(item: dict[str, Any]) -> dict[str, Any]:
         "salary_text": item.get("salary_text") or None,
         "employment_mode": item.get("employment_mode") or None,
         "description": item.get("description") or None,
+        "raw_description_html": rich_fields["raw_description_html"],
+        "description_text": rich_fields["description_text"],
+        "description_sections": rich_fields["description_sections"],
+        "responsibilities": rich_fields["responsibilities"],
+        "requirements": rich_fields["requirements"],
+        "nice_to_have": rich_fields["nice_to_have"],
+        "benefits": rich_fields["benefits"],
+        "seniority_level": rich_fields["seniority_level"],
+        "employment_type": rich_fields["employment_type"],
+        "job_function": rich_fields["job_function"],
+        "industry": rich_fields["industry"],
+        "education_level": rich_fields["education_level"],
+        "years_experience_min": rich_fields["years_experience_min"],
+        "years_experience_max": rich_fields["years_experience_max"],
+        "required_skill_names": rich_fields["required_skill_names"],
+        "preferred_skill_names": rich_fields["preferred_skill_names"],
+        "extracted_skill_names": rich_fields["extracted_skill_names"],
         "experience_level": item.get("experience_level") or None,
         "posted_at": item.get("posted_at") or None,
         "source": item.get("source") or None,
-        "source_url": item.get("source_url") or item.get("url") or None,
-        "skills": item.get("skills") or item.get("tags") or [],
+        "source_url": rich_fields["source_url"],
+        "source_updated_at": rich_fields["source_updated_at"],
+        "skills": rich_fields["required_skill_names"] or rich_fields["extracted_skill_names"],
         "is_active": item.get("is_active", True),
     }
 
@@ -1104,7 +1294,7 @@ async def _require_user(db: AsyncSession, token_payload: dict[str, Any]) -> dict
 
 
 def _normalise_skill_value(value: str) -> str:
-    return " ".join(str(value).lower().strip().split())
+    return normalize_skill_term(value)
 
 
 async def _ensure_default_skill_taxonomy(db: AsyncSession) -> bool:
@@ -1117,12 +1307,12 @@ async def _ensure_default_skill_taxonomy(db: AsyncSession) -> bool:
         if table_exists is None:
             return False
 
-        count = (await db.execute(text("SELECT COUNT(*) FROM skills"))).scalar_one()
-        if int(count or 0) > 0:
+        count = int((await db.execute(text("SELECT COUNT(*) FROM skills"))).scalar_one() or 0)
+        target_count = min(5_000, len(DEFAULT_SKILL_TAXONOMY))
+        if count >= target_count:
             return True
 
-        for row in DEFAULT_SKILL_TAXONOMY:
-            await db.execute(_SEED_SKILL_STMT, row)
+        await db.execute(_SEED_SKILL_STMT, list(DEFAULT_SKILL_TAXONOMY))
         await db.commit()
         return True
     except Exception as exc:  # pragma: no cover - protects ad-hoc pre-migration DBs
@@ -1138,8 +1328,8 @@ async def _load_skill_taxonomy(db: AsyncSession) -> list[dict[str, Any]]:
     rows = (
         await db.execute(
             text(
-                "SELECT name, category, aliases "
-                "FROM skills ORDER BY frequency DESC, name ASC "
+                "SELECT name, category, aliases, source, confidence "
+                "FROM skills ORDER BY frequency DESC, confidence DESC, name ASC "
                 "LIMIT :limit"
             ),
             {"limit": SKILL_SEARCH_MAX_ROWS},
@@ -1151,6 +1341,8 @@ async def _load_skill_taxonomy(db: AsyncSession) -> list[dict[str, Any]]:
             "name": str(row["name"]),
             "category": str(row["category"] or "technical"),
             "aliases": [str(alias) for alias in (row.get("aliases") or [])],
+            "source": str(row.get("source") or "local"),
+            "confidence": float(row.get("confidence") or 1.0),
         }
         for row in rows
     ]
@@ -1159,6 +1351,7 @@ async def _load_skill_taxonomy(db: AsyncSession) -> list[dict[str, Any]]:
 def _skill_search_score(skill: dict[str, Any], query: str) -> int:
     name = _normalise_skill_value(skill["name"])
     aliases = [_normalise_skill_value(alias) for alias in skill.get("aliases", [])]
+    words = name.split()
     if query == name:
         return 0
     if query in aliases:
@@ -1167,11 +1360,17 @@ def _skill_search_score(skill: dict[str, Any], query: str) -> int:
         return 2
     if any(alias.startswith(query) for alias in aliases):
         return 3
-    if query in name:
+    if any(word.startswith(query) for word in words):
         return 4
-    if any(query in alias for alias in aliases):
+    if query in name:
         return 5
+    if any(query in alias for alias in aliases):
+        return 6
     return 99
+
+
+def _skill_search_priority(skill: dict[str, Any]) -> int:
+    return SKILL_SEARCH_PRIORITY.get(str(skill.get("name") or ""), 0)
 
 
 def _normalise_query_values(values: list[str] | None) -> set[str]:
@@ -1383,7 +1582,10 @@ async def _job_skill_gap(
     db_uuid = to_uuid(job_id)
     row = (
         await db.execute(
-            text("SELECT title, company, match_data FROM jobs WHERE id = :id"),
+            text(
+                "SELECT title, company, required_skill_names, preferred_skill_names, "
+                "extracted_skill_names, match_data FROM jobs WHERE id = :id"
+            ),
             {"id": db_uuid},
         )
     ).mappings().first()
@@ -1391,7 +1593,17 @@ async def _job_skill_gap(
         raise HTTPException(status_code=404, detail="Job not found")
 
     match_data = _parse_match_data(row.get("match_data"))
-    required_skills = _display_skill_list(match_data.get("skills", []))
+    required_skills = _display_skill_list(
+        row.get("required_skill_names") or match_data.get("required_skills") or match_data.get("skills", [])
+    )
+    preferred_skills = _display_skill_list(
+        row.get("preferred_skill_names") or match_data.get("preferred_skills", [])
+    )
+    extracted_skills = _display_skill_list(
+        row.get("extracted_skill_names") or match_data.get("extracted_skills", [])
+    )
+    if not required_skills:
+        required_skills = extracted_skills
     user_skill_keys = {_normalized_skill_name(skill) for skill in user_skills}
     matched = [
         skill
@@ -1414,6 +1626,8 @@ async def _job_skill_gap(
         "job_title": row.get("title"),
         "company": row.get("company"),
         "required_skills": required_skills,
+        "preferred_skills": preferred_skills,
+        "extracted_skills": extracted_skills,
         "matched_skills": matched,
         "missing_skills": missing,
         "skill_match_percent": round(
@@ -1674,7 +1888,13 @@ async def search_skills(
             skill for skill in taxonomy
             if _skill_search_score(skill, query) < 99
         ]
-        matches.sort(key=lambda skill: (_skill_search_score(skill, query), skill["name"]))
+        matches.sort(
+            key=lambda skill: (
+                _skill_search_score(skill, query),
+                _skill_search_priority(skill),
+                skill["name"],
+            )
+        )
     else:
         matches = taxonomy
     if excluded:
@@ -2235,6 +2455,18 @@ async def upload_certificate(
 # Jobs
 # ════════════════════════════════════════════════════════════════
 
+JOB_SELECT_COLUMNS = """
+    id, title, company, company_logo, location, type, min_salary, max_salary,
+    salary_currency, salary_text, employment_mode, description,
+    raw_description_html, description_text, description_sections,
+    responsibilities, requirements, nice_to_have, benefits,
+    seniority_level, employment_type, job_function, industry, education_level,
+    years_experience_min, years_experience_max, required_skill_names,
+    preferred_skill_names, extracted_skill_names, source_url, source_updated_at,
+    experience_level, posted_at, source, is_active, match_data
+"""
+
+
 @app.get("/api/jobs")
 async def list_jobs(
     location: str | None = None,
@@ -2279,10 +2511,9 @@ async def list_jobs(
     rows = (
         await db.execute(
             text(
-                "SELECT id, title, company, company_logo, location, type, min_salary, max_salary, "
-                "salary_currency, salary_text, employment_mode, description, experience_level, "
-                "posted_at, source, is_active, match_data "
-                f"FROM jobs WHERE {where_clause} ORDER BY posted_at DESC, id "
+                f"SELECT {JOB_SELECT_COLUMNS} "
+                f"FROM jobs WHERE {where_clause} "
+                "ORDER BY posted_at DESC, length(coalesce(description_text, description, '')) DESC, id "
                 "LIMIT :limit OFFSET :offset"
             ),
             params_with_paging,
@@ -2297,12 +2528,7 @@ async def list_jobs(
     total = int((total_row or {}).get("total") or 0)
     jobs: list[dict[str, Any]] = []
     for row in rows:
-        job = dict(row)
-        match_data = _parse_match_data(job.pop("match_data", None))
-        job["source_url"] = match_data.get("source_url")
-        job["skills"] = match_data.get("skills") or []
-        job["company_logo"] = _proxied_company_logo_url(job.get("company_logo"), job.get("company"))
-        jobs.append(job)
+        jobs.append(_job_payload_from_row(row))
     total_pages = max(1, (total + limit - 1) // limit) if total > 0 else 1
     return {
         "jobs": jobs,
@@ -2317,8 +2543,20 @@ def _job_payload_from_row(row: Any, *, public_id: str | None = None) -> dict[str
     job = dict(row)
     job["id"] = public_id or str(job["id"])
     match_data = _parse_match_data(job.pop("match_data", None))
-    job["source_url"] = match_data.get("source_url")
-    job["skills"] = match_data.get("skills") or []
+    job["source_url"] = job.get("source_url") or match_data.get("source_url")
+    required_skills = _display_skill_list(
+        job.get("required_skill_names") or match_data.get("required_skills")
+    )
+    preferred_skills = _display_skill_list(
+        job.get("preferred_skill_names") or match_data.get("preferred_skills")
+    )
+    extracted_skills = _display_skill_list(
+        job.get("extracted_skill_names") or match_data.get("extracted_skills") or match_data.get("skills")
+    )
+    job["skills"] = required_skills or extracted_skills
+    job["required_skills"] = required_skills
+    job["preferred_skills"] = preferred_skills
+    job["extracted_skills"] = extracted_skills
     job["company_logo"] = _proxied_company_logo_url(job.get("company_logo"), job.get("company"))
     return job
 
@@ -2619,10 +2857,7 @@ async def list_saved_jobs(
     rows = (
         await db.execute(
             text(
-                "SELECT j.id, j.title, j.company, j.company_logo, j.location, j.type, "
-                "j.min_salary, j.max_salary, j.salary_currency, j.salary_text, "
-                "j.employment_mode, j.description, j.experience_level, j.posted_at, "
-                "j.source, j.is_active, j.match_data "
+                f"SELECT {', '.join(f'j.{col.strip()}' for col in JOB_SELECT_COLUMNS.split(',') if col.strip())} "
                 "FROM user_job_interactions uji "
                 "JOIN jobs j ON uji.job_id = j.id "
                 "WHERE uji.user_id = :uid AND uji.saved = true "
@@ -2698,22 +2933,14 @@ async def get_job(job_id: str, db: AsyncSession = Depends(get_db)) -> dict[str, 
     row = (
         await db.execute(
             text(
-                "SELECT id, title, company, company_logo, location, type, min_salary, max_salary, "
-                "salary_currency, salary_text, employment_mode, description, experience_level, "
-                "posted_at, source, is_active, match_data FROM jobs WHERE id = :id"
+                f"SELECT {JOB_SELECT_COLUMNS} FROM jobs WHERE id = :id"
             ),
             {"id": db_uuid},
         )
     ).mappings().first()
     if not row:
         raise HTTPException(status_code=404, detail="Job not found")
-    result = dict(row)
-    result["id"] = job_id
-    match_data = _parse_match_data(result.pop("match_data", None))
-    result["source_url"] = match_data.get("source_url")
-    result["skills"] = match_data.get("skills") or []
-    result["company_logo"] = _proxied_company_logo_url(result.get("company_logo"), result.get("company"))
-    return result
+    return _job_payload_from_row(row, public_id=job_id)
 
 
 # ════════════════════════════════════════════════════════════════

@@ -15,6 +15,10 @@ package-lock.json
 package.json
 
 data
+!data/
+data/*
+!data/skills/
+!data/skills/**
 models
 notebooks
 reports

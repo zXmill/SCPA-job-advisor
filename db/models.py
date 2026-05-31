@@ -310,6 +310,41 @@ class Job(Base):
         nullable=True,
     )
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    raw_description_html: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description_sections: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, server_default=text("'{}'::jsonb"), nullable=False
+    )
+    responsibilities: Mapped[List[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'::text[]"), nullable=False
+    )
+    requirements: Mapped[List[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'::text[]"), nullable=False
+    )
+    nice_to_have: Mapped[List[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'::text[]"), nullable=False
+    )
+    benefits: Mapped[List[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'::text[]"), nullable=False
+    )
+    seniority_level: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    employment_type: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    job_function: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    industry: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    education_level: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    years_experience_min: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    years_experience_max: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    required_skill_names: Mapped[List[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'::text[]"), nullable=False
+    )
+    preferred_skill_names: Mapped[List[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'::text[]"), nullable=False
+    )
+    extracted_skill_names: Mapped[List[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'::text[]"), nullable=False
+    )
+    source_url: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)
+    source_updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     experience_level: Mapped[Optional[ExperienceLevel]] = mapped_column(
         Enum(
             ExperienceLevel,
@@ -355,6 +390,7 @@ class Job(Base):
         Index("idx_jobs_company", "company"),
         Index("idx_jobs_location", "location"),
         Index("idx_jobs_source", "source"),
+        Index("idx_jobs_source_url", "source_url"),
         Index("idx_jobs_posted_at", posted_at.desc()),
         Index(
             "idx_jobs_active",
@@ -544,6 +580,12 @@ class Skill(Base):
     aliases: Mapped[List[str]] = mapped_column(
         ARRAY(Text), server_default=text("'{}'::text[]"), nullable=False
     )
+    source: Mapped[str] = mapped_column(
+        String(64), server_default=text("'local'"), nullable=False
+    )
+    confidence: Mapped[float] = mapped_column(
+        Float, server_default=text("1.0"), nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("NOW()"), nullable=False
     )
@@ -558,6 +600,7 @@ class Skill(Base):
     __table_args__ = (
         Index("idx_skills_name", "name"),
         Index("idx_skills_category", "category"),
+        Index("idx_skills_source", "source"),
     )
 
     def __repr__(self) -> str:

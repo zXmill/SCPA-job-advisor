@@ -13,7 +13,9 @@ COPY services/pipeline/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY services/__init__.py ./services/__init__.py
+COPY services/shared ./services/shared
 COPY services/pipeline ./services/pipeline
+COPY data/skills ./data/skills
 
 EXPOSE 8005
 

@@ -24,6 +24,8 @@ import httpx
 from bs4 import BeautifulSoup
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, HttpUrl
+from services.shared.job_description import parse_job_description
+from services.shared.skill_taxonomy import skill_alias_mapping
 
 app = FastAPI(
     title="SCPA Scraper Service",
@@ -34,8 +36,12 @@ app = FastAPI(
 DEFAULT_TIMEOUT_SECONDS = 8.0
 USER_AGENT = "SCPA-Scraper/1.0 (+local academic project)"
 _SPACE_RE = re.compile(r"\s+")
-_DEFAULT_MAX_DESCRIPTION_CHARS = 1400
+_DEFAULT_MAX_DESCRIPTION_CHARS = 12000
 _MAX_SAFE_REDIRECTS = 5
+_DNS_RESOLVE_TIMEOUT_SECONDS = float(os.getenv("SCRAPER_DNS_TIMEOUT_SECONDS", "2"))
+_SEED_TASK_TIMEOUT_SECONDS = float(os.getenv("SCRAPER_SEED_TASK_TIMEOUT_SECONDS", "30"))
+_SEED_PARSE_TIMEOUT_SECONDS = float(os.getenv("SCRAPER_SEED_PARSE_TIMEOUT_SECONDS", "8"))
+_MAX_SOURCE_RESPONSE_BYTES = int(os.getenv("SCRAPER_MAX_SOURCE_RESPONSE_BYTES", "1500000"))
 SCRAPER_ALLOWED_HOST_SUFFIXES = {
     "linkedin.com",
     "indeed.com",
@@ -115,7 +121,23 @@ def _resolve_host_addresses(hostname: str) -> list[str]:
     return addresses
 
 
-def _validate_scrape_url(url: str) -> str:
+async def _resolve_host_addresses_async(hostname: str) -> list[str]:
+    try:
+        infos = await asyncio.wait_for(
+            asyncio.to_thread(socket.getaddrinfo, hostname, None, type=socket.SOCK_STREAM),
+            timeout=_DNS_RESOLVE_TIMEOUT_SECONDS,
+        )
+    except TimeoutError as exc:
+        raise HTTPException(status_code=400, detail="scraper URL host resolution timed out") from exc
+    except socket.gaierror as exc:
+        raise HTTPException(status_code=400, detail="scraper URL host could not be resolved") from exc
+    addresses = sorted({info[4][0] for info in infos})
+    if not addresses:
+        raise HTTPException(status_code=400, detail="scraper URL host could not be resolved")
+    return addresses
+
+
+def _validate_scrape_url(url: str, *, resolve_dns: bool = True) -> str:
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"}:
         raise HTTPException(status_code=400, detail="scraper URL scheme is not allowed")
@@ -136,13 +158,27 @@ def _validate_scrape_url(url: str) -> str:
     if not _is_allowed_scraper_host(host):
         raise HTTPException(status_code=400, detail="scraper URL host is not allowed")
 
-    for address in _resolve_host_addresses(host):
+    if resolve_dns:
+        for address in _resolve_host_addresses(host):
+            if _is_unsafe_address(address):
+                raise HTTPException(
+                    status_code=400,
+                    detail="scraper URL resolves to private or non-public address",
+                )
+    return url
+
+
+async def _validate_scrape_url_async(url: str) -> str:
+    safe_url = _validate_scrape_url(url, resolve_dns=False)
+    parsed = urlparse(safe_url)
+    host = parsed.hostname or ""
+    for address in await _resolve_host_addresses_async(host):
         if _is_unsafe_address(address):
             raise HTTPException(
                 status_code=400,
                 detail="scraper URL resolves to private or non-public address",
             )
-    return url
+    return safe_url
 
 
 async def _fetch_safe_url(
@@ -150,7 +186,7 @@ async def _fetch_safe_url(
     url: str,
     timeout: float | None = None,
 ) -> httpx.Response:
-    current_url = _validate_scrape_url(url)
+    current_url = await _validate_scrape_url_async(url)
     for _ in range(_MAX_SAFE_REDIRECTS + 1):
         response = await client.get(current_url, timeout=timeout, follow_redirects=False)
         if not response.is_redirect:
@@ -158,7 +194,7 @@ async def _fetch_safe_url(
         location = response.headers.get("location")
         if not location:
             raise HTTPException(status_code=400, detail="scraper URL redirect is missing a location")
-        current_url = _validate_scrape_url(urljoin(str(response.url), location))
+        current_url = await _validate_scrape_url_async(urljoin(str(response.url), location))
     raise HTTPException(status_code=400, detail="scraper URL redirect limit exceeded")
 
 
@@ -237,42 +273,16 @@ SOURCE_URL_TEMPLATES: dict[str, list[str]] = {
 }
 
 SOURCE_ENV_FLAGS = {
-    "linkedin": "PIPELINE_ENABLE_LINKEDIN",
-    "indeed": "PIPELINE_ENABLE_INDEED",
     "jobstreet": "PIPELINE_ENABLE_JOBSTREET",
-    "glints": "PIPELINE_ENABLE_GLINTS",
     "kalibrr": "PIPELINE_ENABLE_KALIBRR",
+    "glints": "PIPELINE_ENABLE_GLINTS",
     "karir": "PIPELINE_ENABLE_KARIR",
     "techinasia": "PIPELINE_ENABLE_TECHINASIA",
+    "linkedin": "PIPELINE_ENABLE_LINKEDIN",
+    "indeed": "PIPELINE_ENABLE_INDEED",
 }
 
-SKILL_ALIASES: dict[str, set[str]] = {
-    "Software Engineering": {"software engineer", "software engineering", "developer", "programmer"},
-    "Python": {"python", "fastapi", "django", "pandas", "numpy"},
-    "React": {"react", "reactjs", "react.js", "next.js", "nextjs"},
-    "Web": {"web", "frontend", "front-end", "html", "css", "javascript", "typescript"},
-    "SQL": {"sql", "postgresql", "postgres", "mysql", "database"},
-    "Machine Learning": {"machine learning", "ml", "ai", "pytorch", "tensorflow", "scikit"},
-    "Docker": {"docker", "container"},
-    "Kubernetes": {"kubernetes", "k8s"},
-    "Node.js": {"node.js", "nodejs", "node"},
-    "JavaScript": {"javascript", "js"},
-    "TypeScript": {"typescript", "ts"},
-    "Data": {"data engineer", "data scientist", "analytics", "analyst", "etl"},
-    # Non-tech tag mapping — keeps the inferred-skill fallback meaningful for
-    # design/HR/finance/etc. roles even when the source page omits explicit
-    # skill chips.
-    "HR": {"human resources", "hr ", "talent acquisition", "rekrutmen", "recruiter", "people operations"},
-    "Finance": {"finance", "akuntansi", "accounting", "auditor", "tax ", "treasury", "ppic"},
-    "Marketing": {"marketing", "digital marketing", "content marketing", "seo", "sem", "branding", "copywriter"},
-    "Sales": {"sales", "account executive", "business development", "bdr", "sdr", "inside sales"},
-    "Design": {"design", "designer", "graphic design", "ui/ux", "ui ux", "figma", "canva", "adobe", "illustrator", "photoshop"},
-    "Operations": {"operations", "operasional", "supply chain", "logistics", "warehouse", "procurement"},
-    "Customer Service": {"customer service", "customer success", "cs ", "support specialist", "call center"},
-    "Education": {"teacher", "guru", "education", "tutor", "lecturer", "dosen"},
-    "Legal": {"legal", "lawyer", "paralegal", "compliance", "regulatory"},
-    "Healthcare": {"healthcare", "nurse", "perawat", "dokter", "apoteker", "medical", "klinis", "clinical"},
-}
+SKILL_ALIASES: dict[str, set[str]] = skill_alias_mapping()
 
 
 @dataclass(frozen=True)
@@ -367,6 +377,23 @@ class JobItem(BaseModel):
     job_id: str
     title: str
     description: str = ""
+    raw_description_html: Optional[str] = None
+    description_text: str = ""
+    description_sections: dict[str, str] = Field(default_factory=dict)
+    responsibilities: List[str] = Field(default_factory=list)
+    requirements: List[str] = Field(default_factory=list)
+    nice_to_have: List[str] = Field(default_factory=list)
+    benefits: List[str] = Field(default_factory=list)
+    seniority_level: Optional[str] = None
+    employment_type: Optional[str] = None
+    job_function: Optional[str] = None
+    industry: Optional[str] = None
+    education_level: Optional[str] = None
+    years_experience_min: Optional[int] = None
+    years_experience_max: Optional[int] = None
+    required_skills: List[str] = Field(default_factory=list)
+    preferred_skills: List[str] = Field(default_factory=list)
+    extracted_skills: List[str] = Field(default_factory=list)
     company: str = ""
     company_logo: Optional[str] = None
     location: str = ""
@@ -374,6 +401,7 @@ class JobItem(BaseModel):
     skills: List[str] = Field(default_factory=list)
     source_url: Optional[str] = None
     source: Optional[str] = None
+    source_updated_at: Optional[str] = None
     salary_text: Optional[str] = None
     content_hash: str
 
@@ -450,9 +478,17 @@ def _infer_skills(*parts: str | None) -> list[str]:
     haystack = " ".join(part or "" for part in parts).lower()
     skills: list[str] = []
     for skill, aliases in SKILL_ALIASES.items():
-        if any(alias in haystack for alias in aliases):
+        if any(_contains_alias(haystack, alias) for alias in aliases):
             skills.append(skill)
-    return skills[:12]
+    return skills[:24]
+
+
+def _contains_alias(text: str, alias: str) -> bool:
+    if not alias:
+        return False
+    if " " in alias or "." in alias or "+" in alias or "#" in alias or "-" in alias:
+        return alias in text
+    return re.search(rf"(?<![a-z0-9]){re.escape(alias)}(?![a-z0-9])", text) is not None
 
 
 def _nested_value(raw: dict[str, Any], path: tuple[str, ...]) -> Any:
@@ -624,14 +660,43 @@ def _job_item(
     source_url: str | None,
     source: str | None = None,
     salary_text: str | None = None,
+    raw_description_html: str | None = None,
 ) -> JobItem:
     digest = _content_hash(title, company, location)
-    inferred_skills = _infer_skills(title, description, " ".join(tags))
-    skills = tags or inferred_skills
+    parsed = parse_job_description(description, raw_description_html)
+    description_text = parsed.description_text or description
+    required_skills = _infer_skills(
+        title,
+        parsed.description_sections.get("requirements", ""),
+        " ".join(parsed.requirements),
+    )
+    preferred_skills = _infer_skills(
+        parsed.description_sections.get("nice_to_have", ""),
+        " ".join(parsed.nice_to_have),
+    )
+    extracted_skills = _infer_skills(title, description_text, " ".join(tags))
+    skills = tags or required_skills or extracted_skills
     return JobItem(
         job_id=digest,
         title=title,
-        description=description,
+        description=description_text,
+        raw_description_html=parsed.raw_description_html,
+        description_text=description_text,
+        description_sections=parsed.description_sections,
+        responsibilities=parsed.responsibilities,
+        requirements=parsed.requirements,
+        nice_to_have=parsed.nice_to_have,
+        benefits=parsed.benefits,
+        seniority_level=parsed.seniority_level,
+        employment_type=parsed.employment_type,
+        job_function=parsed.job_function,
+        industry=parsed.industry,
+        education_level=parsed.education_level,
+        years_experience_min=parsed.years_experience_min,
+        years_experience_max=parsed.years_experience_max,
+        required_skills=required_skills,
+        preferred_skills=preferred_skills,
+        extracted_skills=extracted_skills,
         company=company,
         company_logo=company_logo or _fallback_logo(company),
         location=location,
@@ -639,6 +704,7 @@ def _job_item(
         skills=skills,
         source_url=source_url,
         source=_canonical_source(source, source_url),
+        source_updated_at=None,
         salary_text=salary_text or None,
         content_hash=digest,
     )
@@ -1028,6 +1094,12 @@ def _is_thin_description(job: JobItem) -> bool:
 
 def _extract_detail_description(soup: BeautifulSoup) -> str:
     """Pull the full job-description body using known per-source selectors."""
+    _html, text = _extract_detail_description_payload(soup)
+    return text
+
+
+def _extract_detail_description_payload(soup: BeautifulSoup) -> tuple[str | None, str]:
+    """Return raw HTML and text for the detail description when available."""
     selectors = [
         # LinkedIn (logged-out public job page)
         ".show-more-less-html__markup",
@@ -1049,9 +1121,10 @@ def _extract_detail_description(soup: BeautifulSoup) -> str:
     for selector in selectors:
         node = soup.select_one(selector)
         if node:
+            raw_html = str(node)
             text = clean_text(node.get_text(" ", strip=True))
             if text and len(text) >= _DETAIL_FULL_DESC_MIN_CHARS:
-                return text
+                return raw_html, text
     # JSON-LD JobPosting fallback covers most boards that ship structured data.
     for script in soup.find_all("script", attrs={"type": "application/ld+json"}):
         try:
@@ -1074,14 +1147,15 @@ def _extract_detail_description(soup: BeautifulSoup) -> str:
                 description = item.get("description") or ""
                 cleaned = _clean_html_text(description, max_chars=8000)
                 if cleaned and len(cleaned) >= _DETAIL_FULL_DESC_MIN_CHARS:
-                    return cleaned
+                    raw_html = str(description) if "<" in str(description) else None
+                    return raw_html, cleaned
     # Meta description as a last resort — at least never the bare title echo.
     meta = soup.select_one("meta[name='description'], meta[property='og:description']")
     if meta:
         text = clean_text(meta.get("content"))
         if text:
-            return text
-    return ""
+            return None, text
+    return None, ""
 
 
 def _extract_detail_salary(soup: BeautifulSoup, fallback_text: str | None = None) -> str | None:
@@ -1120,25 +1194,55 @@ async def _enrich_job_detail(client: httpx.AsyncClient, job: JobItem) -> JobItem
     if not url:
         return job
     try:
-        safe_url = _validate_scrape_url(url)
+        _validate_scrape_url(url, resolve_dns=False)
     except HTTPException:
         return job
     try:
-        response = await _fetch_safe_url(client, safe_url, timeout=_DETAIL_FETCH_TIMEOUT_SECONDS)
+        response = await _fetch_safe_url(client, url, timeout=_DETAIL_FETCH_TIMEOUT_SECONDS)
         response.raise_for_status()
-    except httpx.HTTPError:
+    except (httpx.HTTPError, HTTPException, TimeoutError):
         return job
     content_type = response.headers.get("content-type", "")
     if "html" not in content_type.lower():
         return job
     soup = BeautifulSoup(response.text, "html.parser")
-    description = _extract_detail_description(soup) or job.description
+    raw_html, description = _extract_detail_description_payload(soup)
+    description = description or job.description
     salary = job.salary_text or _extract_detail_salary(soup, fallback_text=description)
     if description == job.description and salary == job.salary_text:
         return job
+    parsed = parse_job_description(description, raw_html)
+    required_skills = _infer_skills(
+        job.title,
+        parsed.description_sections.get("requirements", ""),
+        " ".join(parsed.requirements),
+    )
+    preferred_skills = _infer_skills(
+        parsed.description_sections.get("nice_to_have", ""),
+        " ".join(parsed.nice_to_have),
+    )
+    extracted_skills = _infer_skills(job.title, parsed.description_text, " ".join(job.tags))
     update = job.model_copy(
         update={
-            "description": description or job.description,
+            "description": parsed.description_text or description or job.description,
+            "raw_description_html": parsed.raw_description_html,
+            "description_text": parsed.description_text or description or job.description,
+            "description_sections": parsed.description_sections,
+            "responsibilities": parsed.responsibilities,
+            "requirements": parsed.requirements,
+            "nice_to_have": parsed.nice_to_have,
+            "benefits": parsed.benefits,
+            "seniority_level": parsed.seniority_level,
+            "employment_type": parsed.employment_type,
+            "job_function": parsed.job_function,
+            "industry": parsed.industry,
+            "education_level": parsed.education_level,
+            "years_experience_min": parsed.years_experience_min,
+            "years_experience_max": parsed.years_experience_max,
+            "required_skills": required_skills,
+            "preferred_skills": preferred_skills,
+            "extracted_skills": extracted_skills,
+            "skills": job.tags or required_skills or extracted_skills,
             "salary_text": salary,
         }
     )
@@ -1212,13 +1316,27 @@ async def scrape_run(limit: int = 100):
     """Run one configured scrape cycle.
 
     Set `SCRAPER_SEED_URLS` to a comma-separated list of HTML job-board/search
-    URLs or public job API URLs. When live URLs are unavailable or return no
-    jobs, the service returns local sample data so the rest of the ML pipeline
-    remains testable.
+    URLs or public job API URLs. Runtime never fabricates job listings. If no
+    real source is configured or reachable, callers get an empty degraded
+    response and must not treat it as a real catalog refresh.
     """
     seed_urls = _configured_seed_urls()
     if not seed_urls:
-        return await sample()
+        return ScrapeResponse(
+            count=0,
+            jobs=[],
+            deduplicated=0,
+            source_stats=[
+                {
+                    "source": "configured_sources",
+                    "url": None,
+                    "count": 0,
+                    "deduplicated": 0,
+                    "status": "not_configured",
+                    "error": "SCRAPER_SEED_URLS or enabled source flags are required for real data",
+                }
+            ],
+        )
 
     all_jobs: list[JobItem] = []
     deduplicated = 0
@@ -1232,47 +1350,66 @@ async def scrape_run(limit: int = 100):
     async def fetch_seed(client: httpx.AsyncClient, seed: SeedUrl) -> tuple[SeedUrl, ScrapeResponse | None, str | None]:
         async with semaphore:
             try:
-                response = await _fetch_safe_url(client, seed.url)
+                response = await asyncio.wait_for(
+                    _fetch_safe_url(client, seed.url, timeout=DEFAULT_TIMEOUT_SECONDS),
+                    timeout=_SEED_TASK_TIMEOUT_SECONDS,
+                )
                 response.raise_for_status()
-                parsed = _parse_fetched_content(
-                    response.text,
-                    response.headers.get("content-type", ""),
-                    seed.url,
-                    target,
+                if len(response.content) > _MAX_SOURCE_RESPONSE_BYTES:
+                    return seed, None, f"source response exceeded {_MAX_SOURCE_RESPONSE_BYTES} bytes"
+                parsed = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        _parse_fetched_content,
+                        response.text,
+                        response.headers.get("content-type", ""),
+                        seed.url,
+                        target,
+                    ),
+                    timeout=_SEED_PARSE_TIMEOUT_SECONDS,
                 )
                 return seed, parsed, None
             except httpx.HTTPError as exc:
                 return seed, None, str(exc)
+            except HTTPException as exc:
+                return seed, None, str(exc.detail)
+            except TimeoutError:
+                return seed, None, f"source fetch exceeded {_SEED_TASK_TIMEOUT_SECONDS:.0f}s"
+            except Exception as exc:
+                return seed, None, f"{type(exc).__name__}: {str(exc)[:160]}"
 
     async with httpx.AsyncClient(
         timeout=DEFAULT_TIMEOUT_SECONDS,
         headers={"User-Agent": USER_AGENT},
     ) as client:
-        results = await asyncio.gather(*(fetch_seed(client, seed) for seed in selected_urls))
-        for seed, parsed, error in results:
-            if parsed:
-                all_jobs.extend(parsed.jobs)
-                deduplicated += parsed.deduplicated
-                source_stats.append(
-                    {
-                        "source": seed.source,
-                        "url": seed.url,
-                        "count": parsed.count,
-                        "deduplicated": parsed.deduplicated,
-                        "status": "ok",
-                    }
-                )
-            else:
-                source_stats.append(
-                    {
-                        "source": seed.source,
-                        "url": seed.url,
-                        "count": 0,
-                        "deduplicated": 0,
-                        "status": "failed",
-                        "error": error,
-                    }
-                )
+        for offset in range(0, len(selected_urls), concurrency):
+            batch = selected_urls[offset:offset + concurrency]
+            results = await asyncio.gather(*(fetch_seed(client, seed) for seed in batch))
+            for seed, parsed, error in results:
+                if parsed:
+                    all_jobs.extend(parsed.jobs)
+                    deduplicated += parsed.deduplicated
+                    source_stats.append(
+                        {
+                            "source": seed.source,
+                            "url": seed.url,
+                            "count": parsed.count,
+                            "deduplicated": parsed.deduplicated,
+                            "status": "ok",
+                        }
+                    )
+                else:
+                    source_stats.append(
+                        {
+                            "source": seed.source,
+                            "url": seed.url,
+                            "count": 0,
+                            "deduplicated": 0,
+                            "status": "failed",
+                            "error": error,
+                        }
+                    )
+            if len({job.content_hash for job in all_jobs}) >= target:
+                break
 
         seen: set[str] = set()
         jobs_by_source: dict[str, list[JobItem]] = {}
@@ -1292,7 +1429,22 @@ async def scrape_run(limit: int = 100):
                 if len(unique) >= target:
                     break
         if not unique:
-            return await sample()
+            return ScrapeResponse(
+                count=0,
+                jobs=[],
+                deduplicated=deduplicated,
+                source_stats=[
+                    *source_stats,
+                    {
+                        "source": "all_sources",
+                        "url": None,
+                        "count": 0,
+                        "deduplicated": deduplicated,
+                        "status": "empty",
+                        "error": "no real jobs returned by configured sources",
+                    },
+                ],
+            )
 
         # Bounded detail-page enrichment: pulls full description + salary_text
         # for the top N jobs whose listing-card description is just the title
@@ -1310,90 +1462,7 @@ async def scrape_run(limit: int = 100):
 
 @app.get("/sample", response_model=ScrapeResponse)
 async def sample():
-    html = """
-    <article class="job-card">
-      <h2 class="job-title">Data Scientist Junior</h2>
-      <div class="company">PT Tokopedia</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Bergabung dengan tim data science kami untuk mengembangkan model prediktif menggunakan Python, TensorFlow, dan SQL. Menganalisis data pengguna untuk meningkatkan rekomendasi produk.</p>
-      <span class="tag">Python</span><span class="tag">TensorFlow</span><span class="tag">SQL</span>
-    </article>
-    <article class="job-card">
-      <h2 class="job-title">Product Manager</h2>
-      <div class="company">Gojek</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Memimpin pengembangan produk digital untuk jutaan pengguna di Asia Tenggara. Membutuhkan kemampuan analitik data, Agile/Scrum, dan stakeholder management.</p>
-      <span class="tag">Product Management</span><span class="tag">Agile</span><span class="tag">Scrum</span>
-    </article>
-    <article class="job-card">
-      <h2 class="job-title">Frontend Engineer</h2>
-      <div class="company">Bukalapak</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Membangun antarmuka pengguna yang responsif menggunakan React, TypeScript, dan Next.js. Pengalaman dengan design system dan testing framework diutamakan.</p>
-      <span class="tag">React</span><span class="tag">TypeScript</span><span class="tag">Next.js</span>
-    </article>
-    <article class="job-card">
-      <h2 class="job-title">Senior Data Analyst</h2>
-      <div class="company">Gopay Indonesia</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Menganalisis data transaksi fintech untuk mendukung keputusan strategis. Keahlian SQL, Tableau, Python, dan statistical modeling diperlukan.</p>
-      <span class="tag">SQL</span><span class="tag">Tableau</span><span class="tag">Python</span>
-    </article>
-    <article class="job-card">
-      <h2 class="job-title">Machine Learning Engineer</h2>
-      <div class="company">Traveloka</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Membangun dan deploy model ML untuk personalisasi harga dan rekomendasi perjalanan. PyTorch, MLOps, dan cloud infrastructure (AWS/GCP).</p>
-      <span class="tag">PyTorch</span><span class="tag">MLOps</span><span class="tag">Python</span>
-    </article>
-    <article class="job-card">
-      <h2 class="job-title">Backend Engineer (Go)</h2>
-      <div class="company">Shopee Indonesia</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Mengembangkan microservices menggunakan Go, gRPC, dan Kubernetes. Membutuhkan pengalaman distributed systems dan high-throughput architectures.</p>
-      <span class="tag">Go</span><span class="tag">gRPC</span><span class="tag">Kubernetes</span>
-    </article>
-    <article class="job-card">
-      <h2 class="job-title">DevOps Engineer</h2>
-      <div class="company">OVO</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Mengelola infrastructure CI/CD, Docker, Kubernetes, dan monitoring. Pengalaman AWS, Terraform, dan observability stack (Prometheus, Grafana).</p>
-      <span class="tag">Docker</span><span class="tag">Kubernetes</span><span class="tag">AWS</span>
-    </article>
-    <article class="job-card">
-      <h2 class="job-title">UI/UX Designer</h2>
-      <div class="company">Blibli.com</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Merancang pengalaman pengguna e-commerce. Figma, user research, prototyping, design system. Portofolio desain interaksi diperlukan.</p>
-      <span class="tag">Figma</span><span class="tag">UI/UX</span><span class="tag">Prototyping</span>
-    </article>
-    <article class="job-card">
-      <h2 class="job-title">Cloud Solutions Architect</h2>
-      <div class="company">Google Indonesia</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Membantu enterprise Indonesia mengadopsi Google Cloud. Keahlian cloud architecture, networking, security, dan data analytics di GCP.</p>
-      <span class="tag">Google Cloud</span><span class="tag">Cloud Architecture</span><span class="tag">Security</span>
-    </article>
-    <article class="job-card">
-      <h2 class="job-title">Cybersecurity Analyst</h2>
-      <div class="company">Bank Mandiri</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Monitoring keamanan sistem perbankan, incident response, dan vulnerability assessment. Sertifikasi CompTIA Security+ atau CEH diutamakan.</p>
-      <span class="tag">Cybersecurity</span><span class="tag">Incident Response</span><span class="tag">Security</span>
-    </article>
-    <article class="job-card">
-      <h2 class="job-title">Data Engineer</h2>
-      <div class="company">Grab Indonesia</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Membangun data pipeline dan data warehouse menggunakan Apache Spark, Airflow, dan BigQuery. ETL optimization dan data quality monitoring.</p>
-      <span class="tag">Apache Spark</span><span class="tag">Airflow</span><span class="tag">BigQuery</span>
-    </article>
-    <article class="job-card">
-      <h2 class="job-title">Mobile Developer (Flutter)</h2>
-      <div class="company">Dana Indonesia</div>
-      <div class="location">Jakarta, Indonesia</div>
-      <p class="description">Mengembangkan aplikasi mobile fintech dengan Flutter/Dart. Pengalaman REST API integration, state management, dan app performance optimization.</p>
-      <span class="tag">Flutter</span><span class="tag">Dart</span><span class="tag">Mobile</span>
-    </article>
-    """
-    return extract_jobs(html, source_url="sample://local", limit=20)
+    raise HTTPException(
+        status_code=410,
+        detail="Sample job endpoint disabled. Configure real scraper seed URLs and use /scrape/run.",
+    )

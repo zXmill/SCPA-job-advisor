@@ -1,0 +1,395 @@
+"""Stage 1: fetch or reuse job candidates from the scraper service."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+import json
+import logging
+import os
+import uuid
+from typing import Any
+
+import httpx
+from sqlalchemy import Text as SqlText
+from sqlalchemy import bindparam, text
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+
+
+JOB_CACHE: list[dict[str, Any]] = []
+logger = logging.getLogger("scpa.pipeline.stage_1")
+_db_engine: AsyncEngine | None = None
+SCRAPER_RUN_TIMEOUT_SECONDS = float(os.getenv("SCRAPER_RUN_TIMEOUT_SECONDS", "120"))
+
+
+def _async_db_url(url: str | None) -> str | None:
+    if not url:
+        return None
+    if url.startswith("postgresql+psycopg2://"):
+        return url.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
+
+
+def _database_url() -> str | None:
+    return _async_db_url(
+        os.getenv("PIPELINE_DATABASE_URL")
+        or os.getenv("DATABASE_URL")
+        or os.getenv("GATEWAY_DATABASE_URL")
+    )
+
+
+def _get_db_engine() -> AsyncEngine | None:
+    global _db_engine
+    if os.getenv("PIPELINE_USE_DB_CANDIDATES", "true").strip().lower() not in {"1", "true", "yes", "on"}:
+        return None
+    url = _database_url()
+    if not url:
+        return None
+    if _db_engine is None:
+        _db_engine = create_async_engine(url, pool_pre_ping=True, pool_size=2, max_overflow=3)
+    return _db_engine
+
+
+def _stable_uuid(value: str) -> uuid.UUID:
+    try:
+        return uuid.UUID(str(value))
+    except ValueError:
+        return uuid.uuid5(uuid.NAMESPACE_DNS, str(value))
+
+
+def _parse_match_data(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str) and value.strip():
+        try:
+            parsed = json.loads(value)
+            return parsed if isinstance(parsed, dict) else {}
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def _clean_source(value: str | None) -> str | None:
+    if not value:
+        return None
+    cleaned = value.lower().strip().replace(" ", "").replace("-", "")
+    allowed = {
+        "jobstreet",
+        "linkedin",
+        "glints",
+        "kalibrr",
+        "karir",
+        "topkarir",
+        "kitalulus",
+        "techinasia",
+        "remotive",
+        "indeed",
+    }
+    return cleaned if cleaned in allowed else None
+
+
+@dataclass
+class ScrapeStageResult:
+    user: dict[str, Any]
+    jobs: list[dict[str, Any]]
+    summary: dict[str, Any]
+
+
+def _build_user(user_id: str, profile: dict[str, Any] | None, interaction_count: int) -> dict[str, Any]:
+    profile = profile or {}
+    skills = profile.get("skills") or profile.get("keahlian") or ["Bahasa Inggris", "Public Speaking"]
+    program_studi = profile.get("program_studi") or profile.get("jurusan") or "Sastra Inggris"
+    jurusan = profile.get("jurusan") or program_studi
+    profile_text = f"{program_studi} {jurusan} {' '.join(map(str, skills))}"
+    return {
+        "id": str(user_id),
+        "name": profile.get("name") or profile.get("nama") or "Ibnu",
+        "program_studi": program_studi,
+        "jurusan": jurusan,
+        "university": profile.get("university") or profile.get("universitas") or "Universitas Negeri Surabaya",
+        "skills": list(skills),
+        "interaction_count": interaction_count,
+        "profile_text": profile_text,
+    }
+
+
+def _normalize_scraped_jobs(raw_jobs: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    jobs: list[dict[str, Any]] = []
+    for index, raw in enumerate(raw_jobs[:limit]):
+        title = str(raw.get("title") or "").strip()
+        if not title:
+            continue
+        job_id = str(raw.get("job_id") or raw.get("id") or raw.get("content_hash") or f"scraped-{index}")
+        jobs.append(
+            {
+                "id": job_id,
+                "job_id": job_id,
+                "title": title,
+                "company": raw.get("company") or "",
+                "company_logo": raw.get("company_logo"),
+                "location": raw.get("location") or "",
+                "description": raw.get("description") or "",
+                "raw_description_html": raw.get("raw_description_html"),
+                "description_text": raw.get("description_text") or raw.get("description") or "",
+                "description_sections": raw.get("description_sections") or {},
+                "responsibilities": raw.get("responsibilities") or [],
+                "requirements": raw.get("requirements") or [],
+                "nice_to_have": raw.get("nice_to_have") or [],
+                "benefits": raw.get("benefits") or [],
+                "seniority_level": raw.get("seniority_level"),
+                "employment_type": raw.get("employment_type"),
+                "job_function": raw.get("job_function"),
+                "industry": raw.get("industry"),
+                "education_level": raw.get("education_level"),
+                "years_experience_min": raw.get("years_experience_min"),
+                "years_experience_max": raw.get("years_experience_max"),
+                "required_skills": raw.get("required_skills") or [],
+                "preferred_skills": raw.get("preferred_skills") or [],
+                "extracted_skills": raw.get("extracted_skills") or raw.get("skills") or raw.get("tags") or [],
+                "tags": raw.get("tags") or [],
+                "skills": raw.get("skills") or raw.get("tags") or [],
+                "source_url": raw.get("source_url"),
+                "source": raw.get("source"),
+                "source_updated_at": raw.get("source_updated_at"),
+                "salary_text": raw.get("salary_text"),
+            }
+        )
+    return jobs
+
+
+async def _fetch_jobs(client: httpx.AsyncClient, scraper_url: str, limit: int) -> tuple[list[dict[str, Any]], str]:
+    try:
+        response = await client.post(
+            f"{scraper_url}/scrape/run",
+            params={"limit": limit},
+            timeout=SCRAPER_RUN_TIMEOUT_SECONDS,
+        )
+        response.raise_for_status()
+        data = response.json()
+        jobs = _normalize_scraped_jobs(data.get("jobs", []), limit)
+        if jobs:
+            return jobs, "scraper_run"
+        logger.warning("scraper returned no real jobs; continuing with empty candidate pool")
+        return [], "scraper_empty"
+    except httpx.HTTPError as exc:
+        logger.warning("scraper unavailable; refusing sample job fallback: %s", exc)
+        return [], "scraper_unavailable"
+
+
+async def _load_db_jobs(limit: int) -> list[dict[str, Any]]:
+    engine = _get_db_engine()
+    if engine is None:
+        return []
+    rows: list[dict[str, Any]] = []
+    try:
+        async with engine.connect() as conn:
+            result = await conn.execute(
+                text(
+                    "SELECT id::text AS id, title, company, company_logo, location, type::text AS type, "
+                    "min_salary, max_salary, salary_currency, salary_text, employment_mode::text AS employment_mode, "
+                    "description, raw_description_html, description_text, description_sections, responsibilities, "
+                    "requirements, nice_to_have, benefits, seniority_level, employment_type, job_function, industry, "
+                    "education_level, years_experience_min, years_experience_max, required_skill_names, "
+                    "preferred_skill_names, extracted_skill_names, source_url, source_updated_at, "
+                    "experience_level::text AS experience_level, posted_at, source::text AS source, "
+                    "is_active, match_data FROM jobs WHERE is_active = true ORDER BY posted_at DESC LIMIT :limit"
+                ),
+                {"limit": limit},
+            )
+            rows = [dict(row) for row in result.mappings().all()]
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.warning("database candidate load failed: %s", exc)
+        return []
+
+    jobs: list[dict[str, Any]] = []
+    for row in rows:
+        match_data = _parse_match_data(row.pop("match_data", None))
+        job_id = str(match_data.get("original_job_id") or row.get("id"))
+        posted_at = row.get("posted_at")
+        if posted_at is not None:
+            row["posted_at"] = posted_at.isoformat() if hasattr(posted_at, "isoformat") else str(posted_at)
+        jobs.append(
+            {
+                **row,
+                "id": str(row.get("id")),
+                "job_id": job_id,
+                "source_url": match_data.get("source_url") or row.get("source_url"),
+                "skills": row.get("required_skill_names") or row.get("extracted_skill_names") or match_data.get("skills") or match_data.get("tags") or [],
+                "tags": match_data.get("tags") or match_data.get("skills") or [],
+                "salary_text": row.get("salary_text"),
+            }
+        )
+    return jobs
+
+
+async def _upsert_scraped_jobs(jobs: list[dict[str, Any]]) -> int:
+    engine = _get_db_engine()
+    if engine is None or not jobs:
+        return 0
+    params: list[dict[str, Any]] = []
+    for job in jobs:
+        title = str(job.get("title") or "").strip()
+        company = str(job.get("company") or "").strip() or "Unknown Company"
+        if not title:
+            continue
+        original_id = str(job.get("job_id") or job.get("id") or job.get("content_hash") or title)
+        skills = job.get("skills") or job.get("tags") or []
+        if not isinstance(skills, list):
+            skills = [str(skills)]
+        required_skills = job.get("required_skills") or job.get("required_skill_names") or skills
+        preferred_skills = job.get("preferred_skills") or job.get("preferred_skill_names") or []
+        extracted_skills = job.get("extracted_skills") or job.get("extracted_skill_names") or skills
+        params.append(
+            {
+                "id": _stable_uuid(original_id),
+                "title": title,
+                "company": company,
+                "company_logo": job.get("company_logo"),
+                "location": job.get("location") or None,
+                "description": job.get("description") or None,
+                "raw_description_html": job.get("raw_description_html") or None,
+                "description_text": job.get("description_text") or job.get("description") or None,
+                "description_sections": json.dumps(job.get("description_sections") or {}),
+                "responsibilities": job.get("responsibilities") or [],
+                "requirements": job.get("requirements") or [],
+                "nice_to_have": job.get("nice_to_have") or [],
+                "benefits": job.get("benefits") or [],
+                "seniority_level": job.get("seniority_level") or None,
+                "employment_type": job.get("employment_type") or None,
+                "job_function": job.get("job_function") or None,
+                "industry": job.get("industry") or None,
+                "education_level": job.get("education_level") or None,
+                "years_experience_min": job.get("years_experience_min"),
+                "years_experience_max": job.get("years_experience_max"),
+                "required_skill_names": required_skills,
+                "preferred_skill_names": preferred_skills,
+                "extracted_skill_names": extracted_skills,
+                "source_url": job.get("source_url"),
+                "source_updated_at": job.get("source_updated_at"),
+                "salary_text": job.get("salary_text") or None,
+                "source": _clean_source(job.get("source")),
+                "is_active": bool(job.get("is_active", True)),
+                "match_data": json.dumps(
+                    {
+                        "original_job_id": original_id,
+                        "source_url": job.get("source_url"),
+                        "skills": required_skills or extracted_skills or skills,
+                        "tags": job.get("tags") or skills,
+                        "required_skills": required_skills,
+                        "preferred_skills": preferred_skills,
+                        "extracted_skills": extracted_skills,
+                    }
+                ),
+            }
+        )
+    if not params:
+        return 0
+    try:
+        async with engine.begin() as conn:
+            upsert_stmt = text(
+                "INSERT INTO jobs ("
+                "id, title, company, company_logo, location, description, raw_description_html, description_text, "
+                "description_sections, responsibilities, requirements, nice_to_have, benefits, seniority_level, "
+                "employment_type, job_function, industry, education_level, years_experience_min, years_experience_max, "
+                "required_skill_names, preferred_skill_names, extracted_skill_names, source_url, source_updated_at, "
+                "salary_text, source, is_active, match_data"
+                ") VALUES ("
+                ":id, :title, :company, :company_logo, :location, :description, :raw_description_html, :description_text, "
+                "CAST(:description_sections AS jsonb), :responsibilities, :requirements, :nice_to_have, :benefits, :seniority_level, "
+                ":employment_type, :job_function, :industry, :education_level, :years_experience_min, :years_experience_max, "
+                ":required_skill_names, :preferred_skill_names, :extracted_skill_names, :source_url, :source_updated_at, "
+                ":salary_text, :source, :is_active, CAST(:match_data AS jsonb)"
+                ") "
+                "ON CONFLICT (id) DO UPDATE SET "
+                "title = EXCLUDED.title, company = EXCLUDED.company, company_logo = EXCLUDED.company_logo, "
+                "location = EXCLUDED.location, description = EXCLUDED.description, raw_description_html = EXCLUDED.raw_description_html, "
+                "description_text = EXCLUDED.description_text, description_sections = EXCLUDED.description_sections, "
+                "responsibilities = EXCLUDED.responsibilities, requirements = EXCLUDED.requirements, nice_to_have = EXCLUDED.nice_to_have, "
+                "benefits = EXCLUDED.benefits, seniority_level = EXCLUDED.seniority_level, employment_type = EXCLUDED.employment_type, "
+                "job_function = EXCLUDED.job_function, industry = EXCLUDED.industry, education_level = EXCLUDED.education_level, "
+                "years_experience_min = EXCLUDED.years_experience_min, years_experience_max = EXCLUDED.years_experience_max, "
+                "required_skill_names = EXCLUDED.required_skill_names, preferred_skill_names = EXCLUDED.preferred_skill_names, "
+                "extracted_skill_names = EXCLUDED.extracted_skill_names, source_url = EXCLUDED.source_url, source_updated_at = EXCLUDED.source_updated_at, "
+                "salary_text = EXCLUDED.salary_text, source = EXCLUDED.source, is_active = EXCLUDED.is_active, match_data = EXCLUDED.match_data, posted_at = NOW()"
+            ).bindparams(
+                bindparam("responsibilities", type_=ARRAY(SqlText())),
+                bindparam("requirements", type_=ARRAY(SqlText())),
+                bindparam("nice_to_have", type_=ARRAY(SqlText())),
+                bindparam("benefits", type_=ARRAY(SqlText())),
+                bindparam("required_skill_names", type_=ARRAY(SqlText())),
+                bindparam("preferred_skill_names", type_=ARRAY(SqlText())),
+                bindparam("extracted_skill_names", type_=ARRAY(SqlText())),
+            )
+            await conn.execute(
+                upsert_stmt,
+                params,
+            )
+        return len(params)
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.warning("database scraped-job upsert failed: %s", exc)
+        return 0
+
+
+def _merge_jobs(primary: list[dict[str, Any]], secondary: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str] | str] = set()
+    for job in [*primary, *secondary]:
+        source_url = str(job.get("source_url") or "").strip().lower()
+        fingerprint: tuple[str, str, str] | str = source_url or (
+            str(job.get("title") or "").strip().lower(),
+            str(job.get("company") or "").strip().lower(),
+            str(job.get("location") or "").strip().lower(),
+        )
+        if fingerprint in seen:
+            continue
+        seen.add(fingerprint)
+        merged.append(job)
+        if len(merged) >= limit:
+            break
+    return merged
+
+
+async def run_scrape_stage(
+    client: httpx.AsyncClient,
+    scraper_url: str,
+    user_id: str,
+    profile: dict[str, Any] | None,
+    interaction_count: int,
+    refresh_jobs: bool,
+    limit: int,
+) -> ScrapeStageResult:
+    user = _build_user(user_id, profile, interaction_count)
+    skipped = bool(JOB_CACHE) and not refresh_jobs
+
+    db_jobs = await _load_db_jobs(limit)
+
+    if db_jobs and not refresh_jobs:
+        jobs = db_jobs
+        source = "database"
+    elif skipped and not db_jobs:
+        jobs = JOB_CACHE[:limit]
+        source = "cache"
+    else:
+        scraped_jobs, source = await _fetch_jobs(client, scraper_url.rstrip("/"), limit)
+        upserted = await _upsert_scraped_jobs(scraped_jobs)
+        refreshed_db_jobs = await _load_db_jobs(limit)
+        jobs = _merge_jobs(refreshed_db_jobs, scraped_jobs, limit)
+        source = f"{source}+database" if refreshed_db_jobs else source
+        if upserted:
+            source = f"{source}:upserted={upserted}"
+        JOB_CACHE[:] = jobs
+
+    return ScrapeStageResult(
+        user=user,
+        jobs=jobs[:limit],
+        summary={
+            "skipped_scrape": skipped,
+            "refresh_requested": refresh_jobs,
+            "source": source,
+            "cached_jobs": len(JOB_CACHE),
+            "database_jobs": len(db_jobs),
+            "returned_jobs": len(jobs[:limit]),
+        },
+    )

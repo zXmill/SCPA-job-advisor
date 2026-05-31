@@ -10,6 +10,7 @@ from services.ncf.main import app as ncf_app
 from services.pipeline.stages.stage_5_aggregate import run_aggregate_stage
 from services.sbert.main import app as sbert_app
 from services.scraper.main import app as scraper_app
+from tests.test_job_description_quality import CBI_DESCRIPTION
 
 
 pytestmark = [pytest.mark.anyio, pytest.mark.integration]
@@ -34,7 +35,55 @@ async def test_scrape_to_ranked_recommendations_e2e() -> None:
         transport=ASGITransport(app=scraper_app),
         base_url="http://scraper",
     ) as scraper:
-        scrape_response = await scraper.get("/sample")
+        scrape_response = await scraper.post(
+            "/scrape/html",
+            json={
+                "source_url": "https://www.linkedin.com/jobs/view/cbi-data-scientist",
+                "html": f"""
+                    <article class="job-card">
+                      <h2 class="job-title">Data Scientist</h2>
+                      <div class="company">CBI Credit Bureau Indonesia</div>
+                      <div class="location">South Jakarta, Indonesia</div>
+                      <p class="description">{CBI_DESCRIPTION}</p>
+                      <span class="tag">Python</span>
+                      <span class="tag">MLOps</span>
+                      <span class="tag">Credit Scoring</span>
+                      <span class="tag">Docker</span>
+                      <span class="tag">Kubernetes</span>
+                    </article>
+                    <article class="job-card">
+                      <h2 class="job-title">Data Platform Engineer</h2>
+                      <div class="company">CBI Credit Bureau Indonesia</div>
+                      <div class="location">Jakarta, Indonesia</div>
+                      <p class="description">{CBI_DESCRIPTION}</p>
+                      <span class="tag">Airflow</span>
+                      <span class="tag">Git</span>
+                    </article>
+                    <article class="job-card">
+                      <h2 class="job-title">Machine Learning Engineer</h2>
+                      <div class="company">CBI Credit Bureau Indonesia</div>
+                      <div class="location">Jakarta, Indonesia</div>
+                      <p class="description">{CBI_DESCRIPTION}</p>
+                      <span class="tag">Machine Learning</span>
+                    </article>
+                    <article class="job-card">
+                      <h2 class="job-title">MLOps Engineer</h2>
+                      <div class="company">CBI Credit Bureau Indonesia</div>
+                      <div class="location">Jakarta, Indonesia</div>
+                      <p class="description">{CBI_DESCRIPTION}</p>
+                      <span class="tag">MLOps</span>
+                    </article>
+                    <article class="job-card">
+                      <h2 class="job-title">Credit Risk Data Scientist</h2>
+                      <div class="company">CBI Credit Bureau Indonesia</div>
+                      <div class="location">Jakarta, Indonesia</div>
+                      <p class="description">{CBI_DESCRIPTION}</p>
+                      <span class="tag">Credit Scoring</span>
+                    </article>
+                """,
+                "limit": 10,
+            },
+        )
     assert scrape_response.status_code == 200
     jobs = scrape_response.json()["jobs"]
     assert len(jobs) >= 5
