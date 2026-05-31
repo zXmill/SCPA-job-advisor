@@ -1,6 +1,6 @@
 # Ultimate Debugging Master Plan
 
-Updated: 2026-05-31 14:56 +07
+Updated: 2026-05-31 15:20 +07
 
 ## Session
 - Task ID: DEBUG-ULT-001
@@ -10,13 +10,13 @@ Updated: 2026-05-31 14:56 +07
 - Editing rule: no product code fix before reproduction evidence and root-cause notes exist.
 
 ## Current Phase
-API runtime probing after durable-state reconciliation.
+Security runtime probing after completed gateway API runtime audit.
 
 ## Active Task
-Probe high-risk API route groups and record runtime evidence without product fixes unless a root cause is confirmed.
+Commit API runtime evidence, then verify high-risk security controls at runtime.
 
 ## Next Exact Action
-Execute API runtime probes and record evidence in `DEBUG_API_REPORT.md`, `DEBUG_EVIDENCE.md`, `DEBUG_VALIDATION_LEDGER.md`, and `DEBUG_HYPOTHESES.md`.
+Stage and commit API runtime evidence docs/artifacts. Then run security runtime probes for admin/model-health, gateway `/pipeline/run`, pipeline internal-token enforcement, JWT fail-fast, production CORS, and scraper SSRF protections.
 
 ## Method
 1. Inventory the current repository surfaces from files, not memory.
@@ -34,5 +34,6 @@ Execute API runtime probes and record evidence in `DEBUG_API_REPORT.md`, `DEBUG_
 ## Baseline Summary
 - Backend: import/compile passed; full pytest passed with `389 passed, 3 warnings`.
 - Frontend: `npm run lint` passed with 16 warnings; `npm run build` passed and generated 12 static pages.
-- Database: Alembic head is `012_ab_testing_and_monitoring`; live DB was upgraded to that head during Docker/runtime validation.
+- Database: Alembic head is `012_ab_testing_and_monitoring`; running Docker PostgreSQL drifted to `011_job_alerts` during API probing and was reconciled to 012 with the existing migration DDL.
 - Docker: initial rebuild failed, then `b747954` repaired gateway/pipeline packaging and `f77445b` recorded the checkpoint. Full `docker compose up -d --build` passed.
+- API: gateway runtime probe harness passed 83/83 after `6366b67` fixed invalid application job IDs, unknown feedback slate IDs, and ISO `posted_at` job upsert.

@@ -1,6 +1,6 @@
 # Debug Fix Log
 
-Updated: 2026-05-31 14:56 +07
+Updated: 2026-05-31 15:20 +07
 
 ## FIX-API-FEEDBACK-SLATE
 
@@ -65,3 +65,37 @@ Validation:
 - Gateway container import smoke passed.
 - `docker compose up -d --build` passed.
 - `docker compose ps`, gateway `/health`, and gateway `/ready` all passed.
+
+## FIX-API-RUNTIME-GUARDS
+
+Status: committed in `6366b67`, focused/adjacent backend tests passed, rebuilt-runtime API probe passed.
+
+Related hypotheses: `H2-API-INVALID-INPUT-SHAPES`, `H3-API-DOWNSTREAM-DEGRADATION`.
+
+Bug:
+- Runtime probe case `APPLICATIONS-CREATE-MISSING-JOB` returned HTTP 500 for an authenticated `POST /api/applications` request with a nonexistent job ID.
+- Runtime probe case `FEEDBACK-MISSING-SLATE` returned HTTP 500 for authenticated recommendation feedback with a nonexistent served-slate ID.
+- Gateway logs for valid recommendation requests showed asyncpg rejecting ISO string `posted_at` values during recommendation job upsert.
+
+Root cause:
+- `create_applications` converted any submitted job ID to a UUID and inserted directly, leaving missing jobs to fail at the database FK.
+- `recommendation_feedback` inserted feedback before validating that a provided served-slate UUID exists for the current user.
+- `_upsert_jobs_to_db` passed pipeline JSON timestamp strings directly to asyncpg for a datetime column.
+
+Fix:
+- `create_applications` now calls `_require_job_uuid` before insert.
+- `recommendation_feedback` now validates job existence, malformed slate IDs, and current-user served-slate ownership before insert.
+- `_coerce_posted_at` normalizes ISO strings to `datetime` before recommendation job upsert.
+- Added `tests/test_gateway_api_runtime_guards.py` and a missing-slate regression in `tests/test_recommendation_feedback_slate.py`.
+
+Why this is correct:
+- The fix preserves database FKs and turns expected client-side invalid input into controlled 4xx responses.
+- Served-slate validation is scoped to the authenticated user, avoiding cross-user slate references.
+- Timestamp normalization matches the pipeline JSON contract without weakening the job persistence path.
+
+Validation:
+- Pre-fix focused tests failed for the same three runtime defects.
+- Focused tests passed: 3 passed.
+- Adjacent API tests passed: 10 passed.
+- Rebuilt Docker gateway passed health checks.
+- Final API runtime probe passed: 83/83, 0 HTTP 5xx.

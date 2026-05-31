@@ -1,0 +1,397 @@
+gateway-1  | INFO:     172.18.0.1:59790 - "POST /api/auth/register HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:59798 - "POST /api/auth/register HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:59812 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:59820 - "POST /api/auth/register HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:     172.18.0.1:59836 - "POST /api/auth/register HTTP/1.1" 409 Conflict
+gateway-1  | INFO:     172.18.0.1:59852 - "POST /api/auth/login HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:     172.18.0.1:59868 - "GET / HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:59872 - "GET /health HTTP/1.1" 200 OK
+gateway-1  | INFO:httpx:HTTP Request: GET http://pipeline:8005/health "HTTP/1.1 200 OK"
+gateway-1  | INFO:     172.18.0.1:59874 - "GET /ready HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:59890 - "GET /api/company-logo?url=http%3A%2F%2F127.0.0.1%2Flogo.png&company=Probe HTTP/1.1" 400 Bad Request
+gateway-1  | INFO:     172.18.0.1:59892 - "GET /api/skills/search?q=python&limit=5 HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:59896 - "GET /api/skills/search?q=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:     172.18.0.1:59906 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:59918 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:59926 - "GET /api/auth/me HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:59930 - "GET /api/profile/completeness HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:59934 - "GET /api/profile/completeness HTTP/1.1" 200 OK
+gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/invalidate-user/19aa62d7-429b-4a7e-9b77-903fc4300f79 "HTTP/1.1 200 OK"
+gateway-1  | INFO:     172.18.0.1:59938 - "PUT /api/profile HTTP/1.1" 200 OK
+gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/invalidate-user/19aa62d7-429b-4a7e-9b77-903fc4300f79 "HTTP/1.1 200 OK"
+gateway-1  | INFO:     172.18.0.1:59946 - "PUT /api/profile HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:59954 - "PUT /api/profile HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/invalidate-user/19aa62d7-429b-4a7e-9b77-903fc4300f79 "HTTP/1.1 200 OK"
+gateway-1  | INFO:     172.18.0.1:59966 - "PUT /api/profile/onboarding HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:59976 - "PUT /api/profile/onboarding HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/invalidate-user/19aa62d7-429b-4a7e-9b77-903fc4300f79 "HTTP/1.1 200 OK"
+gateway-1  | INFO:     172.18.0.1:59988 - "POST /api/profile/cv HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:59994 - "POST /api/profile/cv HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:     172.18.0.1:59996 - "POST /api/profile/certificates HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:     172.18.0.1:60010 - "GET /api/jobs?limit=3 HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60014 - "GET /api/jobs?page=0 HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:     172.18.0.1:60026 - "GET /api/jobs/09442211-b541-5235-a102-ca4b619faa81 HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60042 - "POST /api/jobs/09442211-b541-5235-a102-ca4b619faa81/save HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:60046 - "POST /api/jobs/09442211-b541-5235-a102-ca4b619faa81/save HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60058 - "DELETE /api/jobs/09442211-b541-5235-a102-ca4b619faa81/save HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60074 - "POST /api/jobs/09442211-b541-5235-a102-ca4b619faa81/skip HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60076 - "GET /api/jobs/09442211-b541-5235-a102-ca4b619faa81/skill-gap HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60090 - "GET /api/jobs/2cb9159c-1a23-4f1c-b677-0bd72598f6df HTTP/1.1" 404 Not Found
+gateway-1  | INFO:     172.18.0.1:60102 - "GET /api/jobs/saved HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:60104 - "GET /api/jobs/saved HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60112 - "GET /api/applications HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:60126 - "GET /api/applications HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60128 - "POST /api/applications HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60142 - "POST /api/applications HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:     172.18.0.1:60158 - "POST /api/applications HTTP/1.1" 500 Internal Server Error
+gateway-1  | ERROR:    Exception in ASGI application
+gateway-1  | Traceback (most recent call last):
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 550, in _prepare_and_execute
+gateway-1  |     self._rows = deque(await prepared_stmt.fetch(*parameters))
+gateway-1  |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/asyncpg/prepared_stmt.py", line 177, in fetch
+gateway-1  |     data = await self.__bind_execute(args, 0, timeout)
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/asyncpg/prepared_stmt.py", line 268, in __bind_execute
+gateway-1  |     data, status, _ = await self.__do_execute(
+gateway-1  |                       ^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/asyncpg/prepared_stmt.py", line 257, in __do_execute
+gateway-1  |     return await executor(protocol)
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "asyncpg/protocol/protocol.pyx", line 205, in bind_execute
+gateway-1  | asyncpg.exceptions.ForeignKeyViolationError: insert or update on table "applications" violates foreign key constraint "applications_job_id_fkey"
+gateway-1  | DETAIL:  Key (job_id)=(5427783b-8598-4677-9e6b-1edf1aab1e15) is not present in table "jobs".
+gateway-1  |
+gateway-1  | The above exception was the direct cause of the following exception:
+gateway-1  |
+gateway-1  | Traceback (most recent call last):
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+gateway-1  |     self.dialect.do_execute(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+gateway-1  |     cursor.execute(statement, parameters)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 585, in execute
+gateway-1  |     self._adapt_connection.await_(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+gateway-1  |     return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+gateway-1  |     value = await result
+gateway-1  |             ^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 563, in _prepare_and_execute
+gateway-1  |     self._handle_exception(error)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
+gateway-1  |     self._adapt_connection._handle_exception(error)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
+gateway-1  |     raise translated_error from error
+gateway-1  | sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.IntegrityError: <class 'asyncpg.exceptions.ForeignKeyViolationError'>: insert or update on table "applications" violates foreign key constraint "applications_job_id_fkey"
+gateway-1  | DETAIL:  Key (job_id)=(5427783b-8598-4677-9e6b-1edf1aab1e15) is not present in table "jobs".
+gateway-1  |
+gateway-1  | The above exception was the direct cause of the following exception:
+gateway-1  |
+gateway-1  | Traceback (most recent call last):
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/httptools_impl.py", line 421, in run_asgi
+gateway-1  |     result = await app(  # type: ignore[func-returns-value]
+gateway-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+gateway-1  |     return await self.app(scope, receive, send)
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 1159, in __call__
+gateway-1  |     await super().__call__(scope, receive, send)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 90, in __call__
+gateway-1  |     await self.middleware_stack(scope, receive, send)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+gateway-1  |     raise exc
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+gateway-1  |     await self.app(scope, receive, _send)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 191, in __call__
+gateway-1  |     with recv_stream, send_stream, collapse_excgroups():
+gateway-1  |   File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+gateway-1  |     self.gen.throw(typ, value, traceback)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
+gateway-1  |     raise exc
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 193, in __call__
+gateway-1  |     response = await self.dispatch_func(request, call_next)
+gateway-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/app/services/gateway/main.py", line 1575, in add_latency_headers
+gateway-1  |     response = await call_next(request)
+gateway-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 168, in call_next
+gateway-1  |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/base.py", line 144, in coro
+gateway-1  |     await self.app(scope, receive_or_disconnect, send_no_error)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/cors.py", line 88, in __call__
+gateway-1  |     await self.app(scope, receive, send)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+gateway-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+gateway-1  |     raise exc
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+gateway-1  |     await app(scope, receive, sender)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+gateway-1  |     await self.app(scope, receive, send)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 660, in __call__
+gateway-1  |     await self.middleware_stack(scope, receive, send)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 680, in app
+gateway-1  |     await route.handle(scope, receive, send)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
+gateway-1  |     await self.app(scope, receive, send)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 134, in app
+gateway-1  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+gateway-1  |     raise exc
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+gateway-1  |     await app(scope, receive, sender)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 120, in app
+gateway-1  |     response = await f(request)
+gateway-1  |                ^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 674, in app
+gateway-1  |     raw_response = await run_endpoint_function(
+gateway-1  |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 328, in run_endpoint_function
+gateway-1  |     return await dependant.call(**values)
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/app/services/gateway/main.py", line 2723, in create_applications
+gateway-1  |     await db.execute(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/session.py", line 448, in execute
+gateway-1  |     result = await greenlet_spawn(
+gateway-1  |              ^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 201, in greenlet_spawn
+gateway-1  |     result = context.throw(*sys.exc_info())
+gateway-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2372, in execute
+gateway-1  |     return self._execute_internal(
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2279, in _execute_internal
+gateway-1  |     result = conn.execute(
+gateway-1  |              ^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+gateway-1  |     return meth(
+gateway-1  |            ^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+gateway-1  |     return connection._execute_clauseelement(
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+gateway-1  |     ret = self._execute_context(
+gateway-1  |           ^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+gateway-1  |     return self._exec_single_context(
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+gateway-1  |     self._handle_dbapi_exception(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+gateway-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+gateway-1  |     self.dialect.do_execute(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+gateway-1  |     cursor.execute(statement, parameters)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 585, in execute
+gateway-1  |     self._adapt_connection.await_(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+gateway-1  |     return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+gateway-1  |     value = await result
+gateway-1  |             ^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 563, in _prepare_and_execute
+gateway-1  |     self._handle_exception(error)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
+gateway-1  |     self._adapt_connection._handle_exception(error)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
+gateway-1  |     raise translated_error from error
+gateway-1  | sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.IntegrityError) <class 'asyncpg.exceptions.ForeignKeyViolationError'>: insert or update on table "applications" violates foreign key constraint "applications_job_id_fkey"
+gateway-1  | DETAIL:  Key (job_id)=(5427783b-8598-4677-9e6b-1edf1aab1e15) is not present in table "jobs".
+gateway-1  | [SQL: INSERT INTO applications (id, user_id, job_id) VALUES ($1, $2, $3)]
+gateway-1  | [parameters: ('1c607e23-a3b1-4758-ac84-b4e1959869b5', UUID('19aa62d7-429b-4a7e-9b77-903fc4300f79'), UUID('5427783b-8598-4677-9e6b-1edf1aab1e15'))]
+gateway-1  | (Background on this error at: https://sqlalche.me/e/20/gkpj)
+gateway-1  | INFO:     172.18.0.1:60170 - "GET /api/market-demand HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:60178 - "GET /api/market-demand?limit=5 HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60192 - "GET /api/job-alerts HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:60208 - "GET /api/job-alerts HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60224 - "POST /api/job-alerts HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60234 - "POST /api/job-alerts HTTP/1.1" 400 Bad Request
+gateway-1  | INFO:     172.18.0.1:60248 - "PUT /api/job-alerts/2 HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60254 - "DELETE /api/job-alerts/2 HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:60262 - "DELETE /api/job-alerts/999999999 HTTP/1.1" 404 Not Found
+gateway-1  | INFO:     172.18.0.1:60266 - "POST /api/recommendations HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:60280 - "POST /api/recommendations HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:     127.0.0.1:45188 - "GET /health HTTP/1.1" 200 OK
+gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run "HTTP/1.1 200 OK"
+gateway-1  | ERROR:scpa.gateway:Failed to upsert recommended jobs: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $14 in element #0 of executemany() sequence: '2026-05-31T02:05:03.063175' (expected a datetime.date or datetime.datetime instance, got 'str')
+gateway-1  | [SQL:
+gateway-1  |                 INSERT INTO jobs (
+gateway-1  |                     id, title, company, company_logo, location, type, min_salary, max_salary,
+gateway-1  |                     salary_currency, salary_text, employment_mode, description, experience_level,
+gateway-1  |                     posted_at, source, is_active, match_data
+gateway-1  |                 ) VALUES (
+gateway-1  |                     $1, $2, $3, $4, $5, $6, $7, $8,
+gateway-1  |                     $9, $10, $11, $12, $13,
+gateway-1  |                     $14, $15, $16, $17
+gateway-1  |                 ) ON CONFLICT (id) DO UPDATE SET
+gateway-1  |                     title = EXCLUDED.title,
+gateway-1  |                     company = EXCLUDED.company,
+gateway-1  |                     company_logo = EXCLUDED.company_logo,
+gateway-1  |                     location = EXCLUDED.location,
+gateway-1  |                     description = EXCLUDED.description,
+gateway-1  |                     salary_text = COALESCE(EXCLUDED.salary_text, jobs.salary_text),
+gateway-1  |                     source = EXCLUDED.source,
+gateway-1  |                     is_active = EXCLUDED.is_active,
+gateway-1  |                     match_data = EXCLUDED.match_data
+gateway-1  |             ]
+gateway-1  | [parameters: [(UUID('03a4f54c-49b3-5d4d-ae48-d3160803d576'), 'Finance Analyst, AG APAC - Tropical Oils', 'Cargill', 'http://localhost:9000/api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FD560BAQE-JavwZhEueQ%2Fcompany-logo_100_100%2FB56ZVIHolwGoAQ-%2F0%2F1740671715990%2Fcargill_logo%3Fe%3D2147483647%26v%3Dbeta%26t%3DRPlPp82xXXkRoQDn4nzjP9Bwsl_J6fJiIf6-9ZmVxZo&company=Cargill', 'Palembang, South Sumatra, Indonesia', None, None, None, 'IDR', None, None, 'Finance Analyst, AG APAC - Tropical Oils Cargill Palembang, South Sumatra, Indonesia', None, '2026-05-31T02:05:03.063175', 'linkedin', True, '{"skills": ["Data", "Finance"], "source_url": "https://id.linkedin.com/jobs/view/finance-analyst-ag-apac-tropical-oils-at-cargill-4405174743?position=7&pageNum=0&refId=%2FFYJ10leW1pwBbS%2FUHsuww%3D%3D&trackingId=vsS0FoXK86zhcTvYN270RA%3D%3D"}'), (UUID('9aa89db3-4fd5-509b-9392-e7f5e8fa1b24'), 'Senior Cost Analyst', 'Volex', 'http://localhost:9000/api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FC4D0BAQGcL3X2PFZbDA%2Fcompany-logo_100_100%2Fcompany-logo_100_100%2F0%2F1630509139971%2Fvolex_logo%3Fe%3D2147483647%26v%3Dbeta%26t%3DgjUJ-KLcLg98DjBLw1VE8XfFA6GJyULgb90MF4dX3C4&company=Volex', 'Batam, Riau Islands, Indonesia', None, None, None, 'IDR', None, None, 'Senior Cost Analyst Volex Batam, Riau Islands, Indonesia', None, '2026-05-31T02:05:03.063175', 'linkedin', True, '{"skills": ["Data"], "source_url": "https://id.linkedin.com/jobs/view/senior-cost-analyst-at-volex-4410011142?position=34&pageNum=0&refId=%2FFYJ10leW1pwBbS%2FUHsuww%3D%3D&trackingId=pDDQszYpYzYLSgLitP5SwA%3D%3D"}')]]
+gateway-1  | (Background on this error at: https://sqlalche.me/e/20/dbapi)
+gateway-1  | INFO:     172.18.0.1:60290 - "POST /api/recommendations HTTP/1.1" 200 OK
+gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run "HTTP/1.1 200 OK"
+gateway-1  | ERROR:scpa.gateway:Failed to upsert recommended jobs: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $14: '2026-05-31T02:05:03.063175' (expected a datetime.date or datetime.datetime instance, got 'str')
+gateway-1  | [SQL:
+gateway-1  |                 INSERT INTO jobs (
+gateway-1  |                     id, title, company, company_logo, location, type, min_salary, max_salary,
+gateway-1  |                     salary_currency, salary_text, employment_mode, description, experience_level,
+gateway-1  |                     posted_at, source, is_active, match_data
+gateway-1  |                 ) VALUES (
+gateway-1  |                     $1, $2, $3, $4, $5, $6, $7, $8,
+gateway-1  |                     $9, $10, $11, $12, $13,
+gateway-1  |                     $14, $15, $16, $17
+gateway-1  |                 ) ON CONFLICT (id) DO UPDATE SET
+gateway-1  |                     title = EXCLUDED.title,
+gateway-1  |                     company = EXCLUDED.company,
+gateway-1  |                     company_logo = EXCLUDED.company_logo,
+gateway-1  |                     location = EXCLUDED.location,
+gateway-1  |                     description = EXCLUDED.description,
+gateway-1  |                     salary_text = COALESCE(EXCLUDED.salary_text, jobs.salary_text),
+gateway-1  |                     source = EXCLUDED.source,
+gateway-1  |                     is_active = EXCLUDED.is_active,
+gateway-1  |                     match_data = EXCLUDED.match_data
+gateway-1  |             ]
+gateway-1  | [parameters: (UUID('03a4f54c-49b3-5d4d-ae48-d3160803d576'), 'Finance Analyst, AG APAC - Tropical Oils', 'Cargill', 'http://localhost:9000/api/company-logo?url=https%3A%2F%2Fmedia.licdn.com%2Fdms%2Fimage%2Fv2%2FD560BAQE-JavwZhEueQ%2Fcompany-logo_100_100%2FB56ZVIHolwGoAQ-%2F0%2F1740671715990%2Fcargill_logo%3Fe%3D2147483647%26v%3Dbeta%26t%3DRPlPp82xXXkRoQDn4nzjP9Bwsl_J6fJiIf6-9ZmVxZo&company=Cargill', 'Palembang, South Sumatra, Indonesia', None, None, None, 'IDR', None, None, 'Finance Analyst, AG APAC - Tropical Oils Cargill Palembang, South Sumatra, Indonesia', None, '2026-05-31T02:05:03.063175', 'linkedin', True, '{"skills": ["Data", "Finance"], "source_url": "https://id.linkedin.com/jobs/view/finance-analyst-ag-apac-tropical-oils-at-cargill-4405174743?position=7&pageNum=0&refId=%2FFYJ10leW1pwBbS%2FUHsuww%3D%3D&trackingId=vsS0FoXK86zhcTvYN270RA%3D%3D"}')]
+gateway-1  | (Background on this error at: https://sqlalche.me/e/20/dbapi)
+gateway-1  | INFO:     172.18.0.1:57340 - "POST /recommendations HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:57348 - "POST /api/recommendations/feedback HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:57362 - "POST /api/recommendations/feedback HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/feedback "HTTP/1.1 422 Unprocessable Entity"
+gateway-1  | INFO:     172.18.0.1:57368 - "POST /api/recommendations/feedback HTTP/1.1" 200 OK
+gateway-1  | ERROR:scpa.gateway:feedback persistence failed user_id=19aa62d7-429b-4a7e-9b77-903fc4300f79 job_id=03a4f54c-49b3-5d4d-ae48-d3160803d576
+gateway-1  | Traceback (most recent call last):
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 550, in _prepare_and_execute
+gateway-1  |     self._rows = deque(await prepared_stmt.fetch(*parameters))
+gateway-1  |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/asyncpg/prepared_stmt.py", line 177, in fetch
+gateway-1  |     data = await self.__bind_execute(args, 0, timeout)
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/asyncpg/prepared_stmt.py", line 268, in __bind_execute
+gateway-1  |     data, status, _ = await self.__do_execute(
+gateway-1  |                       ^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/asyncpg/prepared_stmt.py", line 257, in __do_execute
+gateway-1  |     return await executor(protocol)
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "asyncpg/protocol/protocol.pyx", line 205, in bind_execute
+gateway-1  | asyncpg.exceptions.ForeignKeyViolationError: insert or update on table "feedback_events" violates foreign key constraint "feedback_events_slate_id_fkey"
+gateway-1  | DETAIL:  Key (slate_id)=(6d2859c5-bacd-4b8f-b9d1-b68108887b1e) is not present in table "served_slates".
+gateway-1  |
+gateway-1  | The above exception was the direct cause of the following exception:
+gateway-1  |
+gateway-1  | Traceback (most recent call last):
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+gateway-1  |     self.dialect.do_execute(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+gateway-1  |     cursor.execute(statement, parameters)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 585, in execute
+gateway-1  |     self._adapt_connection.await_(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+gateway-1  |     return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+gateway-1  |     value = await result
+gateway-1  |             ^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 563, in _prepare_and_execute
+gateway-1  |     self._handle_exception(error)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
+gateway-1  |     self._adapt_connection._handle_exception(error)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
+gateway-1  |     raise translated_error from error
+gateway-1  | sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.IntegrityError: <class 'asyncpg.exceptions.ForeignKeyViolationError'>: insert or update on table "feedback_events" violates foreign key constraint "feedback_events_slate_id_fkey"
+gateway-1  | DETAIL:  Key (slate_id)=(6d2859c5-bacd-4b8f-b9d1-b68108887b1e) is not present in table "served_slates".
+gateway-1  |
+gateway-1  | The above exception was the direct cause of the following exception:
+gateway-1  |
+gateway-1  | Traceback (most recent call last):
+gateway-1  |   File "/app/services/gateway/main.py", line 3017, in recommendation_feedback
+gateway-1  |     await db.execute(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/session.py", line 448, in execute
+gateway-1  |     result = await greenlet_spawn(
+gateway-1  |              ^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 201, in greenlet_spawn
+gateway-1  |     result = context.throw(*sys.exc_info())
+gateway-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2372, in execute
+gateway-1  |     return self._execute_internal(
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2279, in _execute_internal
+gateway-1  |     result = conn.execute(
+gateway-1  |              ^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+gateway-1  |     return meth(
+gateway-1  |            ^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+gateway-1  |     return connection._execute_clauseelement(
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+gateway-1  |     ret = self._execute_context(
+gateway-1  |           ^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+gateway-1  |     return self._exec_single_context(
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+gateway-1  |     self._handle_dbapi_exception(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+gateway-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+gateway-1  |     self.dialect.do_execute(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+gateway-1  |     cursor.execute(statement, parameters)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 585, in execute
+gateway-1  |     self._adapt_connection.await_(
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+gateway-1  |     return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+gateway-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+gateway-1  |     value = await result
+gateway-1  |             ^^^^^^^^^^^^
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 563, in _prepare_and_execute
+gateway-1  |     self._handle_exception(error)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
+gateway-1  |     self._adapt_connection._handle_exception(error)
+gateway-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
+gateway-1  |     raise translated_error from error
+gateway-1  | sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.IntegrityError) <class 'asyncpg.exceptions.ForeignKeyViolationError'>: insert or update on table "feedback_events" violates foreign key constraint "feedback_events_slate_id_fkey"
+gateway-1  | DETAIL:  Key (slate_id)=(6d2859c5-bacd-4b8f-b9d1-b68108887b1e) is not present in table "served_slates".
+gateway-1  | [SQL: INSERT INTO feedback_events (event_type, user_id, job_id, slate_id, rank, source, dwell_ms, model_provenance, metadata, created_at) VALUES ($1, $2, $3, $4, $5, 'frontend', $6, CAST($7 AS jsonb), CAST($8 AS jsonb), NOW())]
+gateway-1  | [parameters: ('impression', '19aa62d7-429b-4a7e-9b77-903fc4300f79', UUID('03a4f54c-49b3-5d4d-ae48-d3160803d576'), UUID('6d2859c5-bacd-4b8f-b9d1-b68108887b1e'), 1, 0, '{"sbert_score": null, "ncf_score": null, "dqn_score": null}', '{"recommendation_id": "8d2a22e3-9263-4865-83f9-07cea8aaa630", "run_id": null, "served_slate_id": "6d2859c5-bacd-4b8f-b9d1-b68108887b1e", "rank": 0, "slate_job_ids": ["03a4f54c-49b3-5d4d-ae48-d3160803d576"], "reward": 0.2}')]
+gateway-1  | (Background on this error at: https://sqlalche.me/e/20/gkpj)
+gateway-1  | INFO:     172.18.0.1:57382 - "POST /api/recommendations/feedback HTTP/1.1" 500 Internal Server Error
+gateway-1  | INFO:     172.18.0.1:57398 - "POST /api/recommendations/feedback HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:     172.18.0.1:57410 - "POST /api/learning-path HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:httpx:HTTP Request: POST http://dqn:8004/learning-path "HTTP/1.1 200 OK"
+gateway-1  | INFO:     172.18.0.1:57418 - "POST /api/learning-path HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:57422 - "GET /api/admin/model-health HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:57438 - "GET /api/admin/model-health HTTP/1.1" 403 Forbidden
+gateway-1  | INFO:     172.18.0.1:57446 - "POST /pipeline/run HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:57458 - "POST /pipeline/run HTTP/1.1" 403 Forbidden
+gateway-1  | INFO:     172.18.0.1:57472 - "GET /api/experiments HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:57474 - "GET /api/experiments?limit=5 HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:57476 - "POST /api/experiments HTTP/1.1" 401 Unauthorized
+gateway-1  | INFO:     172.18.0.1:57490 - "POST /api/experiments HTTP/1.1" 403 Forbidden
+gateway-1  | INFO:     172.18.0.1:57494 - "POST /api/experiments HTTP/1.1" 422 Unprocessable Entity
+gateway-1  | INFO:     172.18.0.1:57506 - "POST /api/auth/login HTTP/1.1" 200 OK
+gateway-1  | INFO:httpx:HTTP Request: GET http://pipeline:8005/health "HTTP/1.1 200 OK"
+gateway-1  | INFO:     172.18.0.1:57508 - "GET /api/admin/model-health HTTP/1.1" 200 OK
+gateway-1  | INFO:httpx:HTTP Request: POST http://pipeline:8005/pipeline/run "HTTP/1.1 200 OK"
+gateway-1  | INFO:     172.18.0.1:57514 - "POST /pipeline/run HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:39754 - "POST /api/experiments HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:39768 - "GET /api/experiments/8f0345e5-34fa-4a94-ac9f-3738f7843248 HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:39778 - "POST /api/experiments/8f0345e5-34fa-4a94-ac9f-3738f7843248/start HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:39792 - "POST /api/experiments/8f0345e5-34fa-4a94-ac9f-3738f7843248/assign HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:39806 - "GET /api/experiments/8f0345e5-34fa-4a94-ac9f-3738f7843248/metrics HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:39812 - "POST /api/events/track HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:39824 - "POST /api/events/track HTTP/1.1" 400 Bad Request
+gateway-1  | INFO:     172.18.0.1:39840 - "POST /api/experiments/8f0345e5-34fa-4a94-ac9f-3738f7843248/pause HTTP/1.1" 200 OK
+gateway-1  | INFO:     172.18.0.1:39848 - "POST /api/experiments/8f0345e5-34fa-4a94-ac9f-3738f7843248/complete HTTP/1.1" 200 OK

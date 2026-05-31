@@ -1,8 +1,8 @@
 # Debug Database Report
 
-Updated: 2026-05-31 10:45 +07
+Updated: 2026-05-31 15:20 +07
 
-Status: live migration validation completed against the running local PostgreSQL container.
+Status: running Docker PostgreSQL schema reconciled to repo head after API runtime probe found drift.
 
 ## Required Checks
 - Alembic heads.
@@ -19,9 +19,12 @@ Status: live migration validation completed against the running local PostgreSQL
 - `alembic upgrade head` applied migrations through `012_ab_testing_and_monitoring`.
 - `alembic current` now reports `012_ab_testing_and_monitoring (head)`.
 - Full pytest, including `db/tests/test_models.py` and `db/tests/test_seed_contracts.py`, passed.
+- API runtime probe reconciliation later found the running Docker PostgreSQL database at `011_job_alerts`, with `experiments`, `experiment_assignments`, and `experiment_metrics` absent.
+- Applied the existing `012_ab_testing_and_monitoring` table/index DDL via `docker compose exec -T postgres psql` because the gateway image does not include Alembic and Postgres is not host-exposed.
+- Post-repair checks now return `012_ab_testing_and_monitoring`, `experiments`, `experiment_assignments`, and `experiment_metrics`.
 
 ## Open Validation
-- Container-local Alembic is still not part of the gateway runtime image by design; migration validation was run from the repo-local `.venv` against the local PostgreSQL container.
+- Container-local Alembic is still not part of the gateway runtime image by design. Future migration validation should explicitly target the Docker PostgreSQL database instead of assuming host Alembic and compose DB are the same target.
 
 ## Feedback/Slate Relationship Finding
 - The `feedback_events.slate_id` FK correctly rejects feedback for unknown served slates.

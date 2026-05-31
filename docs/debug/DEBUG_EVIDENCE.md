@@ -1,6 +1,6 @@
 # Debug Evidence
 
-Updated: 2026-05-31 10:45 +07
+Updated: 2026-05-31 15:20 +07
 
 ## Bootstrap Evidence
 - Repository cwd: `E:\TUGAS AKHIR\SCPA`.
@@ -12,7 +12,7 @@ Updated: 2026-05-31 10:45 +07
 
 ## Evidence Index
 - Browser artifacts: final authenticated Selenium audit saved under `reports/debug/browser/`.
-- API artifacts: focused API/database regression evidence collected for `H4-API-FEEDBACK-SLATE-FK`.
+- API artifacts: gateway runtime probe artifacts under `reports/debug/api/`; final fixed run is `gateway_runtime_probe_20260531T081953Z.json` plus matching `.log`.
 - Model artifacts: pending.
 - Database artifacts: live Alembic current/upgrade/current validation recorded.
 - Docker artifacts: compose build/up, service health, and browser re-check recorded.
@@ -61,7 +61,26 @@ Updated: 2026-05-31 10:45 +07
 - `alembic current` before upgrade: `001_initial_schema`.
 - `alembic upgrade head`: pass, applied migrations through `012_ab_testing_and_monitoring`.
 - `alembic current` after upgrade: `012_ab_testing_and_monitoring (head)`.
+- API-phase reconciliation found the running Docker PostgreSQL container still at `011_job_alerts` with no `experiments` tables. The existing `012_ab_testing_and_monitoring` DDL was applied through `docker compose exec -T postgres psql` because the gateway image intentionally lacks Alembic and Postgres is not host-exposed.
+- Post-repair Docker DB checks returned `012_ab_testing_and_monitoring`, `experiments`, `experiment_assignments`, and `experiment_metrics`.
 
 ## Final Browser Evidence
 - Final authenticated Selenium audit against the rebuilt Docker runtime: 9 pages, 0 console errors, 0 network failures, 0 blank pages, 0 hydration errors.
 - Report artifact secret scan found no password, bearer token, authorization header, JWT-like token, or access-token strings.
+
+## API Runtime Probe Evidence
+- `scripts/debug/api_runtime_probe.py` compiled and ran against `http://127.0.0.1:9000`.
+- Pre-fix corrected probe after Docker DB 012 repair: `reports/debug/api/gateway_runtime_probe_20260531T080750Z.json`, 83 total, 81 passed, 2 failed, HTTP 5xx cases `APPLICATIONS-CREATE-MISSING-JOB` and `FEEDBACK-MISSING-SLATE`.
+- Pre-fix gateway logs confirmed:
+  - `applications_job_id_fkey` for invalid application job IDs.
+  - `feedback_events_slate_id_fkey` for unknown served-slate IDs.
+  - asyncpg `DataError` when recommendation job upsert received ISO string `posted_at`.
+- Post-fix local validation passed:
+  - Focused red-to-green: `tests\test_gateway_api_runtime_guards.py tests\test_recommendation_feedback_slate.py::test_feedback_with_unknown_served_slate_returns_404 -q` -> 3 passed.
+  - Adjacent suite: `tests\test_gateway_api_runtime_guards.py tests\test_recommendation_feedback_slate.py tests\test_feedback_outbox.py tests\test_saved_jobs_skip.py -q` -> 10 passed.
+- Post-fix Docker validation:
+  - `docker compose up -d --build gateway` passed and rebuilt the gateway plus dependent service images.
+  - `docker compose ps` showed all services healthy.
+  - Gateway `/health` returned healthy.
+  - Final API probe `reports/debug/api/gateway_runtime_probe_20260531T081953Z.json` passed 83/83 with 0 HTTP 5xx.
+  - Final API artifact secret scan found no password, bearer token, authorization header, JWT-like token, or access-token strings.

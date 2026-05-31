@@ -1,8 +1,8 @@
 # Debug Hypotheses
 
-Updated: 2026-05-31 14:56 +07
+Updated: 2026-05-31 15:20 +07
 
-Status: generated from static inventory and baseline validation, then reconciled after served-slate and Docker/runtime fixes. Fixes are allowed only after the related reproduction evidence is recorded.
+Status: generated from static inventory and baseline validation, reconciled after served-slate/Docker fixes, and updated after gateway API runtime probing. Fixes are allowed only after the related reproduction evidence is recorded.
 
 ## Frontend
 
@@ -57,7 +57,7 @@ Hypothesis: gateway `/pipeline/run` must be admin-only and pipeline `/pipeline/r
 
 Expected: unauthenticated/public callers cannot trigger pipeline execution.
 
-Actual: automated tests passed; runtime route probe pending.
+Actual: gateway runtime probe passed for unauthenticated, non-admin, and admin cases. Direct pipeline internal-token probing remains in the security phase.
 
 Test: send unauthenticated, non-admin, admin, and internal-token requests where feasible.
 
@@ -68,7 +68,7 @@ Hypothesis: at least one public API route returns 500 for malformed or empty inp
 
 Expected: invalid input returns 400/401/403/404/422 with safe response shape.
 
-Actual: unit tests pass for many routes; full runtime route probe pending.
+Actual: confirmed and fixed in `6366b67`. Runtime probe found `POST /api/applications` with a nonexistent job ID and `POST /api/recommendations/feedback` with an unknown served-slate ID returned 500. Final rebuilt-runtime probe passed 83/83 with 0 HTTP 5xx.
 
 Test: invalid/empty payload probes for auth, profile, uploads, jobs, recommendations, experiments, and events.
 
@@ -79,7 +79,7 @@ Hypothesis: gateway recommendation and learning-path routes may not degrade cons
 
 Expected: controlled error/degradation response without leaking stack traces.
 
-Actual: existing `/ready` telemetry shows SBERT p95 near gateway timeout target; runtime degradation probe pending.
+Actual: current-service gateway recommendation and learning-path runtime probes passed. Server logs also exposed a nonfatal recommendation job upsert failure for ISO string `posted_at`; fixed in `6366b67`. Explicit downstream-unavailable simulation remains pending.
 
 Test: run route smoke with current services, then simulate bad downstream URL in process-level tests if needed.
 
@@ -114,7 +114,7 @@ Hypothesis: repository migrations are at head `012_ab_testing_and_monitoring`, b
 
 Expected: live DB current revision equals head.
 
-Actual: fixed during runtime validation. Live DB initially reported `001_initial_schema`; `alembic upgrade head` passed; `alembic current` now reports `012_ab_testing_and_monitoring (head)`.
+Actual: confirmed again during API probing. Running Docker PostgreSQL reported `011_job_alerts` and lacked `experiments` tables; the existing 012 DDL was applied through `psql`, and the running DB now reports `012_ab_testing_and_monitoring` with experiment tables present.
 
 Test: run Alembic current against the intended DB with known non-secret connection config.
 
