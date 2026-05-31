@@ -890,6 +890,8 @@ def run_mode(
 ) -> tuple[list[ScenarioResult], NetworkRecorder, ConsoleRecorder, dict[str, Any]]:
     recorder = NetworkRecorder(driver)
     console = ConsoleRecorder(driver)
+    driver.get(base_url.rstrip("/"))
+    wait_for_ready(driver)
     driver.execute_script("window.localStorage.clear(); window.sessionStorage.clear();")
     auth_result = perform_login(driver, recorder, console, base_url, mode, email, password)
     scenarios: list[ScenarioResult] = []
