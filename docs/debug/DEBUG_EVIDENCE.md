@@ -1,6 +1,6 @@
 # Debug Evidence
 
-Updated: 2026-05-31 15:20 +07
+Updated: 2026-05-31 16:26 +07
 
 ## Bootstrap Evidence
 - Repository cwd: `E:\TUGAS AKHIR\SCPA`.
@@ -47,7 +47,7 @@ Updated: 2026-05-31 15:20 +07
   - Focused regression passed.
   - Adjacent recommendation/pipeline suite passed with 6 tests.
   - Full backend suite passed with 390 tests.
-- Browser re-verification of the fix is pending because the live browser target currently uses an existing/stale gateway container and the current Docker gateway rebuild is separately broken.
+- Browser re-verification later passed after Docker/runtime repair; the final route-level Selenium audit reported 0 network failures.
 
 ## Docker And Runtime Evidence
 - `docker compose build gateway`: pass. Gateway context dropped from prior 5.06GB failure to 286.56KB; image built successfully.
@@ -84,3 +84,9 @@ Updated: 2026-05-31 15:20 +07
   - Gateway `/health` returned healthy.
   - Final API probe `reports/debug/api/gateway_runtime_probe_20260531T081953Z.json` passed 83/83 with 0 HTTP 5xx.
   - Final API artifact secret scan found no password, bearer token, authorization header, JWT-like token, or access-token strings.
+
+## Product-Quality Recovery Evidence
+- `git log --oneline -20` shows latest commit `d511e1c docs: record api runtime probe evidence`.
+- `git status --short --branch` confirms branch `agent-run` remains dirty with pre-existing modified/untracked files; no unrelated dirty work was staged during reconciliation.
+- Required debug reports were re-read on 2026-05-31 16:26 +07. Stale debug state was found in `COMPACT_RECOVERY.md`, `DEBUG_MASTER_PLAN.md`, `DEBUG_BROWSER_REPORT.md`, `DEBUG_FRONTEND_REPORT.md`, and this evidence file.
+- `impeccable` setup was invoked for the frontend phase. The project-local helper path was absent, and the installed skill helper reported `NO_PRODUCT_MD`; frontend design/product work therefore needs a minimal `PRODUCT.md` context before UI changes.

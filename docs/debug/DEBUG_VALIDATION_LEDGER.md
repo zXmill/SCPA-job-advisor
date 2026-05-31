@@ -1,6 +1,6 @@
 # Debug Validation Ledger
 
-Updated: 2026-05-31 15:20 +07
+Updated: 2026-05-31 16:26 +07
 
 | Timestamp | Command | Result | Related ID | Summary |
 | --- | --- | --- | --- | --- |
@@ -65,3 +65,5 @@ Updated: 2026-05-31 15:20 +07
 | 2026-05-31 15:19 +07 | `.\.venv\Scripts\python.exe scripts\debug\api_runtime_probe.py --base-url http://127.0.0.1:9000 --output-dir reports\debug\api --timeout 60` | pass | API-RUNTIME-PROBE | Final sanitized rebuilt-runtime API probe passed: 83 total, 83 passed, 0 failed, 0 HTTP 5xx. |
 | 2026-05-31 15:20 +07 | `rg -n "access_token|Authorization|Bearer |eyJ|password123|admin123" reports/debug/api` | pass | SECRET-SCAN | API reports/logs contained no token values, authorization headers, JWT-like strings, or demo passwords. |
 | 2026-05-31 15:20 +07 | `Select-String reports\debug\api\gateway_runtime_probe_20260531T081953Z.log -Pattern "ERROR|Traceback|Failed to upsert|ForeignKeyViolation|Internal Server Error| 500 "` | pass | API-RUNTIME-PROBE | Final API log contained no FK/upsert/internal-server-error matches. |
+| 2026-05-31 16:26 +07 | `git log --oneline -20`; `git status --short --branch`; required `docs/debug/*.md` reads | pass | PRODUCT-QUALITY-RECOVERY | Recovered from repository state only. Latest commit is `d511e1c`; stale pending-API-evidence and security-phase state was found before the frontend product-quality phase. |
+| 2026-05-31 16:26 +07 | `node .codex/skills/impeccable/scripts/context.mjs`; `node C:\Users\ACER\.codex\skills\impeccable\scripts\context.mjs` | partial | IMPECCABLE-SETUP | Project-local helper path was absent; installed helper reported `NO_PRODUCT_MD`, so `PRODUCT.md` initialization is required before frontend UI changes. |

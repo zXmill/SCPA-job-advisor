@@ -1,8 +1,8 @@
 # Debug Browser Report
 
-Updated: 2026-05-31 10:45 +07
+Updated: 2026-05-31 16:26 +07
 
-Status: Selenium/Chrome audit harness added; final authenticated audit against rebuilt Docker runtime passed.
+Status: route-level Selenium/Chrome audit passed against rebuilt Docker runtime. A separate semantic product-quality audit is now required because manual browser inspection found user-visible issues not covered by the prior harness.
 
 ## Required Coverage
 - Home page.
@@ -55,6 +55,10 @@ Status: Selenium/Chrome audit harness added; final authenticated audit against r
 - `FIX-API-FEEDBACK-SLATE`: current source persists the served slate before returning recommendations, verified by focused API/database tests, full backend tests, and final Selenium audit.
 - `BROWSER-LOCALHOST-CONTRACT`: audits against `127.0.0.1` created false positives or CORS/login mismatch. The working local browser contract is `localhost:3000` -> `localhost:9000`, matching `frontend/.env.local` and compose CORS.
 - `BROWSER-WARN-THREE-CLOCK`: Chrome console reports `THREE.Clock` deprecation from the frontend animation stack. Non-blocking warning.
+
+## Current Product-Quality Gap
+- The previous audit did not assert semantic UI correctness after fetch cancellation, timeout, retry, sort/filter, save/skip, repeated theme toggle, skill autocomplete, or job-detail content interactions.
+- The new phase must capture evidence under `reports/debug/product_quality/` and classify manual findings before any frontend/product-code fix.
 
 ## Artifact Files
 - `reports/debug/browser/browser_audit.md`

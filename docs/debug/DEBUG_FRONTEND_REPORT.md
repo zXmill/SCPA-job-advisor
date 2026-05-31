@@ -1,8 +1,8 @@
 # Debug Frontend Report
 
-Updated: 2026-05-31 09:12 +07
+Updated: 2026-05-31 16:26 +07
 
-Status: static/lint/build checks completed; browser-backed checks pending.
+Status: static/lint/build checks completed, route-level browser audit passed, and semantic product-quality browser checks are pending.
 
 ## Required Checks
 - Pages/routes.
@@ -40,4 +40,11 @@ Status: static/lint/build checks completed; browser-backed checks pending.
 - Canonical authenticated audit on `localhost:3000` loaded all discovered routes without blank pages or hydration errors.
 - Browser warning: `THREE.Clock` deprecation on the home page.
 - Browser warning: one LCP image recommendation on analytics for a company logo image.
-- Browser failure originates from backend feedback persistence, not a frontend crash: `/recommendations` remains visible but `POST /api/recommendations/feedback` returns 500.
+- Previous browser failure originated from backend feedback persistence, not a frontend crash: `/recommendations` remained visible while `POST /api/recommendations/feedback` returned 500. This was fixed and later verified by final route-level Selenium audit.
+
+## Product-Quality Checks Needed
+- Job vacancies timeout/error state correctness.
+- Recommendation timeout/error state correctness and canceled request race behavior.
+- Theme toggle repeated-click and persistence behavior.
+- Skill autocomplete taxonomy richness and duplicate handling.
+- Job detail content depth, structured fields, and skill-gap context.
