@@ -30,6 +30,11 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = ROOT / "reports" / "debug" / "runtime_contract"
+THEME_BUTTON_XPATH = (
+    "//button[contains(@aria-label, 'theme') "
+    "or contains(@aria-label, 'Theme') "
+    "or contains(@aria-label, 'Switch to')]"
+)
 
 TIMEOUT_TEXTS = (
     "Permintaan kehabisan waktu. Coba lagi.",
@@ -111,7 +116,7 @@ def sanitize_obj(value: Any) -> Any:
         sanitized: dict[str, Any] = {}
         for key, item in value.items():
             if SENSITIVE_KEY_RE.search(str(key)):
-                sanitized[key] = "<redacted>"
+                sanitized[key] = item if isinstance(item, bool) else "<redacted>"
             else:
                 sanitized[key] = sanitize_obj(item)
         return sanitized
@@ -164,6 +169,7 @@ class NetworkRecorder:
     def __init__(self, driver: webdriver.Chrome) -> None:
         self.driver = driver
         self.events: list[dict[str, Any]] = []
+        self.request_urls: dict[str, str] = {}
 
     def poll(self, mode: str, scenario: str) -> list[dict[str, Any]]:
         try:
@@ -197,6 +203,7 @@ class NetworkRecorder:
             url = request.get("url", "")
             if not url:
                 return None
+            self.request_urls[str(params.get("requestId", ""))] = sanitize_text(url)
             return {
                 **base,
                 "event": "request",
@@ -220,9 +227,11 @@ class NetworkRecorder:
                 "from_service_worker": bool(response.get("fromServiceWorker")),
             }
         if method == "Network.loadingFailed":
+            request_id = str(params.get("requestId", ""))
             return {
                 **base,
                 "event": "loading_failed",
+                "url": self.request_urls.get(request_id, ""),
                 "error_text": sanitize_text(params.get("errorText", "")),
                 "canceled": bool(params.get("canceled")),
                 "resource_type": params.get("type", ""),
@@ -325,6 +334,62 @@ def wait_for_ready(driver: WebDriver, timeout: int = 30) -> None:
     )
 
 
+def set_react_input_value(driver: WebDriver, selector: str, value: str) -> None:
+    driver.execute_script(
+        """
+        const input = document.querySelector(arguments[0]);
+        if (!input) throw new Error(`Input not found: ${arguments[0]}`);
+        const setter = Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          'value'
+        ).set;
+        setter.call(input, arguments[1]);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        """,
+        selector,
+        value,
+    )
+
+
+def set_network_throttle(
+    driver: webdriver.Chrome,
+    latency_ms: int,
+    download_bytes_per_second: int,
+    upload_bytes_per_second: int,
+) -> bool:
+    try:
+        driver.execute_cdp_cmd(
+            "Network.emulateNetworkConditions",
+            {
+                "offline": False,
+                "latency": latency_ms,
+                "downloadThroughput": download_bytes_per_second,
+                "uploadThroughput": upload_bytes_per_second,
+                "connectionType": "cellular3g",
+            },
+        )
+        return True
+    except WebDriverException:
+        return False
+
+
+def reset_network_throttle(driver: webdriver.Chrome) -> None:
+    try:
+        driver.execute_cdp_cmd(
+            "Network.emulateNetworkConditions",
+            {
+                "offline": False,
+                "latency": 0,
+                "downloadThroughput": -1,
+                "uploadThroughput": -1,
+                "connectionType": "none",
+            },
+        )
+    except WebDriverException:
+        pass
+
+
 def wait_for_endpoint(
     recorder: NetworkRecorder,
     mode: str,
@@ -340,10 +405,6 @@ def wait_for_endpoint(
             event
             for event in events
             if endpoint_fragment in event.get("url", "")
-            or (
-                event.get("event") == "loading_failed"
-                and endpoint_fragment in event.get("request_id", "")
-            )
         )
         if any(event.get("event") in {"response", "loading_failed"} for event in seen):
             return seen
@@ -367,14 +428,16 @@ def perform_login(
     driver.get(f"{base_url.rstrip('/')}/auth")
     wait_for_ready(driver)
     try:
-        email_input = driver.find_element(By.CSS_SELECTOR, "input[type='email'], input[name='email']")
-        password_input = driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[name='password']")
-        email_input.clear()
-        email_input.send_keys(email)
-        password_input.clear()
-        password_input.send_keys(password)
+        WebDriverWait(driver, 25).until(
+            lambda d: d.find_elements(By.CSS_SELECTOR, "input[name='email']")
+            and d.find_elements(By.CSS_SELECTOR, "input[name='password']")
+            and d.find_elements(By.CSS_SELECTOR, "button[type='submit']")
+        )
+        set_react_input_value(driver, "input[name='email']", email)
+        set_react_input_value(driver, "input[name='password']", password)
         button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-        button.click()
+        driver.execute_script("arguments[0].scrollIntoView({ block: 'center' });", button)
+        driver.execute_script("arguments[0].click();", button)
         WebDriverWait(driver, 25).until(
             lambda d: bool(d.execute_script("return localStorage.getItem('scpa_token')"))
         )
@@ -382,11 +445,12 @@ def perform_login(
     except (TimeoutException, WebDriverException) as exc:
         result["error"] = sanitize_text(str(exc)[:300])
     finally:
+        recorder.poll(mode, "login")
+        console.poll(mode, "login")
         result["has_token"] = bool(
             driver.execute_script("return Boolean(localStorage.getItem('scpa_token'))")
         )
-        recorder.poll(mode, "login")
-        console.poll(mode, "login")
+        result["login_request_count"] = count_matching(recorder.events, "/api/auth/login", "request")
     return result
 
 
@@ -635,6 +699,165 @@ def audit_recommendations(
     return scenario
 
 
+def audit_jobs_cancellation(
+    driver: webdriver.Chrome,
+    recorder: NetworkRecorder,
+    console: ConsoleRecorder,
+    output: Path,
+    mode: str,
+    base_url: str,
+    route: str,
+    settle: float,
+) -> ScenarioResult:
+    scenario = ScenarioResult(mode=mode, name="jobs_cancellation", route=route)
+    clear_browser_logs(driver)
+    driver.get(f"{base_url.rstrip('/')}{route}")
+    wait_for_ready(driver)
+    wait_for_endpoint(recorder, mode, "jobs_cancellation", "/api/jobs", 20)
+    throttle_enabled = set_network_throttle(driver, 2500, 24_000, 12_000)
+    scenario.notes.append(f"network throttle enabled={throttle_enabled}")
+    try:
+        for city, experience in (("Jakarta", "entry"), ("Bandung", "mid"), ("Surabaya", "senior")):
+            location = WebDriverWait(driver, 15).until(
+                lambda d: d.find_element(By.CSS_SELECTOR, "#loc")
+            )
+            location.clear()
+            location.send_keys(city)
+            try:
+                Select(driver.find_element(By.CSS_SELECTOR, "#exp")).select_by_value(experience)
+            except WebDriverException:
+                pass
+            button = driver.find_element(By.XPATH, "//button[contains(., 'Filter')]")
+            driver.execute_script("arguments[0].click();", button)
+            time.sleep(0.2)
+    except WebDriverException as exc:
+        scenario.notes.append(f"targeted jobs cancellation action failed: {sanitize_text(str(exc)[:240])}")
+    finally:
+        reset_network_throttle(driver)
+
+    wait_for_endpoint(recorder, mode, "jobs_cancellation", "/api/jobs", 35)
+    time.sleep(settle)
+    recorder.poll(mode, "jobs_cancellation")
+    console.poll(mode, "jobs_cancellation")
+    shot, dom = capture_artifacts(driver, output, mode, "jobs_cancellation", "final")
+    scenario.screenshots.append(shot)
+    scenario.dom_snapshots.append(dom)
+    state = collect_ui_state(driver)
+    scenario.final_ui_state = state
+    all_events = [
+        event
+        for event in recorder.events
+        if event.get("mode") == mode and event.get("scenario") == "jobs_cancellation"
+    ]
+    canceled = canceled_events(all_events)
+    scenario.network_event_count = len(all_events)
+    scenario.canceled_request_count = len(canceled)
+    successful_jobs_response = any(
+        event.get("event") == "response"
+        and "/api/jobs" in event.get("url", "")
+        and int(event.get("status") or 0) < 400
+        for event in all_events
+    )
+    add_check(
+        scenario,
+        "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+        "targeted jobs filter scenario captures cancellation signal",
+        bool(canceled),
+        canceled_request_count=len(canceled),
+        canceled_urls=[event.get("url", "") for event in canceled[:8]],
+        throttle_enabled=throttle_enabled,
+    )
+    add_check(
+        scenario,
+        "BUG-RUNTIME-JOBS-TIMEOUT",
+        "targeted jobs cancellation does not leave false timeout after current success",
+        not (successful_jobs_response and state["timeout_texts"]),
+        successful_jobs_response=successful_jobs_response,
+        timeout_texts=state["timeout_texts"],
+        retry_texts=state["retry_texts"],
+    )
+    scenario.status = "passed" if all(check.passed for check in scenario.checks) else "failed"
+    return scenario
+
+
+def navigate_without_wait(driver: webdriver.Chrome, url: str) -> None:
+    try:
+        driver.execute_script("window.location.assign(arguments[0]);", url)
+    except WebDriverException:
+        driver.get(url)
+
+
+def audit_recommendations_cancellation(
+    driver: webdriver.Chrome,
+    recorder: NetworkRecorder,
+    console: ConsoleRecorder,
+    output: Path,
+    mode: str,
+    base_url: str,
+    settle: float,
+) -> ScenarioResult:
+    scenario = ScenarioResult(mode=mode, name="recommendations_cancellation", route="/recommendations")
+    clear_browser_logs(driver)
+    driver.get(f"{base_url.rstrip('/')}/dashboard")
+    wait_for_ready(driver)
+    throttle_enabled = set_network_throttle(driver, 2500, 24_000, 12_000)
+    scenario.notes.append(f"network throttle enabled={throttle_enabled}")
+    try:
+        for refresh in ("runtime-audit-1", "runtime-audit-2", "runtime-audit-3"):
+            navigate_without_wait(
+                driver,
+                f"{base_url.rstrip('/')}/recommendations?refresh={refresh}",
+            )
+            time.sleep(0.35)
+    finally:
+        reset_network_throttle(driver)
+
+    wait_for_ready(driver, 35)
+    wait_for_endpoint(recorder, mode, "recommendations_cancellation", "/api/recommendations", 40)
+    time.sleep(settle)
+    recorder.poll(mode, "recommendations_cancellation")
+    console.poll(mode, "recommendations_cancellation")
+    shot, dom = capture_artifacts(driver, output, mode, "recommendations_cancellation", "final")
+    scenario.screenshots.append(shot)
+    scenario.dom_snapshots.append(dom)
+    state = collect_ui_state(driver)
+    scenario.final_ui_state = state
+    all_events = [
+        event
+        for event in recorder.events
+        if event.get("mode") == mode and event.get("scenario") == "recommendations_cancellation"
+    ]
+    canceled = canceled_events(all_events)
+    scenario.network_event_count = len(all_events)
+    scenario.canceled_request_count = len(canceled)
+    successful_recs_response = any(
+        event.get("event") == "response"
+        and "/api/recommendations" in event.get("url", "")
+        and int(event.get("status") or 0) < 400
+        for event in all_events
+    )
+    add_check(
+        scenario,
+        "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+        "targeted recommendations navigation scenario captures cancellation signal",
+        bool(canceled),
+        canceled_request_count=len(canceled),
+        canceled_urls=[event.get("url", "") for event in canceled[:8]],
+        throttle_enabled=throttle_enabled,
+    )
+    add_check(
+        scenario,
+        "BUG-RUNTIME-RECOMMENDATIONS-TIMEOUT",
+        "targeted recommendations cancellation does not leave false timeout after current success",
+        not (successful_recs_response and state["timeout_texts"]),
+        successful_recs_response=successful_recs_response,
+        timeout_texts=state["timeout_texts"],
+        retry_texts=state["retry_texts"],
+    )
+    scenario.status = "passed" if all(check.passed for check in scenario.checks) else "failed"
+    return scenario
+
+
 def audit_auth_navigation(
     driver: webdriver.Chrome,
     recorder: NetworkRecorder,
@@ -699,18 +922,18 @@ def audit_theme(
     clear_browser_logs(driver)
     driver.get(f"{base_url.rstrip('/')}/dashboard")
     wait_for_ready(driver)
-    time.sleep(settle)
-    shot, dom = capture_artifacts(driver, output, mode, "theme_toggle", "before")
-    scenario.screenshots.append(shot)
-    scenario.dom_snapshots.append(dom)
-    before = collect_ui_state(driver)
     try:
-        toggle = driver.find_element(
-            By.XPATH,
-            "//button[contains(@aria-label, 'theme') or contains(@aria-label, 'Theme') or contains(@aria-label, 'Switch to')]",
-        )
+        WebDriverWait(driver, 25).until(lambda d: d.find_elements(By.XPATH, THEME_BUTTON_XPATH))
+        time.sleep(settle)
+        shot, dom = capture_artifacts(driver, output, mode, "theme_toggle", "before")
+        scenario.screenshots.append(shot)
+        scenario.dom_snapshots.append(dom)
+        before = collect_ui_state(driver)
         for _ in range(5):
-            toggle.click()
+            toggle = WebDriverWait(driver, 10).until(
+                lambda d: d.find_element(By.XPATH, THEME_BUTTON_XPATH)
+            )
+            driver.execute_script("arguments[0].click();", toggle)
             time.sleep(0.2)
         time.sleep(settle)
         after = collect_ui_state(driver)
@@ -746,7 +969,9 @@ def audit_theme(
             scenario,
             "BUG-FE-THEME-TOGGLE-STUCK",
             "theme persists after reload",
-            reload_state["theme"].get("dataTheme") == reload_state["theme"].get("storedTheme"),
+            reload_state["theme"].get("storedTheme") in {"light", "dark"}
+            and reload_state["theme"].get("dataTheme") == reload_state["theme"].get("storedTheme"),
+            after_theme=after["theme"],
             after_reload_theme=reload_state["theme"],
         )
         add_check(
@@ -919,6 +1144,30 @@ def run_mode(
             args.exercise_actions,
         )
     )
+    if not args.skip_cancellation_scenarios:
+        scenarios.append(
+            audit_jobs_cancellation(
+                driver,
+                recorder,
+                console,
+                output,
+                mode,
+                base_url,
+                args.jobs_route,
+                args.settle_seconds,
+            )
+        )
+        scenarios.append(
+            audit_recommendations_cancellation(
+                driver,
+                recorder,
+                console,
+                output,
+                mode,
+                base_url,
+                args.settle_seconds,
+            )
+        )
     scenarios.append(
         audit_auth_navigation(driver, recorder, console, output, mode, base_url, args.settle_seconds)
     )
@@ -1002,6 +1251,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--gateway-service", default="gateway")
     parser.add_argument("--gateway-log-tail", type=int, default=300)
     parser.add_argument("--exercise-actions", action="store_true")
+    parser.add_argument("--skip-cancellation-scenarios", action="store_true")
     return parser.parse_args()
 
 
