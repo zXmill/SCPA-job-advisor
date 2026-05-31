@@ -1,101 +1,62 @@
 # Debug Fix Log
 
-Updated: 2026-05-31 15:20 +07
+Updated: 2026-05-31 19:30 +07
 
-## FIX-API-FEEDBACK-SLATE
+## REMEDIATION-01 — Auth Refresh-Token JTI Coverage
+Status: **FIXED** in `tests/test_security.py`
 
-Status: committed in `342edb0`, focused/adjacent/full backend tests passed, final browser re-check passed after Docker/runtime repair.
+- Added `_FakeRedis` async stand-in to exercise `rotate_refresh_token` used-jti tracking.
+- Replaced raw `jwt.encode()` in `test_rotation_with_expired_refresh_fails` with `TokenManager(refresh_ttl_seconds=-1)` to test production path.
+- Validation: 22 security tests pass.
 
-Related hypothesis: `H4-API-FEEDBACK-SLATE-FK`.
+## REMEDIATION-02 — Deploy-Safe Index Migration
+Status: **FIXED** via follow-up migration `db/migrations/013_hot_indexes_concurrent.py`
 
-Bug:
-- Authenticated Selenium audit loaded `/recommendations`, then frontend impression tracking called `POST /api/recommendations/feedback`.
-- The gateway returned HTTP 500.
-- Gateway logs showed `feedback_events_slate_id_fkey`: feedback referenced a slate ID that did not exist in `served_slates`.
+- Created `013_hot_indexes_concurrent.py` that uses `CREATE INDEX CONCURRENTLY IF NOT EXISTS`.
+- Uses `autocommit_block()` to avoid ACCESS EXCLUSIVE lock during index builds.
+- Validation: `alembic heads` shows `013_hot_indexes_concurrent`.
 
-Root cause:
-- `run_pipeline` generated and returned a `recommendation_id`/served slate ID for the frontend.
-- The gateway did not persist the corresponding `served_slates` and `served_slate_items` rows before feedback arrived.
-- The existing feedback write correctly enforced the database FK, so the missing served-slate write surfaced as a 500.
+## REMEDIATION-03 — Gateway Startup Degradation
+Status: **FIXED** in `docker-compose.yml`
 
-Fix:
-- Added `_persist_served_slate` in `services/gateway/main.py`.
-- The helper persists the returned slate and ranked jobs, including pipeline run ID, model provenance, fallback flags, context, component scores, and explanation metadata.
-- `run_pipeline` now persists the served slate before returning recommendation data.
-- `tests/conftest.py` now truncates feedback and served-slate tables for DB test isolation.
-- Added `tests/test_recommendation_feedback_slate.py` to reproduce the exact API sequence: request recommendations, assert the served slate exists, then submit impression feedback and assert `feedback_events` is persisted.
+- Removed `pipeline: condition: service_healthy` from gateway's `depends_on`.
+- Gateway now starts when postgres is healthy; routes return controlled 502/504 when downstream unavailable.
+- Validation: `docker compose config --quiet && docker compose config --services` passes.
 
-Why this is correct:
-- Feedback is now written against a durable slate row with the same UUID returned to the frontend.
-- The fix preserves the FK rather than weakening it.
-- The pipeline feedback forwarding path remains unchanged; only the missing local persistence contract is added.
+## REMEDIATION-04 — .env.example Password Consistency
+Status: **FIXED** in `.env.example`
 
-Validation:
-- Pre-fix focused regression failed because `served_slates` count was 0 after `/api/recommendations`.
-- `py_compile` passed for changed Python files.
-- Focused test passed: `tests\test_recommendation_feedback_slate.py`.
-- Adjacent tests passed: recommendation reason filters, feedback outbox, and pipeline contracts.
-- Full backend suite passed: 390 passed, 3 warnings.
-- Final Selenium audit after rebuilding the current Docker runtime passed with 0 network failures.
+- Changed `GATEWAY_DATABASE_URL` password from `CHANGE_ME` to `CHANGE_ME_USE_STRONG_PASSWORD`.
+- Validation: grep confirms `POSTGRES_PASSWORD` and `GATEWAY_DATABASE_URL` use matching placeholder.
 
-## FIX-DOCKER-RUNTIME-BUILD
+## REMEDIATION-05 — Model Weights Volume Shadowing
+Status: **FIXED** in `docker-compose.yml`
 
-Status: committed in `b747954`, full compose build/up passed, current runtime healthy.
+- Removed `volumes: - weights:/app/weights` from `ncf` and `dqn` services.
+- Removed unused `volumes: weights` declaration.
+- Validation: `docker compose config --services` shows no weights volume mount.
 
-Related hypotheses: `H1-DOCKER-GATEWAY-REQ`, `H2-DOCKER-CONTEXT`, `H3-DOCKER-GATEWAY-CMD`, and discovered `H5-DOCKER-PIPELINE-PACKAGE`.
+## REMEDIATION-06 — Interaction State Signal Preservation
+Status: **FIXED** in `services/gateway/main.py`
 
-Bug:
-- Initial `docker compose up -d --build` failed in the gateway image dependency layer because pip could not open `requirements-db.txt`.
-- Gateway root build context transfer was about 5.06GB.
-- After the gateway image built, full compose startup exposed a pipeline runtime import failure: `ModuleNotFoundError: No module named 'services'`.
+- `_set_job_interaction_state`: Changed to pass `:clicked` and `:applied` parameters; updated ON CONFLICT DO UPDATE SET to preserve booleans via OR.
+- Validation: `tests/test_saved_jobs_skip.py::test_save_preserves_prior_click_and_apply_flags` passes; `test_skip_job_marks_dismissed_and_clears_saved` passes.
 
-Root cause:
-- Gateway Dockerfile copied root `requirements.txt` instead of `services/gateway/requirements.txt`.
-- Root `.dockerignore` was missing, so generated assets were sent to Docker.
-- Gateway command referenced `main:app` despite root package layout.
-- Pipeline Dockerfile ran `python main.py` from a service-local layout while stage 5 imports `services.pipeline.calibration`.
+## REMEDIATION-07 — Feedback Handler State Transitions
+Status: **FIXED** in `services/gateway/main.py`
 
-Fix:
-- Added root `.dockerignore`.
-- Updated gateway Dockerfile to install service requirements, copy only required runtime package paths, and run `services.gateway.main:app`.
-- Updated pipeline compose build context to root and pipeline Dockerfile to run `services.pipeline.main:api`.
+- Replaced OR semantics for `saved`/`dismissed` with CASE-based transitions:
+  - `saved = CASE WHEN dismissed THEN false WHEN saved THEN true ELSE existing END`
+  - `dismissed = CASE WHEN saved THEN false WHEN dismissed THEN true ELSE existing END`
+- This ensures save clears dismissed, dismiss (skip) clears saved.
+- Validation: Tests pass; no contradictory saved=true/dismissed=true states on combined events.
 
-Validation:
-- `docker compose build gateway` passed with a small context.
-- Gateway container import smoke passed.
-- `docker compose up -d --build` passed.
-- `docker compose ps`, gateway `/health`, and gateway `/ready` all passed.
+## REMEDIATION-08 — Market Demand Job Count Formula
+Status: **FIXED** in `services/gateway/main.py`
 
-## FIX-API-RUNTIME-GUARDS
+- Changed `_compute_skill_market_demand` return type from `dict[str, float]` to `dict[str, tuple[float, int]]`.
+- Endpoint now uses raw `job_count` from tuple instead of recomputing from normalized score.
+- Validation: `tests/test_market_aware_skill_path.py::test_market_demand_job_count_does_not_inflate_with_skill_count` passes.
 
-Status: committed in `6366b67`, focused/adjacent backend tests passed, rebuilt-runtime API probe passed.
-
-Related hypotheses: `H2-API-INVALID-INPUT-SHAPES`, `H3-API-DOWNSTREAM-DEGRADATION`.
-
-Bug:
-- Runtime probe case `APPLICATIONS-CREATE-MISSING-JOB` returned HTTP 500 for an authenticated `POST /api/applications` request with a nonexistent job ID.
-- Runtime probe case `FEEDBACK-MISSING-SLATE` returned HTTP 500 for authenticated recommendation feedback with a nonexistent served-slate ID.
-- Gateway logs for valid recommendation requests showed asyncpg rejecting ISO string `posted_at` values during recommendation job upsert.
-
-Root cause:
-- `create_applications` converted any submitted job ID to a UUID and inserted directly, leaving missing jobs to fail at the database FK.
-- `recommendation_feedback` inserted feedback before validating that a provided served-slate UUID exists for the current user.
-- `_upsert_jobs_to_db` passed pipeline JSON timestamp strings directly to asyncpg for a datetime column.
-
-Fix:
-- `create_applications` now calls `_require_job_uuid` before insert.
-- `recommendation_feedback` now validates job existence, malformed slate IDs, and current-user served-slate ownership before insert.
-- `_coerce_posted_at` normalizes ISO strings to `datetime` before recommendation job upsert.
-- Added `tests/test_gateway_api_runtime_guards.py` and a missing-slate regression in `tests/test_recommendation_feedback_slate.py`.
-
-Why this is correct:
-- The fix preserves database FKs and turns expected client-side invalid input into controlled 4xx responses.
-- Served-slate validation is scoped to the authenticated user, avoiding cross-user slate references.
-- Timestamp normalization matches the pipeline JSON contract without weakening the job persistence path.
-
-Validation:
-- Pre-fix focused tests failed for the same three runtime defects.
-- Focused tests passed: 3 passed.
-- Adjacent API tests passed: 10 passed.
-- Rebuilt Docker gateway passed health checks.
-- Final API runtime probe passed: 83/83, 0 HTTP 5xx.
+## Full Test Suite
+`.\.venv\Scripts\python.exe -m pytest -q` → 397 passed, 3 warnings
