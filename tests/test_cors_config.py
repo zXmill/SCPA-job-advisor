@@ -10,7 +10,11 @@ from services.gateway import main as gateway_module
 def test_development_cors_defaults_to_localhost_origins() -> None:
     origins = gateway_module._resolve_cors_origins("development", None)
 
-    assert origins == ["http://localhost:3000", "http://localhost:8000"]
+    assert origins == [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:8000",
+    ]
 
 
 def test_cors_origin_parser_strips_empty_items() -> None:

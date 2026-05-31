@@ -52,7 +52,11 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
 logger = logging.getLogger("scpa.gateway")
 
 # ── Configuration ──
-DEFAULT_DEV_CORS_ORIGINS = ("http://localhost:3000", "http://localhost:8000")
+DEFAULT_DEV_CORS_ORIGINS = (
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:8000",
+)
 PRODUCTION_ENVS = {"production", "prod"}
 
 
