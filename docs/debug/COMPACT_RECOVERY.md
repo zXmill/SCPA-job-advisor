@@ -1,6 +1,6 @@
-# Compact Recovery
+﻿# Compact Recovery
 
-Updated: 2026-05-31 19:03 +07
+Updated: 2026-05-31 19:44 +07
 
 ## Current Task
 CODE-REVIEW-REMEDIATION-001: deploy-safety and data-signal integrity remediation pass.
@@ -9,20 +9,24 @@ CODE-REVIEW-REMEDIATION-001: deploy-safety and data-signal integrity remediation
 agent-run
 
 ## Latest Commit Hash
-8121725
+8df6aef
 
 ## Active Phase
-CODE REVIEW REMEDIATION PASS (P0/P1 findings only).
+REMEDIATION COMPLETE — All 8 P0/P1 findings fixed and validated. See CODE_REVIEW_REMEDIATION_REPORT.md.
 
-## Accepted Findings (P0/P1)
-1. tests/security/token_manager.py fabricates refresh tokens — bypasses jti/Redis rotation test coverage (P0 auth test gap)
-2. db/migrations/009_reco_hot_indexes.py — non-concurrent index creation on hot jobs table causes deploy-time lock (P0 deploy safety)
-3. docker-compose.yml — cascading service_healthy chain blocks gateway startup (P0 deploy safety)
-4. .env.example — POSTGRES_PASSWORD and GATEWAY_DATABASE_URL placeholder mismatch (P0 deploy safety)
-5. docker-compose.yml — named volume mounts on ncf/dqn shadow baked-in model weights (P0 deploy safety)
-6. services/gateway/main.py:2415-2425 — _set_job_interaction_state hardcodes clicked/applied=false (P1 business logic)
-7. services/gateway/main.py:3091-3094 — feedback handler OR semantics preserve stale contradictory flags (P1 business logic)
-8. services/pipeline/main.py:56 — market-demand job_count formula multiplies by total skills (P1 business logic)
+## Completion Status
+- All 8 P0/P1 findings fixed:
+  1. Auth refresh-token tests now exercise JTI/Redis rotation (R-1)
+  2. Created 013_hot_indexes_concurrent.py with CONCURRENTLY (R-2)
+  3. Removed pipeline: condition: service_healthy from gateway (R-3)
+  4. Aligned GATEWAY_DATABASE_URL to POSTGRES_PASSWORD placeholder (R-4)
+  5. Removed weights volume mounts from ncf/dqn (R-5)
+  6. Added OR semantics for clicked/applied preservation (R-6)
+  7. Added CASE transitions per event type (R-7)
+  8. Fixed market demand to return raw job counts (R-8)
+- 5 scoped commits pushed
+- Tests: 32 passed (focused), 397 passed (full suite)
+- No FAILURE_LEDGER entries required
 
 ## Deferred / Not in Scope
 - P2: outbox batching performance, trigram index, JSONB expression index, N+1 skill inserts, duplicate datetime parsing, duplicate Indonesia constants, duplicate job-payload mapping, dead-code cleanup
@@ -32,17 +36,3 @@ CODE REVIEW REMEDIATION PASS (P0/P1 findings only).
 - Nested frontend/ repository is dirty and must be handled separately.
 - No frontend code changes planned for this remediation pass.
 - No new product features, no ML training, no scraper redesign.
-
-## Next Exact Action
-Phase 1: Triage each P0/P1 finding against current source to confirm validity before writing lines in Phase 2–8.
-
-## Expected Commits
-1. docs: record code review remediation plan
-2. test: exercise refresh token rotation through token manager
-3. db: make recommendation hot indexes deploy safe
-4. deploy: allow gateway startup with degraded ml services
-5. docs: align database password placeholders in env example
-6. deploy: prevent model weight volumes from shadowing artifacts
-7. fix: preserve user interaction state transitions
-8. fix: correct market demand job count calculation
-9. docs: record code review remediation evidence
