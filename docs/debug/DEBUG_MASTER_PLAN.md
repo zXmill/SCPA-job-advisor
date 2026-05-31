@@ -1,6 +1,6 @@
 # Ultimate Debugging Master Plan
 
-Updated: 2026-05-31 10:20 +07
+Updated: 2026-05-31 14:56 +07
 
 ## Session
 - Task ID: DEBUG-ULT-001
@@ -10,13 +10,13 @@ Updated: 2026-05-31 10:20 +07
 - Editing rule: no product code fix before reproduction evidence and root-cause notes exist.
 
 ## Current Phase
-First API/browser and Docker/runtime bugs fixed; remaining phase is broader API/model/security audit.
+API runtime probing after durable-state reconciliation.
 
 ## Active Task
-Commit Docker/runtime fix and evidence, then continue remaining API/model/security probes.
+Probe high-risk API route groups and record runtime evidence without product fixes unless a root cause is confirmed.
 
 ## Next Exact Action
-Commit Docker/runtime fix and refreshed browser artifacts, then continue remaining hypotheses from `DEBUG_HYPOTHESES.md`.
+Execute API runtime probes and record evidence in `DEBUG_API_REPORT.md`, `DEBUG_EVIDENCE.md`, `DEBUG_VALIDATION_LEDGER.md`, and `DEBUG_HYPOTHESES.md`.
 
 ## Method
 1. Inventory the current repository surfaces from files, not memory.
@@ -34,5 +34,5 @@ Commit Docker/runtime fix and refreshed browser artifacts, then continue remaini
 ## Baseline Summary
 - Backend: import/compile passed; full pytest passed with `389 passed, 3 warnings`.
 - Frontend: `npm run lint` passed with 16 warnings; `npm run build` passed and generated 12 static pages.
-- Database: Alembic head is `012_ab_testing_and_monitoring`; live migration upgrade still needs a current-image database run.
-- Docker: `docker compose config` passed, but `docker compose up -d --build` failed while rebuilding gateway because `requirements-db.txt` is not present inside the gateway image build context.
+- Database: Alembic head is `012_ab_testing_and_monitoring`; live DB was upgraded to that head during Docker/runtime validation.
+- Docker: initial rebuild failed, then `b747954` repaired gateway/pipeline packaging and `f77445b` recorded the checkpoint. Full `docker compose up -d --build` passed.

@@ -1,6 +1,6 @@
 # Debug Validation Ledger
 
-Updated: 2026-05-31 09:12 +07
+Updated: 2026-05-31 14:56 +07
 
 | Timestamp | Command | Result | Related ID | Summary |
 | --- | --- | --- | --- | --- |
@@ -43,3 +43,4 @@ Updated: 2026-05-31 09:12 +07
 | 2026-05-31 10:43 +07 | `docker compose ps`; gateway `/health`; gateway `/ready` | pass | RUNTIME-VERIFY | All services healthy; gateway health and readiness passed on port 9000. |
 | 2026-05-31 10:46 +07 | `.\.venv\Scripts\python.exe scripts\debug\selenium_full_audit.py --output reports\debug\browser --headless --email <demo-email> --password <redacted> --settle-seconds 7` | pass | BROWSER-AUDIT-FINAL | Final authenticated browser audit passed: 9 pages, 0 console errors, 0 network failures, 0 blank pages, 0 hydration errors. |
 | 2026-05-31 10:47 +07 | `rg "password123|access_token|Authorization|Bearer |eyJ" reports\debug\browser scripts\debug\selenium_full_audit.py` | pass | SECRET-SCAN | No password, token, authorization header, or JWT-like strings found in browser artifacts/harness. |
+| 2026-05-31 14:56 +07 | `git log --oneline -10`; `git status --short --branch`; required `docs/debug/*.md` reads | pass | STATE-RECONCILIATION | Reconciled stale debug docs: latest commit is `f77445b`, served-slate browser re-check passed, and Docker/runtime fix is already committed and verified. |

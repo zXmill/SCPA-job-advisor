@@ -1,8 +1,8 @@
 # Debug Hypotheses
 
-Updated: 2026-05-31 09:55 +07
+Updated: 2026-05-31 14:56 +07
 
-Status: generated from static inventory and baseline validation. Fixes are allowed only after the related reproduction evidence is recorded.
+Status: generated from static inventory and baseline validation, then reconciled after served-slate and Docker/runtime fixes. Fixes are allowed only after the related reproduction evidence is recorded.
 
 ## Frontend
 
@@ -90,11 +90,11 @@ Hypothesis: recommendation feedback fails because the gateway emits a frontend `
 
 Expected: recommendation response creates or references a persisted served slate, and feedback insert succeeds.
 
-Actual: confirmed by Selenium and gateway logs; `POST /api/recommendations/feedback` returns 500 with `feedback_events_slate_id_fkey`.
+Actual: confirmed by Selenium and gateway logs; fixed in `342edb0`. Final Selenium audit after Docker/runtime repair showed no network failure from feedback.
 
 Test: add a regression test that calls `/api/recommendations`, then posts impression feedback using the returned recommendation ID and asserts 200 plus persisted feedback.
 
-Evidence location: `DEBUG_API_REPORT.md`, `DEBUG_BROWSER_REPORT.md`.
+Evidence location: `DEBUG_API_REPORT.md`, `DEBUG_BROWSER_REPORT.md`, `DEBUG_FIX_LOG.md`.
 
 ## Database
 
@@ -103,22 +103,22 @@ Hypothesis: live migration execution is not currently proven because the gateway
 
 Expected: `alembic upgrade head` can be run in a documented current runtime path.
 
-Actual: local `alembic heads` passes; `docker compose exec gateway python -m alembic ...` fails with `No module named alembic`.
+Actual: local `alembic heads` passed. Container-local Alembic is not part of the gateway runtime image; repo-local `.venv` Alembic was used against the running PostgreSQL container and succeeded.
 
 Test: after Docker repair or explicit local DB config, run `alembic upgrade head` and `alembic current`.
 
-Evidence location: `DEBUG_DATABASE_REPORT.md`.
+Evidence location: `DEBUG_DATABASE_REPORT.md`, `DEBUG_VALIDATION_LEDGER.md`.
 
 ### H2-DB-SCHEMA-HEAD-DRIFT
 Hypothesis: repository migrations are at head `012_ab_testing_and_monitoring`, but the live database may not be at that revision.
 
 Expected: live DB current revision equals head.
 
-Actual: unknown; existing postgres is reachable but current revision was not verified.
+Actual: fixed during runtime validation. Live DB initially reported `001_initial_schema`; `alembic upgrade head` passed; `alembic current` now reports `012_ab_testing_and_monitoring (head)`.
 
 Test: run Alembic current against the intended DB with known non-secret connection config.
 
-Evidence location: `DEBUG_DATABASE_REPORT.md`.
+Evidence location: `DEBUG_DATABASE_REPORT.md`, `DEBUG_VALIDATION_LEDGER.md`.
 
 ### H3-DB-HOT-PATH-INDEXES
 Hypothesis: recommendation, feedback, skill taxonomy, and job alert hot paths require migration-backed indexes that may not exist in a live DB if migrations lag.
@@ -348,33 +348,33 @@ Hypothesis: gateway Docker build fails because its Dockerfile copies root `requi
 
 Expected: gateway image installs requirements successfully.
 
-Actual: confirmed failure: pip cannot open `requirements-db.txt`.
+Actual: fixed in `b747954`; gateway image now installs service requirements and builds successfully.
 
 Test: inspect Dockerfile/compose context, then rebuild after a minimal Dockerfile/context fix.
 
-Evidence location: `DEBUG_DOCKER_REPORT.md`.
+Evidence location: `DEBUG_DOCKER_REPORT.md`, `DEBUG_FIX_LOG.md`.
 
 ### H2-DOCKER-CONTEXT
 Hypothesis: missing root `.dockerignore` makes gateway builds slow and fragile by sending generated data, models, reports, and nested repos into the Docker build context.
 
 Expected: build context excludes bulky/generated/unneeded files.
 
-Actual: confirmed evidence: gateway build context transfer reached about 5.06GB; root `.dockerignore` is missing.
+Actual: fixed in `b747954`; root `.dockerignore` exists and gateway build context is small.
 
 Test: add scoped `.dockerignore`, rebuild, and compare context transfer/build time.
 
-Evidence location: `DEBUG_DOCKER_REPORT.md`.
+Evidence location: `DEBUG_DOCKER_REPORT.md`, `DEBUG_FIX_LOG.md`.
 
 ### H3-DOCKER-GATEWAY-CMD
 Hypothesis: after dependency installation is fixed, gateway container may fail at runtime because Dockerfile command uses `uvicorn main:app` while the app lives at `services.gateway.main:app` when root context is copied.
 
 Expected: container starts current gateway app.
 
-Actual: not reached because dependency layer failed first.
+Actual: fixed in `b747954`; rebuilt gateway uses `services.gateway.main:app` and health checks pass.
 
 Test: rebuild after dependency fix and inspect container logs/health.
 
-Evidence location: `DEBUG_DOCKER_REPORT.md`.
+Evidence location: `DEBUG_DOCKER_REPORT.md`, `DEBUG_FIX_LOG.md`.
 
 ### H4-DOCKER-PORT-CONTRACT
 Hypothesis: docs/runtime/API clients can drift between gateway host port 8000 and compose host port 9000.
