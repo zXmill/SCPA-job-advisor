@@ -117,3 +117,22 @@ Branch: `agent-run`
 - Authenticated route audit uses the demo account advertised on `/auth`; password is not written to reports.
 - Canonical audit route coverage: `/`, `/analytics`, `/apply`, `/auth`, `/dashboard`, `/onboarding`, `/profile`, `/recommendations`, and a sampled `/jobs/{id}` route.
 - Results: 0 blank pages, 0 hydration errors, 1 backend network failure from recommendation feedback.
+
+## Fix In Progress: FIX-API-FEEDBACK-SLATE
+
+### Evidence
+- Browser audit reproduced `POST /api/recommendations/feedback` HTTP 500 on `/recommendations`.
+- Gateway logs showed `feedback_events_slate_id_fkey`, meaning feedback referenced a slate ID not present in `served_slates`.
+- Focused pre-fix regression failed because `/api/recommendations` returned a slate ID but `served_slates` count remained 0.
+
+### What changed
+- Added gateway served-slate persistence before returning recommendations.
+- Persisted ranked served-slate items with model provenance, fallback flags, component scores, and explanation metadata.
+- Added test isolation for served-slate/feedback tables.
+- Added focused regression coverage in `tests/test_recommendation_feedback_slate.py`.
+
+### Validation
+- Changed Python files compile.
+- Focused regression passed.
+- Adjacent recommendation/pipeline tests passed with 6 passed and 1 warning.
+- Full backend pytest passed with 390 passed and 3 warnings.

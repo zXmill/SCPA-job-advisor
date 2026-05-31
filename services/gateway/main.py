@@ -549,6 +549,127 @@ async def _upsert_jobs_to_db(db: AsyncSession, ranked: list[dict[str, Any]]) -> 
         await db.rollback()
 
 
+def _slate_model_versions(ranked: list[dict[str, Any]]) -> dict[str, Any]:
+    for item in ranked:
+        provenance = item.get("model_provenance")
+        if isinstance(provenance, dict) and provenance:
+            return provenance
+    return {}
+
+
+def _slate_fallback_flags(ranked: list[dict[str, Any]]) -> list[str]:
+    flags: list[str] = []
+    for item in ranked:
+        item_flags = item.get("fallback_flags")
+        if isinstance(item_flags, list):
+            flags.extend(str(flag) for flag in item_flags if str(flag).strip())
+    return sorted(set(flags))
+
+
+async def _persist_served_slate(
+    db: AsyncSession,
+    *,
+    slate_id: str,
+    user_id: str,
+    pipeline_run_id: str,
+    ranked: list[dict[str, Any]],
+    request: PipelineRunRequest,
+    profile: dict[str, Any],
+) -> None:
+    if not ranked:
+        return
+
+    slate_uuid = uuid.UUID(slate_id)
+    user_uuid = uuid.UUID(str(user_id))
+    fallback_flags = _slate_fallback_flags(ranked)
+    context = {
+        "limit": request.limit,
+        "refresh_jobs": request.refresh_jobs,
+        "interaction_count": request.interaction_count,
+        "target_role": request.target_role,
+        "profile_location": profile.get("location"),
+        "profile_skill_count": len(profile.get("skills") or []),
+    }
+
+    await db.execute(
+        text(
+            "INSERT INTO served_slates ("
+            "id, user_id, pipeline_run_id, model_versions, fallback_flags, context, created_at"
+            ") VALUES ("
+            ":id, :user_id, :pipeline_run_id, CAST(:model_versions AS jsonb), "
+            "CAST(:fallback_flags AS jsonb), CAST(:context AS jsonb), NOW()"
+            ") ON CONFLICT (id) DO UPDATE SET "
+            "user_id = EXCLUDED.user_id, "
+            "pipeline_run_id = EXCLUDED.pipeline_run_id, "
+            "model_versions = EXCLUDED.model_versions, "
+            "fallback_flags = EXCLUDED.fallback_flags, "
+            "context = EXCLUDED.context"
+        ),
+        {
+            "id": slate_uuid,
+            "user_id": user_uuid,
+            "pipeline_run_id": pipeline_run_id,
+            "model_versions": json.dumps(_slate_model_versions(ranked)),
+            "fallback_flags": json.dumps(fallback_flags),
+            "context": json.dumps(context),
+        },
+    )
+
+    item_rows: list[dict[str, Any]] = []
+    for index, item in enumerate(ranked, start=1):
+        raw_job_id = str(item.get("id") or "")
+        if not raw_job_id:
+            continue
+        rank = int(item.get("rank") or index)
+        component_scores = {
+            "final_score": item.get("final_score"),
+            "sbert_score": item.get("sbert_score"),
+            "ncf_score": item.get("ncf_score"),
+            "dqn_score": item.get("dqn_score"),
+            "match_percent": item.get("match_percent"),
+        }
+        explanation = {
+            "explanation": item.get("explanation"),
+            "segment": item.get("segment"),
+            "strategy": item.get("strategy"),
+        }
+        item_rows.append(
+            {
+                "slate_id": slate_uuid,
+                "job_id": to_uuid(raw_job_id),
+                "rank": rank,
+                "score": item.get("final_score"),
+                "component_scores": json.dumps(component_scores),
+                "model_versions": json.dumps(item.get("model_provenance") or {}),
+                "fallback_flags": json.dumps(item.get("fallback_flags") or []),
+                "explanation": json.dumps(explanation),
+            }
+        )
+
+    if item_rows:
+        await db.execute(
+            text(
+                "INSERT INTO served_slate_items ("
+                "slate_id, job_id, rank, score, component_scores, model_versions, "
+                "fallback_flags, explanation, created_at"
+                ") VALUES ("
+                ":slate_id, :job_id, :rank, :score, CAST(:component_scores AS jsonb), "
+                "CAST(:model_versions AS jsonb), CAST(:fallback_flags AS jsonb), "
+                "CAST(:explanation AS jsonb), NOW()"
+                ") ON CONFLICT (slate_id, rank) DO UPDATE SET "
+                "job_id = EXCLUDED.job_id, "
+                "score = EXCLUDED.score, "
+                "component_scores = EXCLUDED.component_scores, "
+                "model_versions = EXCLUDED.model_versions, "
+                "fallback_flags = EXCLUDED.fallback_flags, "
+                "explanation = EXCLUDED.explanation"
+            ),
+            item_rows,
+        )
+
+    await db.commit()
+
+
 def _map_pipeline_job(item: dict[str, Any]) -> dict[str, Any]:
     """Map pipeline job item to gateway-compatible Job dictionary."""
     return {
@@ -2830,6 +2951,16 @@ async def run_pipeline(
             "reason_filter_labels": dict(REASON_FILTER_LABELS),
             "employer_fit": employer_fit,
         })
+
+    await _persist_served_slate(
+        db,
+        slate_id=slate_id,
+        user_id=uid,
+        pipeline_run_id=pipeline_run_id,
+        ranked=ranked,
+        request=request,
+        profile=profile_for_reasons,
+    )
 
     fairness_tpr_gap = 0.0
     return {

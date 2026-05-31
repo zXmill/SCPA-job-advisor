@@ -1,7 +1,38 @@
 # Debug Fix Log
 
-Updated: 2026-05-31 09:12 +07
+Updated: 2026-05-31 10:20 +07
 
-No product fixes have been made in this debugging session.
+## FIX-API-FEEDBACK-SLATE
 
-Fixes will be recorded only after reproduction evidence, root cause, touched files, and verification are available.
+Status: implemented in current source, focused and adjacent tests passed, browser re-check pending current-runtime Docker repair.
+
+Related hypothesis: `H4-API-FEEDBACK-SLATE-FK`.
+
+Bug:
+- Authenticated Selenium audit loaded `/recommendations`, then frontend impression tracking called `POST /api/recommendations/feedback`.
+- The gateway returned HTTP 500.
+- Gateway logs showed `feedback_events_slate_id_fkey`: feedback referenced a slate ID that did not exist in `served_slates`.
+
+Root cause:
+- `run_pipeline` generated and returned a `recommendation_id`/served slate ID for the frontend.
+- The gateway did not persist the corresponding `served_slates` and `served_slate_items` rows before feedback arrived.
+- The existing feedback write correctly enforced the database FK, so the missing served-slate write surfaced as a 500.
+
+Fix:
+- Added `_persist_served_slate` in `services/gateway/main.py`.
+- The helper persists the returned slate and ranked jobs, including pipeline run ID, model provenance, fallback flags, context, component scores, and explanation metadata.
+- `run_pipeline` now persists the served slate before returning recommendation data.
+- `tests/conftest.py` now truncates feedback and served-slate tables for DB test isolation.
+- Added `tests/test_recommendation_feedback_slate.py` to reproduce the exact API sequence: request recommendations, assert the served slate exists, then submit impression feedback and assert `feedback_events` is persisted.
+
+Why this is correct:
+- Feedback is now written against a durable slate row with the same UUID returned to the frontend.
+- The fix preserves the FK rather than weakening it.
+- The pipeline feedback forwarding path remains unchanged; only the missing local persistence contract is added.
+
+Validation:
+- Pre-fix focused regression failed because `served_slates` count was 0 after `/api/recommendations`.
+- `py_compile` passed for changed Python files.
+- Focused test passed: `tests\test_recommendation_feedback_slate.py`.
+- Adjacent tests passed: recommendation reason filters, feedback outbox, and pipeline contracts.
+- Full backend suite passed: 390 passed, 3 warnings.

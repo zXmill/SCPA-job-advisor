@@ -1662,16 +1662,24 @@
         "docs/agent/PROJECT_STATE.md",
         "docs/agent/SESSION_REPORT.md",
         "docs/agent/DECISION_LOG.md",
-        "docs/agent/VALIDATION_LEDGER.md"
+        "docs/agent/VALIDATION_LEDGER.md",
+        "services/gateway/main.py",
+        "tests/conftest.py",
+        "tests/test_recommendation_feedback_slate.py"
       ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json",
         "git status --short --branch",
-        "git diff --cached -- docs/debug docs/agent"
+        "git diff --cached -- docs/debug docs/agent",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_recommendation_feedback_slate.py -q (pre-fix fail)",
+        ".\\.venv\\Scripts\\python.exe -m py_compile services\\gateway\\main.py tests\\conftest.py tests\\test_recommendation_feedback_slate.py",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_recommendation_feedback_slate.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_recommendation_feedback_slate.py tests\\test_recommendation_reason_filters.py tests\\test_feedback_outbox.py tests\\test_pipeline_contracts.py -q",
+        ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "mixed_baseline",
+      "validation_status": "passed_pending_commit",
       "commit": "",
-      "notes": "Initialization commit 0b55041. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass, Docker rebuild fails at gateway requirements layer and missing .dockerignore causes huge context. Selenium harness added; authenticated browser audit found recommendation feedback 500 from missing served_slates row. No product code fixes before focused regression."
+      "notes": "Initialization commit 0b55041; baseline/hypotheses commit 1fb59e5; Selenium harness commit 2ad62bc. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass, Docker rebuild fails at gateway requirements layer and missing .dockerignore causes huge context. Selenium authenticated browser audit found recommendation feedback 500 from missing served_slates row. Current source persists served_slates/served_slate_items before returning recommendations; focused, adjacent, and full backend tests pass. Fix commit is pending."
     }
   ]
 }

@@ -1,6 +1,6 @@
 # Debug Database Report
 
-Updated: 2026-05-31 09:12 +07
+Updated: 2026-05-31 10:20 +07
 
 Status: baseline migration-head checks completed; live upgrade validation is still blocked by current Docker rebuild failure/current-image gap.
 
@@ -21,3 +21,9 @@ Status: baseline migration-head checks completed; live upgrade validation is sti
 ## Open Validation
 - A live `alembic upgrade head` against a current-image/runtime database has not been proven in this session.
 - Current Docker rebuild failure must be resolved or a deliberate local DB migration path must be used before marking live migration validation as passed.
+
+## Feedback/Slate Relationship Finding
+- The `feedback_events.slate_id` FK correctly rejects feedback for unknown served slates.
+- Browser evidence showed the gateway violated the application-side contract by returning an unpersisted slate ID.
+- Current-source regression verifies `/api/recommendations` now creates the `served_slates` row before `/api/recommendations/feedback` writes `feedback_events`.
+- Test cleanup now truncates `feedback_events`, `served_slate_items`, and `served_slates` to keep DB tests isolated.

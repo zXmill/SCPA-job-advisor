@@ -117,5 +117,12 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Docker baseline: compose config passed, but `docker compose up -d --build` failed while rebuilding gateway because the Dockerfile copies root `requirements.txt` without the referenced requirement files. Root `.dockerignore` is missing and the gateway build context transfer reached about 5.06GB.
 - Runtime caveat: existing containers are healthy on port 9000 but predate the failed rebuild; do not use them as proof that the current Docker source builds.
 
+## Current Debug Fix
+- `H4-API-FEEDBACK-SLATE-FK` was reproduced by authenticated Selenium: `/recommendations` triggered `POST /api/recommendations/feedback` HTTP 500.
+- Root cause: the gateway returned a served slate ID without persisting the matching `served_slates` row.
+- Current source fix: `services/gateway/main.py` persists `served_slates` and `served_slate_items` before returning recommendation data.
+- Regression coverage: `tests/test_recommendation_feedback_slate.py` asserts the recommendation response creates a slate and feedback using that slate returns 200/persists `feedback_events`.
+- Validation: focused regression, adjacent recommendation/pipeline tests, and full backend pytest pass. Full backend result: 390 passed, 3 warnings.
+
 ## Next Task
-Continue `DEBUG-ULT-001`: commit static inventory/baseline/hypotheses, then add and run the Selenium browser audit harness.
+Continue `DEBUG-ULT-001`: commit the served-slate fix narrowly, then address the Docker gateway build failure.

@@ -1,6 +1,6 @@
 # Debug API Report
 
-Updated: 2026-05-31 09:12 +07
+Updated: 2026-05-31 10:20 +07
 
 Status: route inventory initialized; request/response probes pending.
 
@@ -30,3 +30,10 @@ Status: route inventory initialized; request/response probes pending.
 - `POST /api/auth/login` succeeds for the demo account advertised on `/auth`.
 - Authenticated Selenium audit found `POST /api/recommendations/feedback` returns HTTP 500 during impression tracking.
 - Gateway log root cause: `feedback_events.slate_id` violates the FK to `served_slates.id`; the gateway returns a new `recommendation_id`/served slate ID to the frontend but does not persist the corresponding `served_slates` row before feedback arrives.
+
+## Confirmed Fix: FIX-API-FEEDBACK-SLATE
+- `services/gateway/main.py` now persists the served slate and its ranked items before returning recommendation data.
+- The persistence includes slate ID, user ID, pipeline run ID, model versions, fallback flags, request context, component scores, and explanation metadata.
+- `tests/test_recommendation_feedback_slate.py` covers the route sequence that failed in the browser: authenticated `/api/recommendations`, then authenticated `/api/recommendations/feedback` using the returned slate ID.
+- Focused and adjacent API tests pass.
+- Browser re-check is pending until the current gateway source can be served to the frontend; the existing port-9000 container predates this fix.

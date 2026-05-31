@@ -460,3 +460,10 @@
 - Confirmed bug: longer authenticated settle reproduced `POST /api/recommendations/feedback` returning 500 from `/recommendations`; gateway logs show `feedback_events_slate_id_fkey` because the recommendation slate ID is not present in `served_slates`.
 - Next action: commit the Selenium harness and evidence, then add a focused regression test for feedback after recommendations before fixing served-slate persistence.
 
+## 2026-05-31 10:20 +07 - DEBUG-ULT-001 served-slate persistence decision
+- Decision: Fix the gateway contract by persisting served slates before recommendation responses return, rather than weakening the feedback FK or ignoring failed impression events.
+- Evidence: Selenium reproduced the 500, gateway logs identified the FK violation, and a focused pre-fix test proved `/api/recommendations` did not create `served_slates`.
+- Expected files to touch: `services/gateway/main.py`, `tests/conftest.py`, `tests/test_recommendation_feedback_slate.py`, plus debug and agent state ledgers.
+- Validation commands: focused pre-fix regression, `py_compile`, focused post-fix regression, adjacent recommendation/pipeline tests, then full backend pytest before commit.
+- Browser caveat: the live port-9000 gateway is a stale container; browser re-verification of the fix waits for the Docker rebuild/current-runtime issue.
+

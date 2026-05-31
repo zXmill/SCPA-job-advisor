@@ -1,6 +1,6 @@
 # Ultimate Debugging Master Plan
 
-Updated: 2026-05-31 09:12 +07
+Updated: 2026-05-31 10:20 +07
 
 ## Session
 - Task ID: DEBUG-ULT-001
@@ -10,13 +10,13 @@ Updated: 2026-05-31 09:12 +07
 - Editing rule: no product code fix before reproduction evidence and root-cause notes exist.
 
 ## Current Phase
-Hypothesis generation after static inventory and baseline validation.
+First confirmed API/browser bug fixed in current source and awaiting narrow commit.
 
 ## Active Task
-Document baseline evidence, generate subsystem hypotheses, then add the Selenium/Chrome browser audit harness.
+Finish `FIX-API-FEEDBACK-SLATE`, then move to the separately confirmed Docker rebuild failure.
 
 ## Next Exact Action
-Commit static inventory, baseline validation, and initial hypotheses. Then create `scripts/debug/selenium_full_audit.py`.
+Commit the served-slate persistence change narrowly, then investigate `H1-DOCKER-GATEWAY-REQ` and `H2-DOCKER-CONTEXT`.
 
 ## Method
 1. Inventory the current repository surfaces from files, not memory.

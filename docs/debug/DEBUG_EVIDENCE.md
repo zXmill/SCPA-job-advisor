@@ -1,6 +1,6 @@
 # Debug Evidence
 
-Updated: 2026-05-31 09:12 +07
+Updated: 2026-05-31 10:20 +07
 
 ## Bootstrap Evidence
 - Repository cwd: `E:\TUGAS AKHIR\SCPA`.
@@ -12,7 +12,7 @@ Updated: 2026-05-31 09:12 +07
 
 ## Evidence Index
 - Browser artifacts: pending, target `reports/debug/browser/`.
-- API artifacts: pending.
+- API artifacts: focused API/database regression evidence collected for `H4-API-FEEDBACK-SLATE-FK`.
 - Model artifacts: pending.
 - Database artifacts: pending.
 - Docker artifacts: pending.
@@ -38,3 +38,13 @@ Updated: 2026-05-31 09:12 +07
 - Canonical authenticated audit on `http://localhost:3000` with `http://localhost:9000` succeeded for login and loaded all 9 routes with no blank pages or hydration errors.
 - Canonical authenticated audit reproduced one product failure: `POST /api/recommendations/feedback` returned HTTP 500 from `/recommendations`.
 - Gateway logs for that failure show `asyncpg.exceptions.ForeignKeyViolationError` on `feedback_events_slate_id_fkey`: the slate ID sent by the frontend is not present in `served_slates`.
+
+## Feedback Slate Evidence
+- Focused pre-fix regression: `tests\test_recommendation_feedback_slate.py` failed because `served_slates` count was 0 immediately after `/api/recommendations`.
+- Root cause confirmed in current source: the gateway returned a generated slate ID but did not write `served_slates`/`served_slate_items`.
+- Current-source fix validation:
+  - `py_compile` passed for `services\gateway\main.py`, `tests\conftest.py`, and `tests\test_recommendation_feedback_slate.py`.
+  - Focused regression passed.
+  - Adjacent recommendation/pipeline suite passed with 6 tests.
+  - Full backend suite passed with 390 tests.
+- Browser re-verification of the fix is pending because the live browser target currently uses an existing/stale gateway container and the current Docker gateway rebuild is separately broken.
