@@ -1,18 +1,20 @@
 # Code Review Remediation Report
 
-Updated: 2026-05-31 19:30 +07
+Updated: 2026-05-31 20:29 +07
 
 ## Summary
-All 8 P0/P1 high-confidence code review findings were fixed and validated:
+Recovery validation reopened 1 of the 8 P0/P1 high-confidence code review findings:
 - 5 deploy-safety/blocker issues (auth test coverage, concurrent indexes, gateway startup, env example, volume shadowing)
 - 3 business-logic/data-signal issues (interaction state preservation, feedback state transitions, market demand formula)
+
+R-2 is not validated yet. The migration is Alembic head, but `alembic upgrade head` fails when `013_hot_indexes_concurrent.py` attempts to alter isolation level inside Alembic's active transaction.
 
 ## Findings Accepted and Fixed
 
 | ID | Severity | File | Description | Fix |
 |----|----------|------|-----------|-----|
 | R-1 | P0 | `tests/test_security.py` | Auth refresh-token tests bypassed JTI/Redis rotation | Added `_FakeRedis` async mock; tests now exercise production rotation flow |
-| R-2 | P0 | `db/migrations/009_reco_hot_indexes.py` | Non-concurrent index creation blocks writes | Created `013_hot_indexes_concurrent.py` with `CREATE INDEX CONCURRENTLY` |
+| R-2 | P0 | `db/migrations/009_reco_hot_indexes.py` | Non-concurrent index creation blocks writes | Reopened: `013_hot_indexes_concurrent.py` must use Alembic `autocommit_block()` correctly |
 | R-3 | P0 | `docker-compose.yml` | Gateway startup chained to all ML service health | Removed `pipeline: condition: service_healthy` from gateway |
 | R-4 | P0 | `.env.example` | Password placeholders mismatched | Aligned `GATEWAY_DATABASE_URL` to `CHANGE_ME_USE_STRONG_PASSWORD` |
 | R-5 | P0 | `docker-compose.yml` | Named volume shadowed baked-in model weights | Removed weights volume mounts from ncf/dqn |
@@ -34,6 +36,7 @@ All 8 P0/P1 high-confidence code review findings were fixed and validated:
 | `alembic heads` | `013_hot_indexes_concurrent (head)` |
 | `docker compose config --quiet` | pass |
 | `docker compose config --services` | scraper, dqn, postgres, gateway, ncf, sbert, pipeline |
+| `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` | fail: migration 013 changes isolation level inside an initialized transaction |
 
 ## Remaining Limitations / P2 Deferred
 
@@ -50,5 +53,5 @@ These items are deferred per the remediation scope rules (P2 and lower).
 
 ## Next Recommended Phase
 
-- **Runtime Contract Debugging Pass** — if evidence shows inconsistent timeout/stale-request behavior in gateway API responses.
-- See `docs/debug/DEBUG_MASTER_PLAN.md` for the next active task after this remediation.
+- First finish R-2 by patching `013_hot_indexes_concurrent.py` to use Alembic `autocommit_block()` and rerunning migration validation.
+- Defer runtime contract debugging until the bounded P0/P1 remediation pass is complete.

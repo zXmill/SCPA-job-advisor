@@ -1,6 +1,6 @@
 # Debug Fix Log
 
-Updated: 2026-05-31 19:30 +07
+Updated: 2026-05-31 20:29 +07
 
 ## REMEDIATION-01 — Auth Refresh-Token JTI Coverage
 Status: **FIXED** in `tests/test_security.py`
@@ -10,11 +10,11 @@ Status: **FIXED** in `tests/test_security.py`
 - Validation: 22 security tests pass.
 
 ## REMEDIATION-02 — Deploy-Safe Index Migration
-Status: **FIXED** via follow-up migration `db/migrations/013_hot_indexes_concurrent.py`
+Status: **REOPENED** in `db/migrations/013_hot_indexes_concurrent.py`
 
 - Created `013_hot_indexes_concurrent.py` that uses `CREATE INDEX CONCURRENTLY IF NOT EXISTS`.
-- Uses `autocommit_block()` to avoid ACCESS EXCLUSIVE lock during index builds.
-- Validation: `alembic heads` shows `013_hot_indexes_concurrent`.
+- Current source does not yet use Alembic `autocommit_block()` correctly; it changes connection isolation level after a transaction is active.
+- Validation: `alembic heads` shows `013_hot_indexes_concurrent`, but `alembic upgrade head` fails with `InvalidRequestError` about altering `isolation_level` inside an initialized transaction.
 
 ## REMEDIATION-03 — Gateway Startup Degradation
 Status: **FIXED** in `docker-compose.yml`

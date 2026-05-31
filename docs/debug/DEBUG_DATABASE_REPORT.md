@@ -1,6 +1,6 @@
 # Debug Database Report
 
-Updated: 2026-05-31 15:20 +07
+Updated: 2026-05-31 20:29 +07
 
 Status: running Docker PostgreSQL schema reconciled to repo head after API runtime probe found drift.
 
@@ -31,3 +31,8 @@ Status: running Docker PostgreSQL schema reconciled to repo head after API runti
 - Browser evidence showed the gateway violated the application-side contract by returning an unpersisted slate ID.
 - Current-source regression verifies `/api/recommendations` now creates the `served_slates` row before `/api/recommendations/feedback` writes `feedback_events`.
 - Test cleanup now truncates `feedback_events`, `served_slate_items`, and `served_slates` to keep DB tests isolated.
+
+## Code Review Remediation Migration Finding
+- R-2 is reopened. `013_hot_indexes_concurrent` is the Alembic head, but the local database remains at `012_ab_testing_and_monitoring`.
+- `alembic upgrade head` fails inside `013_hot_indexes_concurrent.py` because the migration calls `conn.execution_options(isolation_level="AUTOCOMMIT")` after Alembic has initialized a transaction.
+- Required fix: use Alembic's `autocommit_block()` for `CREATE INDEX CONCURRENTLY` and any concurrent downgrade DDL, then rerun `upgrade head` and `current`.

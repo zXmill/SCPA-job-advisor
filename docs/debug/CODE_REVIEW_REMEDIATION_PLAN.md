@@ -1,6 +1,6 @@
 # Code Review Remediation Plan
 
-Updated: 2026-05-31 19:30 +07
+Updated: 2026-05-31 20:29 +07
 
 ## Review Context
 - Branch: `agent-run`
@@ -17,10 +17,11 @@ Updated: 2026-05-31 19:30 +07
    - Added `test_rotation_marks_jti_as_used_in_redis` and `test_reused_refresh_token_after_rotation_fails`
    - Validation: 22 tests passed
 
-2. **R-2: Hot-path index migration uses non-concurrent DDL** ✅ **FIXED**
+2. **R-2: Hot-path index migration uses non-concurrent DDL** 🔴 **REOPENED**
    - Created follow-up migration `db/migrations/013_hot_indexes_concurrent.py`
-   - Uses `CREATE INDEX CONCURRENTLY IF NOT EXISTS` via autocommit connection
-   - Validation: `alembic heads` shows `013_hot_indexes_concurrent`
+   - Current migration emits `CREATE INDEX CONCURRENTLY IF NOT EXISTS`, but it changes isolation level after Alembic has opened a transaction.
+   - Runtime evidence: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` fails with `sqlalchemy.exc.InvalidRequestError: isolation_level may not be altered unless rollback() or commit() is called first`.
+   - Required fix: use Alembic's non-transactional DDL pattern, then rerun `alembic upgrade head` and `alembic current`.
 
 3. **R-3: Gateway startup blocks on non-critical ML services** ✅ **FIXED**
    - Removed `depends_on: pipeline: condition: service_healthy` from gateway's compose block
@@ -64,7 +65,7 @@ Updated: 2026-05-31 19:30 +07
 - Dead code cleanup (_job_has_indonesia_signal, _get_active_experiments, DEFAULT_SKILL_TAXONOMY dead issue, TokenManager refresh methods)
 
 ## Rejected / Stale
-None. All P0/P1 findings were confirmed against current source and fixed.
+None. All P0/P1 findings were confirmed against current source. R-2 is reopened because migration validation failed after the previous docs marked it complete.
 
 ## Commit Log
 1. `docs/debug/COMPACT_RECOVERY.md`, `docs/debug/DEBUG_MASTER_PLAN.md`, `docs/debug/CODE_REVIEW_REMEDIATION_PLAN.md` — reconciliation
@@ -76,6 +77,14 @@ None. All P0/P1 findings were confirmed against current source and fixed.
 7. `tests/test_market_aware_skill_path.py` — regression test for market demand job_count
 
 ## Validation Commands Run
-- `.\.venv\Scripts\python.exe -m pytest -q` → 397 passed, 3 warnings
-- `alembic heads` → `013_hot_indexes_concurrent (head)`
+- `.\.venv\Scripts\python.exe -m pytest tests/test_security.py tests/test_saved_jobs_skip.py tests/test_market_aware_skill_path.py -q` → 32 passed, 1 warning
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads` → `013_hot_indexes_concurrent (head)`
 - `docker compose config --quiet && docker compose config --services` → pass
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current` → current database remains at `012_ab_testing_and_monitoring`
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` → fail on `013_hot_indexes_concurrent` autocommit handling
+
+## Current Active Task
+Fix R-2 only: update `db/migrations/013_hot_indexes_concurrent.py` to use Alembic `autocommit_block()` correctly for concurrent index create/drop.
+
+## Next Exact Action
+Patch migration 013, run `py_compile`, `alembic upgrade head`, `alembic current`, `alembic heads`, and commit the product fix separately from this state reconciliation.

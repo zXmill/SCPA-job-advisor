@@ -1,6 +1,6 @@
 # Debug Evidence
 
-Updated: 2026-05-31 16:26 +07
+Updated: 2026-05-31 20:29 +07
 
 ## Bootstrap Evidence
 - Repository cwd: `E:\TUGAS AKHIR\SCPA`.
@@ -90,3 +90,13 @@ Updated: 2026-05-31 16:26 +07
 - `git status --short --branch` confirms branch `agent-run` remains dirty with pre-existing modified/untracked files; no unrelated dirty work was staged during reconciliation.
 - Required debug reports were re-read on 2026-05-31 16:26 +07. Stale debug state was found in `COMPACT_RECOVERY.md`, `DEBUG_MASTER_PLAN.md`, `DEBUG_BROWSER_REPORT.md`, `DEBUG_FRONTEND_REPORT.md`, and this evidence file.
 - `impeccable` setup was invoked for the frontend phase. The project-local helper path was absent, and the installed skill helper reported `NO_PRODUCT_MD`; frontend design/product work therefore needs a minimal `PRODUCT.md` context before UI changes.
+
+## Code Review Remediation Recovery Evidence
+- `git log --oneline -8` on 2026-05-31 20:29 +07 shows latest commit `5963523 docs: mark DEBUG-ULT-001 and remediation complete in task queue`.
+- `git status --short --branch` confirms branch `agent-run` remains dirty with pre-existing unrelated changes and untracked files. These are not staged for this remediation pass.
+- Focused remediation tests passed: `.\.venv\Scripts\python.exe -m pytest tests/test_security.py tests/test_saved_jobs_skip.py tests/test_market_aware_skill_path.py -q` -> 32 passed, 1 warning.
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads` passed with `013_hot_indexes_concurrent (head)`.
+- `docker compose config --quiet && docker compose config --services` passed.
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current` reported current database revision `012_ab_testing_and_monitoring`.
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` failed while running `013_hot_indexes_concurrent`.
+- Failure root evidence: `sqlalchemy.exc.InvalidRequestError: This connection has already initialized a SQLAlchemy Transaction() object via begin() or autobegin; isolation_level may not be altered unless rollback() or commit() is called first.`

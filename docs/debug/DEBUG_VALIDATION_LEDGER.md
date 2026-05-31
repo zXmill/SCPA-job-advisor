@@ -1,6 +1,6 @@
 # Debug Validation Ledger
 
-Updated: 2026-05-31 16:26 +07
+Updated: 2026-05-31 20:29 +07
 
 | Timestamp | Command | Result | Related ID | Summary |
 | --- | --- | --- | --- | --- |
@@ -73,3 +73,7 @@ Updated: 2026-05-31 16:26 +07
 | 2026-05-31 19:30 +07 | `.\.venv\Scripts\python.exe -m pytest -q` | pass | REMEDIATION-FULL | Full backend suite passed: 397 passed, 3 warnings. |
 | 2026-05-31 19:30 +07 | `alembic heads` | pass | REMEDIATION-02 | Migration `013_hot_indexes_concurrent` is head. |
 | 2026-05-31 19:30 +07 | `docker compose config --quiet && docker compose config --services` | pass | REMEDIATION-03,04,05 | Compose validates; no volume shadowing, password placeholders synced. |
+| 2026-05-31 20:29 +07 | `git log --oneline -8`; `git status --short --branch`; required `docs/debug/*.md` reads | pass | CODE-REVIEW-REMEDIATION-RECOVERY | Recovered from repository state. Latest commit is `5963523`; debug docs overstated remediation completion. |
+| 2026-05-31 20:29 +07 | `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current` | pass | REMEDIATION-02 | Current database revision is `012_ab_testing_and_monitoring`, not migration head. |
+| 2026-05-31 20:29 +07 | `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads` | pass | REMEDIATION-02 | Repo head remains `013_hot_indexes_concurrent (head)`. |
+| 2026-05-31 20:29 +07 | `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` | fail | REMEDIATION-02 | Migration 013 fails because it alters isolation level after Alembic has initialized a transaction. |
