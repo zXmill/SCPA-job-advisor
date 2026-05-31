@@ -80,3 +80,16 @@ Branch: `agent-run`
 - Docker Compose config: passed with dummy required env vars.
 - Full backend suite: `389 passed, 3 warnings`.
 - Commit: `0313e8a`.
+
+## Task Start: DEBUG-ULT-001 (Ultimate Evidence-Based Debugging Session)
+
+### What is being done
+- Initialized required debug-session documentation under `docs/debug/`.
+- Marked `DEBUG-ULT-001` active in `docs/agent/TASK_QUEUE.json`.
+- Recorded that `morph-mcp` was requested but no callable morph tool is exposed in the current tool surface.
+- No product code has been changed.
+
+### Next validation
+- `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- `git status --short --branch`
+- staged diff inspection before committing initialization docs.

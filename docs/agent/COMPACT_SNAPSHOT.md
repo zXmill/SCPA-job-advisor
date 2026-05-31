@@ -1,63 +1,72 @@
 # Compact Snapshot
 
-Updated: 2026-05-26 00:15 +07
+Updated: 2026-05-31 09:12 +07
 
 ## Current Objective
-Continue from the active task in TASK_QUEUE.json, which is now complete. Next task is P4-ADV-001.
+Run `DEBUG-ULT-001`, an evidence-based full-stack debugging session covering frontend, backend/API, ML services, pipeline, database, Docker, browser flows, and security.
 
 ## Current Phase
-frontend
+debug bootstrap
 
 ## Current Task ID
-P4-ADV-003
+DEBUG-ULT-001
 
 ## Latest Commit Hash
-Root: `118f763` (`feat: add market-aware skill path recommender`). Backend: `45660fa` (`feat: add recommendation reason filter backend`). Nested frontend: `f226e7e` (`feat: add recommendation reason filter controls`).
+Root: `79b1614` (`fix: increase gateway HTTP_TIMEOUT_SECONDS to 15s for pipeline stability`).
 
 ## Current Git Branch
 `agent-run`
 
 ## Dirty Files
-- Pre-existing root: `README.md` modified.
-- Pre-existing root: many untracked project files/directories.
-- Pre-existing nested frontend dirty/untracked files remain unrelated to the active task.
-- Current task: `docs/agent/` state files being updated for P3-FEAT-007-FE completion.
+- Pre-existing root: `README.md`, `SCPAv2`, `notebooks/01_indonesian_hybrid_dataset_eda.ipynb`, and `notebooks/02_hybrid_dataset_validation.ipynb` were modified before this session.
+- Pre-existing root: many untracked project files/directories remain part of the live project and must not be bulk staged.
+- Pre-existing nested `frontend/` repo is dirty and must be committed separately if frontend code changes are made.
+- Current task owns only the new/updated `docs/debug/` and `docs/agent/` debug-session state until evidence justifies product changes.
 
 ## Files Changed This Session
-- `frontend/src/lib/api.ts`
-- `frontend/src/app/recommendations/page.tsx`
-- `docs/agent/PROJECT_STATE.md`
+- `docs/debug/DEBUG_MASTER_PLAN.md`
+- `docs/debug/DEBUG_INVENTORY.md`
+- `docs/debug/DEBUG_HYPOTHESES.md`
+- `docs/debug/DEBUG_EVIDENCE.md`
+- `docs/debug/DEBUG_FIX_LOG.md`
+- `docs/debug/DEBUG_VALIDATION_LEDGER.md`
+- `docs/debug/DEBUG_BROWSER_REPORT.md`
+- `docs/debug/DEBUG_MODEL_REPORT.md`
+- `docs/debug/DEBUG_API_REPORT.md`
+- `docs/debug/DEBUG_FRONTEND_REPORT.md`
+- `docs/debug/DEBUG_BACKEND_REPORT.md`
+- `docs/debug/DEBUG_DATABASE_REPORT.md`
+- `docs/debug/DEBUG_DOCKER_REPORT.md`
+- `docs/debug/DEBUG_SECURITY_REPORT.md`
+- `docs/debug/COMPACT_RECOVERY.md`
 - `docs/agent/TASK_QUEUE.json`
-- `docs/agent/SESSION_REPORT.md`
 - `docs/agent/COMPACT_SNAPSHOT.md`
+- `docs/agent/PROJECT_STATE.md`
+- `docs/agent/SESSION_REPORT.md`
+- `docs/agent/DECISION_LOG.md`
 - `docs/agent/VALIDATION_LEDGER.md`
 
 ## Current Implementation Status
-- `P4-ADV-003` is implemented and validated.
-- Design doc at `docs/ml/MARKET_AWARE_SKILL_PATH.md`.
-- Gateway computes market demand from active job postings and passes it to DQN learning path.
-- `GET /api/market-demand` exposes demand data for frontend display.
-- Next pending task is in TASK_QUEUE.json.
+- Debug documentation has been initialized.
+- No product code has been changed.
+- `morph-mcp` was requested but is not exposed as a callable tool in this session.
 
 ## Commands Already Run
-- Frontend lint: `npm run lint` passed with 16 existing warnings, 0 errors.
-- Frontend build: `npm run build` passed (12 static pages generated).
-- Nested frontend commit: `git commit` -> `f226e7e`.
+- `git status --short --branch`
+- `tool_search morph-mcp`
 
 ## Validation Results
-- Frontend lint passed with 0 errors.
-- Frontend build passed.
+- Baseline validation is pending.
 
 ## Known Errors
-- One existing warning remains in the intentional wrong-secret JWT test.
-- Existing frontend lint warnings remain but do not fail lint.
+- None confirmed in this session yet. Prior durable state recorded frontend lint warnings and backend warning-only test output.
 
 ## Do-Not-Change Constraints
-- Do not stage or revert pre-existing root `README.md` changes or broad untracked project files unless a task explicitly owns them.
+- Do not stage or revert pre-existing root `README.md`, `SCPAv2`, notebooks, or broad untracked project files unless the active debug task explicitly owns them.
 - Do not stage or revert unrelated nested frontend dirty files.
-- Frontend code must be committed inside the nested `frontend/` repository, then recorded by a root state checkpoint.
-- Trust repository files and durable state over chat history or compact summaries.
-- Do not claim completion or move to the next task without fresh validation.
+- Frontend code must be committed inside `frontend/` first, then mirrored in root durable state.
+- Do not fix before collecting reproduction evidence and root-cause notes.
+- Do not claim all validation passed unless each command actually ran in this session.
 
 ## Next Exact Action
-Stage root `docs/agent/` state updates, inspect staged diff, commit `docs: update long-running agent checkpoint`, then proceed to `P4-ADV-001`.
+Validate `docs/agent/TASK_QUEUE.json`, inspect the initialization diff, commit `docs: initialize ultimate debugging session`, then run static inventory and baseline validation.

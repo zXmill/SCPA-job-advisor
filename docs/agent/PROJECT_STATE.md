@@ -107,5 +107,8 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 ## Last Completed Task
 `P5-ML-007` - Fine-tuned SBERT checkpoint runtime integration. Root commit `0313e8a`.
 
+## Current Debug Session
+`DEBUG-ULT-001` is active as of 2026-05-31 09:12 +07. The session is an evidence-based full-stack debugging audit. It must update `docs/debug/*` and `docs/agent/*`, collect runtime evidence before fixes, and keep commits scoped because the repository started dirty.
+
 ## Next Task
-Check TASK_QUEUE.json for next pending task.
+Continue `DEBUG-ULT-001`: commit the initialized debug-session docs, then run static inventory and baseline validation.

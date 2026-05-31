@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "current_phase": "ml",
-  "current_task_id": null,
+  "current_phase": "debug",
+  "current_task_id": "DEBUG-ULT-001",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1611,6 +1611,67 @@
       "validation_status": "passed",
       "commit": "0313e8a",
       "notes": "Active SBERT runtime now loads models/sbert-indonesian-hybrid-manual-research/best with SBERT_MODEL_LOADER=transformers and exposes model_version sbert-indonesian-hybrid-manual-research-best. Pipeline stage 2 preserves the SBERT model_version. SCPAv2 was ignored."
+    },
+    {
+      "id": "DEBUG-ULT-001",
+      "phase": "debug",
+      "title": "Ultimate evidence-based full-stack debugging session",
+      "priority": "P0",
+      "status": "in_progress",
+      "scope": "large",
+      "depends_on": [
+        "P5-ML-007"
+      ],
+      "files_expected": [
+        "docs/debug/DEBUG_MASTER_PLAN.md",
+        "docs/debug/DEBUG_INVENTORY.md",
+        "docs/debug/DEBUG_HYPOTHESES.md",
+        "docs/debug/DEBUG_EVIDENCE.md",
+        "docs/debug/DEBUG_FIX_LOG.md",
+        "docs/debug/DEBUG_VALIDATION_LEDGER.md",
+        "docs/debug/DEBUG_BROWSER_REPORT.md",
+        "docs/debug/DEBUG_MODEL_REPORT.md",
+        "docs/debug/DEBUG_API_REPORT.md",
+        "docs/debug/DEBUG_FRONTEND_REPORT.md",
+        "docs/debug/DEBUG_BACKEND_REPORT.md",
+        "docs/debug/DEBUG_DATABASE_REPORT.md",
+        "docs/debug/DEBUG_DOCKER_REPORT.md",
+        "docs/debug/DEBUG_SECURITY_REPORT.md",
+        "docs/debug/COMPACT_RECOVERY.md",
+        "scripts/debug/selenium_full_audit.py",
+        "reports/debug/"
+      ],
+      "files_touched": [
+        "docs/debug/DEBUG_MASTER_PLAN.md",
+        "docs/debug/DEBUG_INVENTORY.md",
+        "docs/debug/DEBUG_HYPOTHESES.md",
+        "docs/debug/DEBUG_EVIDENCE.md",
+        "docs/debug/DEBUG_FIX_LOG.md",
+        "docs/debug/DEBUG_VALIDATION_LEDGER.md",
+        "docs/debug/DEBUG_BROWSER_REPORT.md",
+        "docs/debug/DEBUG_MODEL_REPORT.md",
+        "docs/debug/DEBUG_API_REPORT.md",
+        "docs/debug/DEBUG_FRONTEND_REPORT.md",
+        "docs/debug/DEBUG_BACKEND_REPORT.md",
+        "docs/debug/DEBUG_DATABASE_REPORT.md",
+        "docs/debug/DEBUG_DOCKER_REPORT.md",
+        "docs/debug/DEBUG_SECURITY_REPORT.md",
+        "docs/debug/COMPACT_RECOVERY.md",
+        "docs/agent/TASK_QUEUE.json",
+        "docs/agent/COMPACT_SNAPSHOT.md",
+        "docs/agent/PROJECT_STATE.md",
+        "docs/agent/SESSION_REPORT.md",
+        "docs/agent/DECISION_LOG.md",
+        "docs/agent/VALIDATION_LEDGER.md"
+      ],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json",
+        "git status --short --branch",
+        "git diff --cached -- docs/debug docs/agent"
+      ],
+      "validation_status": "pending",
+      "commit": "",
+      "notes": "Session bootstrap for hypothesis-driven debugging across frontend, backend/API, ML, database, Docker, browser, and security. No product code fixes until evidence exists."
     }
   ]
 }

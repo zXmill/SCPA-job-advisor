@@ -439,3 +439,11 @@
 - Skipped option: Reading or wiring anything from `SCPAv2`.
 - Reason skipped: The user explicitly said `SCPAv2` failed and should be ignored; the usable checkpoint is already under the current SCPA repo.
 
+## 2026-05-31 09:12 +07 - DEBUG-ULT-001 bootstrap decision
+- Decision: Initialize a dedicated `docs/debug/` evidence ledger and mark `DEBUG-ULT-001` as the active durable task before touching product code.
+- Expected files to touch first: required `docs/debug/*.md` files plus `docs/agent/TASK_QUEUE.json`, `COMPACT_SNAPSHOT.md`, `PROJECT_STATE.md`, `SESSION_REPORT.md`, `DECISION_LOG.md`, and `VALIDATION_LEDGER.md`.
+- Validation commands: JSON parse of `TASK_QUEUE.json`, git status, and staged diff inspection before the initialization commit.
+- Chosen approach: repository files and runtime evidence are authoritative; memory only seeds recovery context.
+- `morph-mcp`: requested by the prompt, but current tool discovery exposed no callable morph tool, so standard local edit tooling is used.
+- Risk and mitigation: the repo started dirty with many untracked project files, so all commits must stage explicit task-owned paths only.
+
