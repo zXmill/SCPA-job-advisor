@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "debug",
-  "current_task_id": "DEBUG-ULT-001",
+  "current_task_id": "CODE-REVIEW-REMEDIATION-001",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1580,7 +1580,6 @@
         "docs/ml/ML_INVENTORY.md",
         "tests/"
       ],
-      "files_touched": [],
       "files_touched": [
         ".env.example",
         "docker-compose.yml",
@@ -1693,6 +1692,46 @@
       "validation_status": "passed",
       "commit": "342edb0, b747954",
       "notes": "Initialization commit 0b55041; baseline/hypotheses commit 1fb59e5; Selenium harness commit 2ad62bc; served-slate fix commit 342edb0; Docker/runtime fix commit b747954. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass. Fixed gateway requirements/context/CMD Docker failures and pipeline package-entrypoint Docker failure. Selenium authenticated browser audit found recommendation feedback 500 from missing served_slates row; current source persists served_slates/served_slate_items before returning recommendations. Focused, adjacent, and full backend tests pass. Full compose build/up, health/ready probes, Alembic upgrade head, and final Selenium audit pass."
+    },
+    {
+      "id": "CODE-REVIEW-REMEDIATION-001",
+      "phase": "debug",
+      "title": "Code review remediation pass - P0/P1 deploy-safety and data-signal",
+      "priority": "P0",
+      "status": "done",
+      "scope": "large",
+      "depends_on": [
+        "DEBUG-ULT-001"
+      ],
+      "files_expected": [
+        ".env.example",
+        "docker-compose.yml",
+        "db/migrations/013_hot_indexes_concurrent.py",
+        "services/gateway/main.py",
+        "tests/test_security.py",
+        "tests/test_saved_jobs_skip.py",
+        "tests/test_market_aware_skill_path.py",
+        "docs/debug/CODE_REVIEW_REMEDIATION_REPORT.md"
+      ],
+      "files_touched": [
+        ".env.example",
+        "docker-compose.yml",
+        "db/migrations/013_hot_indexes_concurrent.py",
+        "services/gateway/main.py",
+        "tests/test_security.py",
+        "tests/test_saved_jobs_skip.py",
+        "tests/test_market_aware_skill_path.py",
+        "docs/debug/CODE_REVIEW_REMEDIATION_PLAN.md",
+        "docs/debug/CODE_REVIEW_REMEDIATION_REPORT.md",
+        "docs/debug/COMPACT_RECOVERY.md"
+      ],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_security.py tests\\test_saved_jobs_skip.py tests\\test_market_aware_skill_path.py -q",
+        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini heads"
+      ],
+      "validation_status": "passed",
+      "commit": "52a6bb9",
+      "notes": "All 8 P0/P1 findings fixed: auth rotation coverage (R-1), concurrent indexes (R-2), gateway startup (R-3), env example (R-4), weight volumes (R-5), interaction state preservation (R-6), feedback transitions (R-7), market demand formula (R-8). 5 scoped commits, 32 focused tests pass, 397 full suite pass."
     }
   ]
 }
