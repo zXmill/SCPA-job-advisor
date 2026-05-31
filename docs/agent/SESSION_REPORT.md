@@ -136,3 +136,4 @@ Branch: `agent-run`
 - Focused regression passed.
 - Adjacent recommendation/pipeline tests passed with 6 passed and 1 warning.
 - Full backend pytest passed with 390 passed and 3 warnings.
+- Commit: `342edb0` (`fix: persist recommendation served slates`).

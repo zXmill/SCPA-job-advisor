@@ -9,7 +9,7 @@ DEBUG-ULT-001: ultimate evidence-based full-stack debugging session.
 agent-run
 
 ## Latest Commit Hash
-2ad62bc
+342edb0
 
 ## Dirty Files
 - Pre-existing before this session: `README.md`, `SCPAv2`, `notebooks/01_indonesian_hybrid_dataset_eda.ipynb`, `notebooks/02_hybrid_dataset_validation.ipynb`.
@@ -24,4 +24,4 @@ H4-API-FEEDBACK-SLATE-FK is fixed in current source and verified by focused/adja
 Backend pytest baseline passed (`389 passed, 3 warnings`), frontend lint/build passed, Docker config passed, Docker rebuild failed at gateway. Selenium authenticated audit reproduced feedback 500. Current-source focused regression and adjacent recommendation/pipeline tests pass after persisting served slates.
 
 ## Next Exact Action
-Commit the served-slate change narrowly, then begin the Docker build-context/dependency-layer fix.
+Begin the Docker build-context/dependency-layer fix for `H1-DOCKER-GATEWAY-REQ` and `H2-DOCKER-CONTEXT`.

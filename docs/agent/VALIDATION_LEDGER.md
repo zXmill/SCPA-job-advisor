@@ -1841,33 +1841,33 @@
 - Command: .\.venv\Scripts\python.exe -m pytest tests\test_recommendation_feedback_slate.py -q
 - Result: fail
 - Summary: Focused pre-fix regression reproduced the missing served-slate persistence; `served_slates` count was 0 after `/api/recommendations`.
-- Related commit hash: pending.
+- Related commit hash: 342edb0.
 
 ## 2026-05-31 10:16 +07
 - Task ID: DEBUG-ULT-001
 - Command: .\.venv\Scripts\python.exe -m py_compile services\gateway\main.py tests\conftest.py tests\test_recommendation_feedback_slate.py
 - Result: pass
 - Summary: Changed gateway and test files compile.
-- Related commit hash: pending.
+- Related commit hash: 342edb0.
 
 ## 2026-05-31 10:17 +07
 - Task ID: DEBUG-ULT-001
 - Command: .\.venv\Scripts\python.exe -m pytest tests\test_recommendation_feedback_slate.py -q
 - Result: pass
 - Summary: Focused regression passed; recommendation response persists a served slate and feedback using that slate returns 200.
-- Related commit hash: pending.
+- Related commit hash: 342edb0.
 
 ## 2026-05-31 10:19 +07
 - Task ID: DEBUG-ULT-001
 - Command: .\.venv\Scripts\python.exe -m pytest tests\test_recommendation_feedback_slate.py tests\test_recommendation_reason_filters.py tests\test_feedback_outbox.py tests\test_pipeline_contracts.py -q
 - Result: pass
 - Summary: Adjacent recommendation, feedback outbox, and pipeline contract tests passed with 6 passed and 1 warning.
-- Related commit hash: pending.
+- Related commit hash: 342edb0.
 
 ## 2026-05-31 10:27 +07
 - Task ID: DEBUG-ULT-001
 - Command: .\.venv\Scripts\python.exe -m pytest -q
 - Result: pass
 - Summary: Full backend suite passed with 390 passed and 3 warnings in 223.23s.
-- Related commit hash: pending.
+- Related commit hash: 342edb0.
 

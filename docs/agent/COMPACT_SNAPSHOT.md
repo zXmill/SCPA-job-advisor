@@ -6,13 +6,13 @@ Updated: 2026-05-31 10:20 +07
 Run `DEBUG-ULT-001`, an evidence-based full-stack debugging session covering frontend, backend/API, ML services, pipeline, database, Docker, browser flows, and security.
 
 ## Current Phase
-feedback slate fix verification
+Docker rebuild repair
 
 ## Current Task ID
 DEBUG-ULT-001
 
 ## Latest Commit Hash
-Root: `2ad62bc` (`test: add selenium browser audit`).
+Root: `342edb0` (`fix: persist recommendation served slates`).
 
 ## Current Git Branch
 `agent-run`
@@ -54,6 +54,7 @@ Root: `2ad62bc` (`test: add selenium browser audit`).
 - Authenticated Selenium audit reproduced `POST /api/recommendations/feedback` HTTP 500.
 - Current source now persists `served_slates` and `served_slate_items` before returning recommendation data.
 - Focused, adjacent, and full backend tests for the fix pass.
+- Served-slate fix committed as `342edb0`.
 - `morph-mcp` was requested but is not exposed as a callable tool in this session.
 
 ## Commands Already Run
@@ -93,4 +94,4 @@ Root: `2ad62bc` (`test: add selenium browser audit`).
 - Do not claim all validation passed unless each command actually ran in this session.
 
 ## Next Exact Action
-Commit the served-slate persistence fix narrowly, then repair the Docker gateway dependency/build-context failure.
+Repair the Docker gateway dependency/build-context failure.

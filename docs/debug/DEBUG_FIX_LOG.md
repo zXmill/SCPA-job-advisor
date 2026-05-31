@@ -4,7 +4,7 @@ Updated: 2026-05-31 10:20 +07
 
 ## FIX-API-FEEDBACK-SLATE
 
-Status: implemented in current source, focused and adjacent tests passed, browser re-check pending current-runtime Docker repair.
+Status: committed in `342edb0`, focused/adjacent/full backend tests passed, browser re-check pending current-runtime Docker repair.
 
 Related hypothesis: `H4-API-FEEDBACK-SLATE-FK`.
 

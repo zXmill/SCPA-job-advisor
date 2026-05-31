@@ -1677,9 +1677,9 @@
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_recommendation_feedback_slate.py tests\\test_recommendation_reason_filters.py tests\\test_feedback_outbox.py tests\\test_pipeline_contracts.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest -q"
       ],
-      "validation_status": "passed_pending_commit",
-      "commit": "",
-      "notes": "Initialization commit 0b55041; baseline/hypotheses commit 1fb59e5; Selenium harness commit 2ad62bc. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass, Docker rebuild fails at gateway requirements layer and missing .dockerignore causes huge context. Selenium authenticated browser audit found recommendation feedback 500 from missing served_slates row. Current source persists served_slates/served_slate_items before returning recommendations; focused, adjacent, and full backend tests pass. Fix commit is pending."
+      "validation_status": "passed",
+      "commit": "342edb0",
+      "notes": "Initialization commit 0b55041; baseline/hypotheses commit 1fb59e5; Selenium harness commit 2ad62bc; served-slate fix commit 342edb0. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass, Docker rebuild fails at gateway requirements layer and missing .dockerignore causes huge context. Selenium authenticated browser audit found recommendation feedback 500 from missing served_slates row. Current source persists served_slates/served_slate_items before returning recommendations; focused, adjacent, and full backend tests pass. Next target is Docker build repair."
     }
   ]
 }

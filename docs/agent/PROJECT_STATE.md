@@ -123,6 +123,7 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Current source fix: `services/gateway/main.py` persists `served_slates` and `served_slate_items` before returning recommendation data.
 - Regression coverage: `tests/test_recommendation_feedback_slate.py` asserts the recommendation response creates a slate and feedback using that slate returns 200/persists `feedback_events`.
 - Validation: focused regression, adjacent recommendation/pipeline tests, and full backend pytest pass. Full backend result: 390 passed, 3 warnings.
+- Commit: `342edb0` (`fix: persist recommendation served slates`).
 
 ## Next Task
-Continue `DEBUG-ULT-001`: commit the served-slate fix narrowly, then address the Docker gateway build failure.
+Continue `DEBUG-ULT-001`: address the Docker gateway build failure.

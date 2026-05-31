@@ -10,13 +10,13 @@ Updated: 2026-05-31 10:20 +07
 - Editing rule: no product code fix before reproduction evidence and root-cause notes exist.
 
 ## Current Phase
-First confirmed API/browser bug fixed in current source and awaiting narrow commit.
+First confirmed API/browser bug fixed and committed; next phase is Docker rebuild repair.
 
 ## Active Task
-Finish `FIX-API-FEEDBACK-SLATE`, then move to the separately confirmed Docker rebuild failure.
+Investigate and fix the separately confirmed Docker rebuild failure.
 
 ## Next Exact Action
-Commit the served-slate persistence change narrowly, then investigate `H1-DOCKER-GATEWAY-REQ` and `H2-DOCKER-CONTEXT`.
+Investigate `H1-DOCKER-GATEWAY-REQ` and `H2-DOCKER-CONTEXT`, then rebuild gateway with evidence.
 
 ## Method
 1. Inventory the current repository surfaces from files, not memory.
