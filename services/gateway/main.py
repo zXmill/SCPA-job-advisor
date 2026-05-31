@@ -2411,18 +2411,29 @@ async def _set_job_interaction_state(
     saved: bool,
     dismissed: bool,
     action_type: str,
+    clicked: bool = False,
+    applied: bool = False,
 ) -> None:
     await db.execute(
         text(
             "INSERT INTO user_job_interactions ("
             "user_id, job_id, clicked, saved, applied, dismissed, created_at"
             ") VALUES ("
-            ":uid, :job_id, false, :saved, false, :dismissed, NOW()"
+            ":uid, :job_id, :clicked, :saved, :applied, :dismissed, NOW()"
             ") ON CONFLICT (user_id, job_id) DO UPDATE SET "
             "saved = EXCLUDED.saved, "
-            "dismissed = EXCLUDED.dismissed"
+            "dismissed = EXCLUDED.dismissed, "
+            "clicked = user_job_interactions.clicked OR EXCLUDED.clicked, "
+            "applied = user_job_interactions.applied OR EXCLUDED.applied"
         ),
-        {"uid": user_id, "job_id": job_id, "saved": saved, "dismissed": dismissed},
+        {
+            "uid": user_id,
+            "job_id": job_id,
+            "clicked": clicked,
+            "saved": saved,
+            "applied": applied,
+            "dismissed": dismissed,
+        },
     )
     await db.execute(
         text(
@@ -2753,8 +2764,15 @@ async def create_applications(
 # Market Demand
 # ════════════════════════════════════════════════════════════════
 
-async def _compute_skill_market_demand(db: AsyncSession) -> dict[str, float]:
-    """Count how many active jobs require each skill and normalise to [0,1]."""
+async def _compute_skill_market_demand(
+    db: AsyncSession,
+) -> dict[str, tuple[float, int]]:
+    """Count how many active jobs require each skill and normalise to [0,1].
+
+    Returns a mapping of skill name to ``(demand_score, raw_job_count)`` so
+    callers can expose both the normalised score and the unfiltered count
+    without risk of the count being recomputed from the normalised value.
+    """
     try:
         rows = (
             await db.execute(
@@ -2778,7 +2796,10 @@ async def _compute_skill_market_demand(db: AsyncSession) -> dict[str, float]:
     max_count = max(counts.values())
     if max_count <= 0:
         return {}
-    return {skill: round(min(1.0, count / max_count), 4) for skill, count in counts.items()}
+    return {
+        skill: (round(min(1.0, count / max_count), 4), count)
+        for skill, count in counts.items()
+    }
 
 
 @app.get("/api/market-demand")
@@ -2790,11 +2811,16 @@ async def market_demand(
     """Return current skill market demand derived from active job postings."""
     await _require_user(db, token_payload)
     demand = await _compute_skill_market_demand(db)
-    max_count = max(demand.values()) if demand else 0.0
-    total = len(demand)
+    max_raw_count = max((raw for _, raw in demand.values()), default=0)
     skills = [
-        {"skill": skill, "demand": score, "job_count": int(score * max_count * total) if max_count and total else 0}
-        for skill, score in sorted(demand.items(), key=lambda x: x[1], reverse=True)[:limit]
+        {
+            "skill": skill,
+            "demand": score,
+            "job_count": raw_count,
+        }
+        for skill, (score, raw_count) in sorted(
+            demand.items(), key=lambda item: item[1][0], reverse=True
+        )[:limit]
     ]
     return {
         "skills": skills,
@@ -2823,7 +2849,8 @@ async def learning_path(
     user_skills = {s["skill"] for s in skills}
 
     target_role = await _resolve_target_role(db, user)
-    market_demand = await _compute_skill_market_demand(db)
+    market_demand_raw = await _compute_skill_market_demand(db)
+    market_demand = {skill: score for skill, (score, _raw) in market_demand_raw.items()}
 
     dqn_url = os.getenv("DQN_URL", os.getenv("DQN_SERVICE_URL", "http://dqn:8004")).rstrip("/")
     dqn_data: dict[str, Any] = {}
@@ -3089,9 +3116,17 @@ async def recommendation_feedback(
                 ":uid, :job_id, :clicked, :saved, :applied, :dismissed, :dwell_seconds, NOW()"
                 ") ON CONFLICT (user_id, job_id) DO UPDATE SET "
                 "clicked = user_job_interactions.clicked OR EXCLUDED.clicked, "
-                "saved = user_job_interactions.saved OR EXCLUDED.saved, "
                 "applied = user_job_interactions.applied OR EXCLUDED.applied, "
-                "dismissed = user_job_interactions.dismissed OR EXCLUDED.dismissed, "
+                "saved = CASE "
+                "  WHEN EXCLUDED.dismissed THEN false "
+                "  WHEN EXCLUDED.saved THEN true "
+                "  ELSE user_job_interactions.saved "
+                "END, "
+                "dismissed = CASE "
+                "  WHEN EXCLUDED.saved THEN false "
+                "  WHEN EXCLUDED.dismissed THEN true "
+                "  ELSE user_job_interactions.dismissed "
+                "END, "
                 "dwell_seconds = GREATEST("
                 "COALESCE(user_job_interactions.dwell_seconds, 0), "
                 "COALESCE(EXCLUDED.dwell_seconds, 0)"
