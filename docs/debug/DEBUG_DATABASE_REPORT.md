@@ -1,6 +1,6 @@
 # Debug Database Report
 
-Updated: 2026-05-31 20:34 +07
+Updated: 2026-05-31 21:41 +07
 
 Status: running Docker PostgreSQL schema reconciled to repo head after API runtime probe found drift.
 
@@ -36,3 +36,8 @@ Status: running Docker PostgreSQL schema reconciled to repo head after API runti
 - R-2 is fixed. `009_reco_hot_indexes.py` now creates/drops hot indexes with PostgreSQL concurrent DDL inside Alembic `autocommit_block()`, so fresh deployments do not create these indexes with long write-blocking index builds.
 - `013_hot_indexes_concurrent.py` is retained as an idempotent repair migration for databases already at `012`; it now uses `autocommit_block()` correctly and does not drop 009-owned indexes on downgrade.
 - Validation passed: `upgrade head`, `downgrade 012_ab_testing_and_monitoring`, `upgrade head`, `current`, and `heads`.
+
+## Runtime Contract Pass Database Impact
+- No database schema or migration changes were made during the runtime-contract pass.
+- The final fixes were frontend request-state handling and gateway CORS configuration only.
+- Runtime audit evidence used the existing running Docker PostgreSQL state; no new migration validation was required for this bounded phase.

@@ -1,6 +1,6 @@
 # Debug Fix Log
 
-Updated: 2026-05-31 20:34 +07
+Updated: 2026-05-31 21:41 +07
 
 ## REMEDIATION-01 — Auth Refresh-Token JTI Coverage
 Status: **FIXED** in `tests/test_security.py`
@@ -60,3 +60,27 @@ Status: **FIXED** in `services/gateway/main.py`
 
 ## Full Test Suite
 `.\.venv\Scripts\python.exe -m pytest -q` → 397 passed, 3 warnings
+
+## RUNTIME-01 — Stale Canceled Jobs/Recommendations Timeout UI
+Status: **FIXED** in nested frontend commit `7f746fe`
+
+- Root cause: `AbortError` from canceled requests was normalized as a timeout-style `ApiError`, and page-level catch/finally blocks could still set timeout/error/loading state after a newer request became active.
+- Files changed: `frontend/src/lib/api.ts`, `frontend/src/app/analytics/page.tsx`, `frontend/src/app/recommendations/page.tsx`.
+- Fix: introduced `ApiCancellationError`, separated timeout aborts from non-timeout cancellations, added monotonic active-request guards, and only clears loading/error for the active request.
+- Recommendation timeout policy changed from 15 seconds to 45 seconds because hybrid recommendation calls can fan out through gateway/model services.
+- Validation: frontend lint/build passed; final runtime contract audit passed dev/prod jobs, recommendations, targeted cancellation, and gateway-restart scenarios with no stale timeout UI.
+
+## RUNTIME-02 — Local Production Frontend CORS Contract
+Status: **FIXED** in root commit `305391e`
+
+- Root cause: the local production-mode Next server runs at `http://localhost:3001`, but gateway development CORS defaults and compose defaults allowed only `http://localhost:3000` and `http://localhost:8000`.
+- Files changed: `.env.example`, `docker-compose.yml`, `services/gateway/main.py`, `tests/test_cors_config.py`.
+- Fix: added `http://localhost:3001` to development CORS defaults and examples without weakening production wildcard/empty-origin rejection.
+- Validation: `tests/test_cors_config.py` passed, `docker compose config --quiet` passed, and final production-mode runtime audit authenticated successfully and passed all scenarios.
+
+## RUNTIME-03 — Theme Toggle Stuck State
+Status: **NOT FIXED, NOT REPRODUCED AFTER HARNESS HARDENING**
+
+- User-reported defect: theme icon/spinner appeared stuck or overlapping.
+- Evidence: final dev and prod runtime audits clicked the toggle 5 times, reloaded, saw `scpa_theme=dark`, no stuck spinner/loading state, and no hydration warning.
+- Decision: no product-code change was made because runtime evidence did not confirm a current defect.

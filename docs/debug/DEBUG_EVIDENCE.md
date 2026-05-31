@@ -1,6 +1,6 @@
 # Debug Evidence
 
-Updated: 2026-05-31 21:20 +07
+Updated: 2026-05-31 21:41 +07
 
 ## Bootstrap Evidence
 - Repository cwd: `E:\TUGAS AKHIR\SCPA`.
@@ -147,3 +147,28 @@ Updated: 2026-05-31 21:20 +07
 - Dev theme evidence: repeated toggle passed after harness hardening; after clicks and reload, `data-theme=dark`, `colorScheme=dark`, and `localStorage.scpa_theme=dark`.
 - Dev gateway restart evidence: passed after second run.
 - Production-mode evidence: login reached `/api/auth/login`, but CORS preflight returned without `Access-Control-Allow-Origin` for origin `http://localhost:3001`; Chrome blocked the request.
+
+## Runtime Contract Final Evidence
+- Frontend tracked product commit: nested `frontend/` commit `7f746fe fix: harden runtime fetch cancellation contract`.
+- Root product commit: `305391e fix: allow local production frontend CORS origin`.
+- Focused syntax/test validation:
+  - `git -C frontend diff --check -- src/lib/api.ts src/app/analytics/page.tsx src/app/recommendations/page.tsx` passed before frontend commit.
+  - `.\.venv\Scripts\python.exe -m py_compile services\gateway\main.py tests\test_cors_config.py` passed.
+  - `.\.venv\Scripts\python.exe -m pytest tests\test_cors_config.py -q` passed: 4 passed, 1 warning.
+  - `npm run lint` in `frontend/` passed with 0 errors and the existing 16 warnings.
+  - `npm run build` in `frontend/` passed.
+  - `docker compose config --quiet` passed.
+- Runtime validation:
+  - Gateway was rebuilt/restarted with development CORS allowing `http://localhost:3001`.
+  - Production-mode Next server was restarted on `http://localhost:3001`.
+  - Final audit command: `.\.venv\Scripts\python.exe scripts\debug\runtime_contract_audit.py --mode both --dev-url http://localhost:3000 --prod-url http://localhost:3001 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --restart-gateway --exercise-actions --settle-seconds 3`.
+  - Final audit result: 14 scenarios, 0 failed checks, 75 canceled request events, 0 severe console entries.
+  - Dev and prod jobs checks passed with no timeout UI after successful jobs responses.
+  - Dev targeted jobs cancellation captured canceled requests and still ended with no timeout/retry UI after current success.
+  - Dev and prod recommendations checks passed with recommendation cards rendered and no timeout UI.
+  - Prod recommendations captured canceled events without final timeout UI.
+  - Auth/session checks passed in dev and prod with 5 `/api/auth/me` requests across 4 navigated routes and no persistent timeout state.
+  - Theme toggle checks passed in dev and prod: no spinner/loading indicator, persisted `scpa_theme=dark`, and no hydration warning.
+  - Gateway restart checks passed in dev and prod; gateway became healthy and the jobs page retained no permanent timeout state.
+- Final artifact paths: `reports/debug/runtime_contract/runtime_contract_report.md`, `summary.json`, `network.ndjson`, `console.ndjson`, `gateway_logs.ndjson`, `screenshots/`, and `dom_snapshots/`.
+- Final secret scan over `reports/debug/runtime_contract` and `scripts/debug/runtime_contract_audit.py` found no demo password, demo email, token value, bearer header, refresh token, or JWT-like value.

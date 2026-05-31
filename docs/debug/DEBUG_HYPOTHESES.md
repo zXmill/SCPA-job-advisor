@@ -513,3 +513,44 @@ Actual: 16 frontend lint warnings persisted while build passed.
 Test: correlate warnings with browser/runtime behavior and decide whether to fix.
 
 Evidence location: `DEBUG_FRONTEND_REPORT.md`.
+
+## Runtime Contract
+
+### H1-RUNTIME-ABORT-AS-TIMEOUT
+Hypothesis: frontend request cancellation is classified as timeout and stale canceled requests can overwrite newer successful page state.
+
+Expected: canceled stale requests are ignored or recorded only as diagnostics; timeout UI appears only for the active request that actually times out.
+
+Actual: confirmed by the second runtime audit. Jobs and recommendations displayed timeout UI after canceled requests even when later/current data succeeded.
+
+Test: targeted jobs filter cancellation and rapid recommendations navigation in `scripts/debug/runtime_contract_audit.py`.
+
+Evidence location: `reports/debug/runtime_contract/summary.json`, `DEBUG_EVIDENCE.md`, `DEBUG_FRONTEND_REPORT.md`.
+
+Status: **fixed** in nested frontend commit `7f746fe`; final dev/prod runtime audit passed with 0 failed checks.
+
+### H2-RUNTIME-PROD-CORS-LOCALHOST-3001
+Hypothesis: local production-mode Next.js server at `http://localhost:3001` is not allowed by gateway development CORS defaults.
+
+Expected: local dev CORS allows both `localhost:3000` dev frontend and `localhost:3001` production-mode frontend, while production still rejects wildcard/empty origins.
+
+Actual: confirmed by the second runtime audit. Browser CORS preflight blocked `POST /api/auth/login` from `http://localhost:3001`.
+
+Test: CORS config regression tests plus production-mode runtime audit login.
+
+Evidence location: `DEBUG_API_REPORT.md`, `DEBUG_SECURITY_REPORT.md`, `reports/debug/runtime_contract/summary.json`.
+
+Status: **fixed** in root commit `305391e`; final production-mode runtime audit authenticated and passed all scenarios.
+
+### H3-RUNTIME-THEME-SPINNER-STUCK
+Hypothesis: theme provider/toggle leaves a stuck spinner or hydration/persistence mismatch after repeated clicks and reload.
+
+Expected: repeated toggle clicks produce no permanent loading indicator, persist `scpa_theme`, and do not emit hydration warnings.
+
+Actual: not confirmed after harness hardening. Final dev and prod audits passed repeated-click/reload checks.
+
+Test: theme-toggle scenario in `scripts/debug/runtime_contract_audit.py`.
+
+Evidence location: `DEBUG_BROWSER_REPORT.md`, `reports/debug/runtime_contract/summary.json`.
+
+Status: **not fixed, no current runtime reproduction**.

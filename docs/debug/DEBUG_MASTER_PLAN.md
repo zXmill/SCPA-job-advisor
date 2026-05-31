@@ -1,17 +1,17 @@
 # Ultimate Debugging Master Plan
 
-Updated: 2026-05-31 21:20 +07
+Updated: 2026-05-31 21:41 +07
 
 ## Session
 - Task ID: RUNTIME-CONTRACT-DEBUG-001
 - Branch: agent-run
-- Active Phase: Bounded Full-Stack Runtime Contract Debugging Pass.
+- Active Phase: Bounded Full-Stack Runtime Contract Debugging Pass complete.
 
 ## Active Task
-Investigate systemic runtime fetch, timeout, cancellation, auth/session, gateway contract, and UI state consistency defects from browser/runtime evidence.
+Runtime fetch, timeout, cancellation, auth/session, gateway contract, and UI state consistency defects have been reproduced, fixed where confirmed, and validated in dev and production-mode browser audits.
 
 ## Next Exact Action
-Apply minimal product fixes for confirmed runtime defects: stale canceled jobs/recommendations requests must not set final timeout UI, dashboard should avoid redundant `/api/auth/me`, and gateway CORS dev defaults must allow the local production frontend origin at `http://localhost:3001`.
+Stop this phase after final documentation commit. Next unfinished debugging work should resume from repository state and select a new bounded phase; do not continue into taxonomy, scraper, ML training, or broad frontend redesign from this runtime pass.
 
 ## Runtime Audit Status
 - Harness commit: `0bb7c54 test: add runtime contract browser audit`.
@@ -25,7 +25,12 @@ Apply minimal product fixes for confirmed runtime defects: stale canceled jobs/r
   - Two canceled jobs filter requests were followed by a successful jobs response, but final UI still showed jobs timeout and retry.
 - Second dev-mode theme evidence passed after harness hardening, so no theme product fix is currently justified.
 - Production-mode evidence now reaches `/api/auth/login` but is blocked by CORS because `http://localhost:3001` is not allowed by the gateway dev CORS defaults.
-- Product-code changes are now allowed for the confirmed stale cancellation and local production-origin CORS defects.
+- Frontend fix commit: nested `frontend/` commit `7f746fe fix: harden runtime fetch cancellation contract`.
+- Root CORS fix commit: `305391e fix: allow local production frontend CORS origin`.
+- Final audit evidence: `reports/debug/runtime_contract/summary.json` generated 2026-05-31T14:37:33Z.
+- Final audit result: 14 scenarios, 0 failed checks, 75 canceled request events, 0 severe console entries.
+- Dev and production-mode frontend scenarios passed for jobs, recommendations, targeted cancellation, auth/session, theme toggle, and gateway restart.
+- Theme product fix was not made because final runtime evidence did not reproduce a stuck spinner or persistence defect.
 
 ## Guardrails
 - Do not start broad award-style frontend redesign during this bounded runtime pass.

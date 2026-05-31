@@ -89,9 +89,27 @@ Status: route-level Selenium/Chrome audit passed against rebuilt Docker runtime.
 - Dev gateway restart: passed.
 - Production-mode login: blocked by CORS preflight from `http://localhost:3001` to `http://localhost:9000/api/auth/login`.
 
+## Runtime Contract Final Audit
+- Command: `python scripts/debug/runtime_contract_audit.py --mode both --dev-url http://localhost:3000 --prod-url http://localhost:3001 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --restart-gateway --exercise-actions --settle-seconds 3`.
+- Result: passed; 14 scenarios, 0 failed checks, 75 canceled request events, 0 severe console entries.
+- Dev jobs: passed; successful jobs response rendered 25 job links and no timeout/retry text.
+- Dev targeted jobs cancellation: passed; canceled jobs filter requests did not leave final timeout UI.
+- Dev recommendations: passed; recommendation cards rendered and no timeout text remained.
+- Dev targeted recommendations navigation: passed; final UI recovered with recommendation cards and no timeout text.
+- Dev auth/session: passed; `/api/auth/me` count stayed bounded at 5 across 4 routes and no persistent timeout state remained.
+- Dev theme toggle: passed; no spinner, persisted `scpa_theme=dark`, no hydration warning.
+- Dev gateway restart: passed; gateway recovered healthy and jobs page retained no permanent timeout.
+- Production-mode login and authenticated scenarios: passed after root CORS fix for `http://localhost:3001`.
+- Production jobs, recommendations, targeted cancellation, auth/session, theme toggle, and gateway restart all passed.
+- Final artifacts: `reports/debug/runtime_contract/runtime_contract_report.md`, `summary.json`, `network.ndjson`, `console.ndjson`, `gateway_logs.ndjson`, `screenshots/`, and `dom_snapshots/`.
+
 ## Artifact Files
 - `reports/debug/browser/browser_audit.md`
 - `reports/debug/browser/summary.json`
 - `reports/debug/browser/console.ndjson`
 - `reports/debug/browser/network_failures.ndjson`
 - `reports/debug/browser/screenshots/*.png`
+- `reports/debug/runtime_contract/runtime_contract_report.md`
+- `reports/debug/runtime_contract/summary.json`
+- `reports/debug/runtime_contract/screenshots/*.png`
+- `reports/debug/runtime_contract/dom_snapshots/*.html`

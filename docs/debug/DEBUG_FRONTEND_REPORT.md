@@ -1,8 +1,8 @@
 # Debug Frontend Report
 
-Updated: 2026-05-31 21:20 +07
+Updated: 2026-05-31 21:41 +07
 
-Status: static/lint/build checks completed, route-level browser audit passed, and runtime-contract browser checks are active.
+Status: static/lint/build checks completed, route-level browser audit passed, and runtime-contract browser checks passed after confirmed cancellation fixes.
 
 ## Required Checks
 - Pages/routes.
@@ -70,3 +70,15 @@ Status: static/lint/build checks completed, route-level browser audit passed, an
 - Theme defect is not currently confirmed after harness hardening; repeated clicks persisted `scpa_theme=dark` and no spinner/hydration warning appeared.
 - Auth/session redundancy is partially frontend-caused: full navigation remounts the auth provider, and dashboard/profile also call `api.getMe()` for page data.
 - Production-mode frontend is blocked by gateway CORS, not by a browser automation failure.
+
+## Runtime Contract Final Result
+- Nested frontend commit: `7f746fe fix: harden runtime fetch cancellation contract`.
+- `frontend/src/lib/api.ts` now classifies browser `AbortError` as `ApiCancellationError`, not a timeout-style `ApiError`.
+- `frontend/src/app/analytics/page.tsx` and `frontend/src/app/recommendations/page.tsx` now use active request sequence guards so stale canceled requests cannot overwrite newer successful state.
+- Recommendation timeout policy is 45 seconds to match hybrid gateway/model latency expectations.
+- Final frontend validation:
+  - `npm run lint`: pass, 0 errors with existing warnings.
+  - `npm run build`: pass.
+  - Runtime audit: dev and production-mode jobs/recommendations/targeted-cancellation/auth/theme/gateway-restart scenarios all passed.
+- Theme toggle was tested but not changed: repeated clicks and reload persisted `scpa_theme=dark`, with no stuck spinner and no hydration warning.
+- Broad award-style redesign remains deferred by runtime-contract scope; only truthful loading/error state and runtime UI consistency were changed.

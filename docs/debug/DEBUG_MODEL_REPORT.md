@@ -1,6 +1,6 @@
 # Debug Model Report
 
-Updated: 2026-05-31 09:12 +07
+Updated: 2026-05-31 21:41 +07
 
 Status: static artifact inventory completed; runtime smoke checks pending.
 
@@ -26,3 +26,8 @@ Status: static artifact inventory completed; runtime smoke checks pending.
 
 ## Runtime Evidence Still Needed
 - Live `/health`, `/encode`, `/match/semantic`, `/predict`, `/recommend/ncf`, `/rank`, `/learning-path`, and calibration smoke checks against current code/runtime.
+
+## Runtime Contract Pass Model Impact
+- No SBERT, NCF, DQN, calibrator, model artifact, or ML training changes were made during the runtime-contract pass.
+- Recommendation timeout handling changed only in the frontend to avoid false timeout UI and to align the client timeout with hybrid gateway/model latency.
+- Dedicated ML runtime smoke checks remain a separate unfinished phase.

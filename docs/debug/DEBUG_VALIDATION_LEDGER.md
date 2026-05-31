@@ -1,6 +1,6 @@
 # Debug Validation Ledger
 
-Updated: 2026-05-31 21:20 +07
+Updated: 2026-05-31 21:41 +07
 
 | Timestamp | Command | Result | Related ID | Summary |
 | --- | --- | --- | --- | --- |
@@ -89,3 +89,13 @@ Updated: 2026-05-31 21:20 +07
 | 2026-05-31 21:09 +07 | `.\.venv\Scripts\python.exe -m py_compile scripts\debug\runtime_contract_audit.py` | pass | RUNTIME-CONTRACT-DEBUG-001 | Runtime contract audit harness compiles after bootstrap fix. |
 | 2026-05-31 21:17 +07 | `.\.venv\Scripts\python.exe scripts\debug\runtime_contract_audit.py --mode both --dev-url http://localhost:3000 --prod-url http://localhost:3001 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --restart-gateway --exercise-actions --settle-seconds 3` | fail | RUNTIME-CONTRACT-DEBUG-001 | Second audit reproduced stale cancellation false timeout in jobs and recommendations, confirmed theme toggle passes, confirmed auth/me redundancy, and found production-mode CORS block for `localhost:3001`. |
 | 2026-05-31 21:20 +07 | `rg -n "password123|access_token|refresh_token|Authorization|Bearer |eyJ...|budi@example.com" reports/debug/runtime_contract scripts/debug/runtime_contract_audit.py` | pass | SECRET-SCAN | No demo password, demo email, token, bearer header, authorization header, refresh token, or JWT-like string found in runtime contract reports or harness. |
+| 2026-05-31 21:31 +07 | `.\.venv\Scripts\python.exe -m py_compile services\gateway\main.py tests\test_cors_config.py` | pass | BUG-RUNTIME-PROD-CORS-LOCALHOST-3001 | Gateway CORS code and regression test compile after adding the local production frontend origin. |
+| 2026-05-31 21:31 +07 | `.\.venv\Scripts\python.exe -m pytest tests\test_cors_config.py -q` | pass | BUG-RUNTIME-PROD-CORS-LOCALHOST-3001 | CORS regression suite passed: 4 passed, 1 warning. |
+| 2026-05-31 21:32 +07 | `npm run lint` in `frontend/` | pass | BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC | Frontend lint passed with 0 errors and existing warnings. |
+| 2026-05-31 21:34 +07 | `npm run build` in `frontend/` | pass | BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC | Next production build passed after request-cancellation changes. |
+| 2026-05-31 21:35 +07 | `docker compose config --quiet` | pass | BUG-RUNTIME-PROD-CORS-LOCALHOST-3001 | Compose config validates after local production CORS default update. |
+| 2026-05-31 21:36 +07 | `$env:CORS_ALLOWED_ORIGINS='http://localhost:3000,http://localhost:3001,http://localhost:8000'; docker compose up -d --build gateway` | pass | BUG-RUNTIME-PROD-CORS-LOCALHOST-3001 | Gateway rebuilt/restarted with local production frontend origin allowed for final runtime validation. |
+| 2026-05-31 21:37 +07 | `.\.venv\Scripts\python.exe scripts\debug\runtime_contract_audit.py --mode both --dev-url http://localhost:3000 --prod-url http://localhost:3001 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --restart-gateway --exercise-actions --settle-seconds 3` | pass | RUNTIME-CONTRACT-DEBUG-001 | Final dev/prod runtime audit passed: 14 scenarios, 0 failed checks, 75 canceled request events, 0 severe console entries. |
+| 2026-05-31 21:38 +07 | `rg -n "<redacted secret-patterns>" reports/debug/runtime_contract scripts/debug/runtime_contract_audit.py` | pass | SECRET-SCAN | No demo password, demo email, token, bearer header, refresh token, or JWT-like value found in final runtime artifacts or harness. |
+| 2026-05-31 21:40 +07 | `git -C frontend commit -m "fix: harden runtime fetch cancellation contract"` | pass | BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC | Created nested frontend fix commit `7f746fe`. |
+| 2026-05-31 21:41 +07 | `git commit -m "fix: allow local production frontend CORS origin"` | pass | BUG-RUNTIME-PROD-CORS-LOCALHOST-3001 | Created root gateway/config fix commit `305391e`. |

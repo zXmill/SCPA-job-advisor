@@ -1,8 +1,8 @@
 # Debug API Report
 
-Updated: 2026-05-31 21:20 +07
+Updated: 2026-05-31 21:41 +07
 
-Status: gateway API runtime probes completed and fixed; final rebuilt-runtime probe passed with 83/83 cases and 0 HTTP 5xx responses.
+Status: gateway API runtime probes completed and fixed; final rebuilt-runtime probe passed with 83/83 cases and runtime-contract production CORS fix passed browser validation.
 
 ## Audit Rules
 - Determine method, path, and auth requirement for each route.
@@ -32,6 +32,7 @@ Status: gateway API runtime probes completed and fixed; final rebuilt-runtime pr
 - Gateway log root cause: `feedback_events.slate_id` violates the FK to `served_slates.id`; the gateway returns a new `recommendation_id`/served slate ID to the frontend but does not persist the corresponding `served_slates` row before feedback arrives.
 - Final authenticated Selenium audit after the served-slate and Docker/runtime fixes reports 0 network failures; recommendation feedback no longer returns HTTP 500 in the browser path.
 - Runtime-contract audit run 2 found local production-mode frontend at `http://localhost:3001` cannot call gateway `POST /api/auth/login` because the gateway dev CORS defaults and compose default env allow `localhost:3000`/`localhost:8000` but not `localhost:3001`.
+- Runtime-contract final audit confirmed production-mode frontend login succeeds after adding `http://localhost:3001` to development CORS defaults and compose/example env.
 
 ## API Runtime Probe: 2026-05-31
 - Harness: `scripts/debug/api_runtime_probe.py`.
@@ -54,3 +55,10 @@ Status: gateway API runtime probes completed and fixed; final rebuilt-runtime pr
 - `tests/test_recommendation_feedback_slate.py` covers the route sequence that failed in the browser: authenticated `/api/recommendations`, then authenticated `/api/recommendations/feedback` using the returned slate ID.
 - Focused, adjacent, and full backend tests pass.
 - Browser re-check passed against the rebuilt current gateway runtime.
+
+## Confirmed Fix: BUG-RUNTIME-PROD-CORS-LOCALHOST-3001
+- Commit: `305391e fix: allow local production frontend CORS origin`.
+- `DEFAULT_DEV_CORS_ORIGINS` now includes `http://localhost:3001`.
+- `docker-compose.yml` and `.env.example` local CORS defaults include `http://localhost:3001`.
+- `tests/test_cors_config.py::test_development_cors_defaults_to_localhost_origins` was updated.
+- Validation: CORS test suite passed, compose config passed, and final production-mode runtime browser audit authenticated successfully and passed all scenarios.

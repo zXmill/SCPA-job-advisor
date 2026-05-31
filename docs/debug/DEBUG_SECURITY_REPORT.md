@@ -1,8 +1,8 @@
 # Debug Security Report
 
-Updated: 2026-05-31 21:20 +07
+Updated: 2026-05-31 21:41 +07
 
-Status: baseline static/test evidence recorded; active runtime probes pending.
+Status: baseline static/test evidence recorded; runtime-contract CORS defect fixed and browser-validated. Broader security runtime probes remain outside this bounded pass.
 
 ## Required Checks
 - Exposed internal ports.
@@ -28,3 +28,6 @@ Status: baseline static/test evidence recorded; active runtime probes pending.
 - Console evidence: Chrome reported no `Access-Control-Allow-Origin` for origin `http://localhost:3001`.
 - Current root cause: development CORS defaults and compose env include `http://localhost:3000,http://localhost:8000` but omit the documented local production-mode frontend origin `http://localhost:3001`.
 - This is a local runtime contract fix, not a weakening of production CORS. Production wildcard/empty-origin rejection remains required.
+- Fix commit: `305391e fix: allow local production frontend CORS origin`.
+- Validation: `tests/test_cors_config.py -q` passed; final production-mode runtime audit authenticated from `http://localhost:3001` to gateway `http://localhost:9000` and passed all scenarios.
+- Secret scan over final runtime artifacts and harness found no demo password, demo email, token value, bearer header, refresh token, or JWT-like value. The staged CORS diff contains the literal header name `Authorization` only as a CORS allowed-header example, not a secret or header value.

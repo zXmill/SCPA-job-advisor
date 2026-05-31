@@ -1,8 +1,8 @@
 # Runtime Contract Findings
 
-Updated: 2026-05-31 21:20 +07
+Updated: 2026-05-31 21:41 +07
 
-Status: recovery, manual-finding intake, and first runtime audit complete. No product-code changes have been made in this phase.
+Status: runtime contract defects reproduced, fixed where confirmed, and re-validated in dev and production-mode frontend audits.
 
 ## Scope Boundary
 - Active phase: Bounded Full-Stack Runtime Contract Debugging Pass.
@@ -23,6 +23,7 @@ Status: recovery, manual-finding intake, and first runtime audit complete. No pr
 - Current evidence: first dev audit passed jobs checks with 25 job links rendered and no timeout text; production-mode evidence and targeted stale cancellation evidence remain pending.
 - Confirmed evidence: second targeted dev audit captured canceled jobs filter requests followed by a successful jobs response, but the final UI still showed `Permintaan kehabisan waktu. Coba lagi.` and `Coba Lagi`.
 - Root cause classification: frontend stale request overwrite plus AbortController cancellation treated as timeout.
+- Final fix/evidence: nested frontend commit `7f746fe` adds `ApiCancellationError`, current-request sequence guards, timeout-only error rendering, and current-request-only loading cleanup in `frontend/src/app/analytics/page.tsx`. Final audit `reports/debug/runtime_contract/summary.json` passed dev and prod jobs and targeted jobs-cancellation checks with no timeout or retry text after current success.
 
 ## BUG-RUNTIME-RECOMMENDATIONS-TIMEOUT
 - Observed route: `/recommendations`.
@@ -37,6 +38,7 @@ Status: recovery, manual-finding intake, and first runtime audit complete. No pr
 - Current evidence: first dev audit passed recommendation checks with recommendation cards rendered and no timeout text; production-mode evidence and targeted stale cancellation evidence remain pending.
 - Confirmed evidence: second dev audit captured `/api/recommendations` failing with `net::ERR_ABORTED` and final UI showing `Pencocokan AI memakan waktu terlalu lama. Coba lagi sebentar.`.
 - Root cause classification: frontend AbortError/current-request handling, with endpoint latency making the timeout/cancel path visible.
+- Final fix/evidence: nested frontend commit `7f746fe` separates cancellation from timeout, adds current-request guards, and raises the recommendations timeout policy to 45 seconds. Final audit passed dev and prod recommendations and targeted recommendations navigation checks with recommendation cards rendered and no stale timeout UI.
 
 ## BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC
 - Observed route: cross-route symptom during jobs, recommendations, and authenticated navigation.
@@ -50,6 +52,7 @@ Status: recovery, manual-finding intake, and first runtime audit complete. No pr
 - Pass condition: canceled stale requests are either ignored or reported only in diagnostics; they do not show user-facing timeout/error UI.
 - Current evidence: first runtime audit captured 0 canceled request events, so this finding remains unconfirmed by harness and needs targeted cancellation reproduction.
 - Confirmed evidence: second runtime audit captured 3 canceled request events. Jobs cancellation caused false final timeout UI after a later successful response; recommendation cancellation caused final timeout UI.
+- Final fix/evidence: frontend request handlers now ignore stale/canceled non-timeout requests and only clear loading/error for the active request. Final audit captured 75 canceled request events across dev/prod scenarios and 0 failed checks; canceled events did not leave user-facing timeout state.
 
 ## BUG-RUNTIME-AUTH-ME-REPEAT
 - Observed route: authenticated routes and reload/navigation flows.
@@ -63,6 +66,7 @@ Status: recovery, manual-finding intake, and first runtime audit complete. No pr
 - Pass condition: auth state stabilizes without request storms or persistent timeout/error states.
 - Current evidence: first dev audit failed the bounded auth/me count check with 6 `/api/auth/me` requests across 4 fast navigated routes. Final UI had no persistent timeout text. Production-mode evidence remains pending.
 - Confirmed evidence: second dev audit again counted 6 `/api/auth/me` requests across 4 full navigations. Dashboard/profile page data fetching adds avoidable `api.getMe()` calls in addition to auth-provider refresh.
+- Final evidence: final audit passed the bounded auth/session check in dev and prod with 5 `/api/auth/me` requests across 4 full navigations and no persistent timeout/error state. A pre-existing untracked dashboard page in the nested frontend tree contains local request-dedup work and was not staged as part of the scoped tracked-file commit.
 
 ## BUG-RUNTIME-SAVED-REQUEST-CANCEL
 - Observed route: recommendations/jobs flows that load saved state.
@@ -75,6 +79,7 @@ Status: recovery, manual-finding intake, and first runtime audit complete. No pr
 - Reproduction plan: open recommendations, save/unsave jobs, navigate away/back quickly, repeat after gateway restart.
 - Pass condition: saved state is correct after current successful request; stale cancellation does not show timeout UI.
 - Current evidence: first dev recommendations save-action check did not leave timeout UI. Canceled saved-request reproduction remains pending.
+- Final evidence: final dev and prod recommendations checks passed save-action assertions with no timeout or retry UI after successful page data.
 
 ## BUG-RUNTIME-LEARNING-PATH-CANCEL
 - Observed route: `/recommendations` or dashboard/profile pages that fetch learning path.
@@ -87,6 +92,7 @@ Status: recovery, manual-finding intake, and first runtime audit complete. No pr
 - Reproduction plan: open `/recommendations`, wait for `/api/learning-path`, sort/change page state, then repeat during gateway restart.
 - Pass condition: recommendation UI remains truthful and recoverable even if learning-path request cancels or fails transiently.
 - Current evidence: first dev recommendations scenario did not leave timeout UI; targeted learning-path cancellation evidence remains pending.
+- Final evidence: final dev and prod auth/navigation/recommendations scenarios exercised `/api/learning-path` as part of the route flow and passed with no parent-page timeout state.
 
 ## BUG-FE-THEME-TOGGLE-STUCK
 - Observed route: global nav/app shell.
@@ -100,6 +106,7 @@ Status: recovery, manual-finding intake, and first runtime audit complete. No pr
 - Pass condition: no permanent spinner/overlap; icon and persisted theme agree after repeated clicks and reload.
 - Current evidence: first dev audit found no stuck spinner and no hydration warning, but theme persistence failed because `localStorage.scpa_theme` remained null after repeated clicks and reload.
 - Updated evidence: second dev audit passed theme toggle checks after harness hardening: no stuck spinner, no hydration warning, and persisted `scpa_theme=dark` after reload. Theme product fix is deferred unless a new runtime reproduction contradicts this.
+- Final evidence: final dev and prod theme-toggle scenarios passed after 5 clicks and reload: no spinner/loading indicator, `scpa_theme=dark`, and no hydration warning. No theme product-code fix was justified.
 
 ## BUG-RUNTIME-PROD-CORS-LOCALHOST-3001
 - Observed route: production-mode local frontend `/auth` at `http://localhost:3001`.
@@ -112,3 +119,11 @@ Status: recovery, manual-finding intake, and first runtime audit complete. No pr
 - Reproduction plan: run runtime-contract audit against `http://localhost:3001` and `http://localhost:9000`.
 - Pass condition: production-mode login succeeds and no CORS console error is present for `/api/auth/login`.
 - Root cause classification: local gateway/frontend runtime contract misconfiguration, not production wildcard CORS weakening.
+- Final fix/evidence: root commit `305391e` adds `http://localhost:3001` to development CORS defaults, compose defaults, and `.env.example`, with `tests/test_cors_config.py` updated. Final production-mode audit login succeeded and all authenticated prod scenarios passed.
+
+## Final Runtime Contract Resolution
+- Frontend tracked product commit: `7f746fe fix: harden runtime fetch cancellation contract` in the nested `frontend/` repo.
+- Root product commit: `305391e fix: allow local production frontend CORS origin`.
+- Final audit command: `.\.venv\Scripts\python.exe scripts\debug\runtime_contract_audit.py --mode both --dev-url http://localhost:3000 --prod-url http://localhost:3001 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --restart-gateway --exercise-actions --settle-seconds 3`.
+- Final audit result: 14 scenarios, 0 failed checks, 75 canceled request events classified without stale timeout UI, and 0 severe console entries.
+- Final artifacts: `reports/debug/runtime_contract/runtime_contract_report.md`, `summary.json`, `network.ndjson`, `console.ndjson`, `gateway_logs.ndjson`, screenshots, and DOM snapshots.
