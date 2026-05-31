@@ -1,0 +1,1 @@
+{"route": "/recommendations", "type": "response", "status": 500, "url": "http://localhost:9000/api/recommendations/feedback", "mimeType": "application/json"}

@@ -1,6 +1,6 @@
 # Compact Recovery
 
-Updated: 2026-05-31 09:52 +07
+Updated: 2026-05-31 10:08 +07
 
 ## Current Task
 DEBUG-ULT-001: ultimate evidence-based debugging session bootstrap.
@@ -18,10 +18,10 @@ agent-run
 - This session owns only the new/updated debugging docs and durable agent-state checkpoint until product evidence confirms a fix.
 
 ## Active Hypothesis
-H1-DOCKER-GATEWAY-REQ is confirmed by baseline rebuild evidence: `docker compose up -d --build` fails in the gateway image because pip cannot open `requirements-db.txt`. H2-DOCKER-CONTEXT is also supported by evidence: gateway build context transferred about 5.06GB and root `.dockerignore` is missing.
+H4-API-FEEDBACK-SLATE-FK is the active product bug: authenticated browser audit reproduces `POST /api/recommendations/feedback` 500 because `feedback_events.slate_id` references a missing `served_slates` row. Docker hypotheses H1/H2 are also confirmed and should be fixed separately.
 
 ## Latest Validation Status
-Backend pytest passed (`389 passed, 3 warnings`), frontend lint/build passed, Docker config passed, Docker rebuild failed at gateway. Existing containers are healthy but predate the failed rebuild.
+Backend pytest passed (`389 passed, 3 warnings`), frontend lint/build passed, Docker config passed, Docker rebuild failed at gateway. Selenium authenticated audit runs and captures artifacts; canonical run found feedback 500 on `/recommendations`.
 
 ## Next Exact Action
-Commit static inventory, baseline validation, and hypotheses, then add and run the Selenium/Chrome audit harness against the current frontend on port 3000 and gateway on port 9000.
+Commit Selenium harness and browser evidence, then add a focused failing test for feedback after recommendation response and fix served slate persistence.

@@ -1,12 +1,12 @@
 # Compact Snapshot
 
-Updated: 2026-05-31 09:55 +07
+Updated: 2026-05-31 10:08 +07
 
 ## Current Objective
 Run `DEBUG-ULT-001`, an evidence-based full-stack debugging session covering frontend, backend/API, ML services, pipeline, database, Docker, browser flows, and security.
 
 ## Current Phase
-debug hypothesis generation / browser harness setup
+browser evidence checkpoint / feedback bug reproduction
 
 ## Current Task ID
 DEBUG-ULT-001
@@ -62,6 +62,7 @@ Root: `0b55041` (`docs: initialize ultimate debugging session`).
 - `npm run build` -> passed.
 - `docker compose config --quiet` -> passed.
 - `docker compose up -d --build` -> failed at gateway dependency layer.
+- `.\.venv\Scripts\python.exe scripts\debug\selenium_full_audit.py --output reports\debug\browser --settle-seconds 7 ...` -> reproduced recommendation feedback 500.
 
 ## Validation Results
 - Backend import/compile and pytest passed.
@@ -74,6 +75,7 @@ Root: `0b55041` (`docs: initialize ultimate debugging session`).
 - Confirmed: root `.dockerignore` is missing and gateway build context transfer reached about 5.06GB.
 - Confirmed: `localhost:8000/health` refused while gateway is currently reachable on `localhost:9000`.
 - Confirmed: existing gateway container lacks the `alembic` module, so container-local migration validation failed.
+- Confirmed: authenticated `/recommendations` impression tracking calls `POST /api/recommendations/feedback`, which returns 500 because `feedback_events.slate_id` references a missing `served_slates` row.
 
 ## Do-Not-Change Constraints
 - Do not stage or revert pre-existing root `README.md`, `SCPAv2`, notebooks, or broad untracked project files unless the active debug task explicitly owns them.
@@ -83,4 +85,4 @@ Root: `0b55041` (`docs: initialize ultimate debugging session`).
 - Do not claim all validation passed unless each command actually ran in this session.
 
 ## Next Exact Action
-Commit static inventory, baseline validation, and hypotheses, then add and run `scripts/debug/selenium_full_audit.py`.
+Commit Selenium harness/browser evidence, then write a focused regression test and fix served-slate persistence for recommendation feedback.

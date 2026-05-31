@@ -454,3 +454,9 @@
 - Risk and mitigation: existing containers are healthy but stale relative to current source, so browser/runtime results must label whether they use existing containers or current rebuilt services.
 - Next action: commit the inventory/baseline/hypotheses docs, then create and run the Selenium browser audit harness.
 
+## 2026-05-31 10:08 +07 - DEBUG-ULT-001 browser audit decision
+- Decision: Use `localhost:3000` and `localhost:9000` as the canonical browser audit origins because they match `frontend/.env.local` and compose CORS; `127.0.0.1` runs are retained only as diagnostic false-start evidence.
+- Evidence: production cross-check on port 3001 had no rendering failures but could not authenticate due origin mismatch; authenticated audit on `localhost:3000` succeeded.
+- Confirmed bug: longer authenticated settle reproduced `POST /api/recommendations/feedback` returning 500 from `/recommendations`; gateway logs show `feedback_events_slate_id_fkey` because the recommendation slate ID is not present in `served_slates`.
+- Next action: commit the Selenium harness and evidence, then add a focused regression test for feedback after recommendations before fixing served-slate persistence.
+

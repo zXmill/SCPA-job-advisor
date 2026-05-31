@@ -109,3 +109,11 @@ Branch: `agent-run`
 - `H1-DOCKER-GATEWAY-REQ`: gateway Docker build dependency layer is broken.
 - `H2-DOCKER-CONTEXT`: root `.dockerignore` is missing, producing an oversized build context.
 - `H4-DOCKER-PORT-CONTRACT`: current frontend env uses port 9000, while port 8000 is not listening.
+- `H4-API-FEEDBACK-SLATE-FK`: authenticated Selenium audit reproduced `POST /api/recommendations/feedback` 500 on `/recommendations`; gateway logs show a missing `served_slates` row for the feedback FK.
+
+### Browser audit
+- Added `scripts/debug/selenium_full_audit.py`.
+- Canonical artifacts are under `reports/debug/browser/`.
+- Authenticated route audit uses the demo account advertised on `/auth`; password is not written to reports.
+- Canonical audit route coverage: `/`, `/analytics`, `/apply`, `/auth`, `/dashboard`, `/onboarding`, `/profile`, `/recommendations`, and a sampled `/jobs/{id}` route.
+- Results: 0 blank pages, 0 hydration errors, 1 backend network failure from recommendation feedback.

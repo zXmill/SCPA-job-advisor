@@ -1671,7 +1671,7 @@
       ],
       "validation_status": "mixed_baseline",
       "commit": "",
-      "notes": "Initialization commit 0b55041. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass, Docker rebuild fails at gateway requirements layer and missing .dockerignore causes huge context. No product code fixes until evidence exists."
+      "notes": "Initialization commit 0b55041. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass, Docker rebuild fails at gateway requirements layer and missing .dockerignore causes huge context. Selenium harness added; authenticated browser audit found recommendation feedback 500 from missing served_slates row. No product code fixes before focused regression."
     }
   ]
 }

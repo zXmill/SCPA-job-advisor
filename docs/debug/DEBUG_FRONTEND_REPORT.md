@@ -35,3 +35,9 @@ Status: static/lint/build checks completed; browser-backed checks pending.
 - Unused imports in `apply`, `auth`, `jobs/[id]`, `onboarding`, and `recommendations`.
 - `frontend/src/app/recommendations/page.tsx` has two `react-hooks/exhaustive-deps` warnings for `eventContext`.
 - `Avatar.tsx` uses a raw `<img>` and triggers the Next image optimization warning.
+
+## Browser Results
+- Canonical authenticated audit on `localhost:3000` loaded all discovered routes without blank pages or hydration errors.
+- Browser warning: `THREE.Clock` deprecation on the home page.
+- Browser warning: one LCP image recommendation on analytics for a company logo image.
+- Browser failure originates from backend feedback persistence, not a frontend crash: `/recommendations` remains visible but `POST /api/recommendations/feedback` returns 500.

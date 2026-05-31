@@ -1822,3 +1822,17 @@
 - Summary: Selected imports and compileall passed.
 - Related commit hash: pending.
 
+## 2026-05-31 09:58 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m py_compile scripts\debug\selenium_full_audit.py
+- Result: pass
+- Summary: Selenium browser audit harness compiled.
+- Related commit hash: pending.
+
+## 2026-05-31 10:05 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe scripts\debug\selenium_full_audit.py --output reports\debug\browser --headless --email <demo-email> --password <redacted> --settle-seconds 7
+- Result: fail
+- Summary: Authenticated audit loaded all 9 routes with no blank pages or hydration errors, but `/recommendations` triggered `POST /api/recommendations/feedback` HTTP 500.
+- Related commit hash: pending.
+

@@ -25,3 +25,8 @@ Status: route inventory initialized; request/response probes pending.
 - SBERT: health, semantic match, encode, metrics.
 - NCF: health, jobs upsert, feedback, train, predict, recommend, invalidate, model status, metrics.
 - DQN: health, jobs upsert, rank, learning path, rerank, reward/feedback, recommend, train, model status, metrics.
+
+## Runtime Findings
+- `POST /api/auth/login` succeeds for the demo account advertised on `/auth`.
+- Authenticated Selenium audit found `POST /api/recommendations/feedback` returns HTTP 500 during impression tracking.
+- Gateway log root cause: `feedback_events.slate_id` violates the FK to `served_slates.id`; the gateway returns a new `recommendation_id`/served slate ID to the frontend but does not persist the corresponding `served_slates` row before feedback arrives.

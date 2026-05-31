@@ -85,6 +85,17 @@ Test: run route smoke with current services, then simulate bad downstream URL in
 
 Evidence location: `DEBUG_API_REPORT.md`, `DEBUG_BACKEND_REPORT.md`.
 
+### H4-API-FEEDBACK-SLATE-FK
+Hypothesis: recommendation feedback fails because the gateway emits a frontend `recommendation_id`/served slate ID but does not persist the corresponding `served_slates` row before impression feedback is inserted.
+
+Expected: recommendation response creates or references a persisted served slate, and feedback insert succeeds.
+
+Actual: confirmed by Selenium and gateway logs; `POST /api/recommendations/feedback` returns 500 with `feedback_events_slate_id_fkey`.
+
+Test: add a regression test that calls `/api/recommendations`, then posts impression feedback using the returned recommendation ID and asserts 200 plus persisted feedback.
+
+Evidence location: `DEBUG_API_REPORT.md`, `DEBUG_BROWSER_REPORT.md`.
+
 ## Database
 
 ### H1-DB-MIGRATION-RUNTIME
