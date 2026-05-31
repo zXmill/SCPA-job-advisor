@@ -38,8 +38,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      pipeline:
-        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).read()"]
@@ -96,8 +94,6 @@ services:
     environment:
       SERVICE_PORT: "8003"
       MODEL_DIR: /app/weights/ncf
-    volumes:
-      - weights:/app/weights
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8003/health', timeout=2).read()"]
@@ -111,8 +107,6 @@ services:
     environment:
       SERVICE_PORT: "8004"
       MODEL_DIR: /app/weights/dqn
-    volumes:
-      - weights:/app/weights
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8004/health', timeout=2).read()"]
@@ -159,4 +153,3 @@ services:
 
 volumes:
   postgres_data:
-  weights:
