@@ -1,6 +1,6 @@
 # Compact Recovery
 
-Updated: 2026-05-31 10:20 +07
+Updated: 2026-05-31 10:47 +07
 
 ## Current Task
 DEBUG-ULT-001: ultimate evidence-based full-stack debugging session.
@@ -18,10 +18,10 @@ agent-run
 - This session currently owns `services/gateway/main.py`, `tests/conftest.py`, `tests/test_recommendation_feedback_slate.py`, and debug/agent state updates for `FIX-API-FEEDBACK-SLATE`.
 
 ## Active Hypothesis
-H4-API-FEEDBACK-SLATE-FK is fixed in current source and verified by focused/adjacent backend tests. Docker hypotheses H1/H2 remain the next confirmed target and should be fixed separately.
+H4-API-FEEDBACK-SLATE-FK is fixed and browser-verified. Docker H1/H2/H3 and pipeline package-entrypoint H5 are fixed; full compose build/up passes.
 
 ## Latest Validation Status
-Backend pytest baseline passed (`389 passed, 3 warnings`), frontend lint/build passed, Docker config passed, Docker rebuild failed at gateway. Selenium authenticated audit reproduced feedback 500. Current-source focused regression and adjacent recommendation/pipeline tests pass after persisting served slates.
+Backend pytest passed after the served-slate fix (`390 passed, 3 warnings`), frontend lint/build passed, Docker config passed, full Docker compose build/up now passes, live database is at Alembic head, and final Selenium authenticated audit passes with 0 network failures.
 
 ## Next Exact Action
-Begin the Docker build-context/dependency-layer fix for `H1-DOCKER-GATEWAY-REQ` and `H2-DOCKER-CONTEXT`.
+Commit Docker/runtime evidence, then continue remaining API/model/security audits from `DEBUG_HYPOTHESES.md`.

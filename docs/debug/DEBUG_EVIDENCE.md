@@ -1,6 +1,6 @@
 # Debug Evidence
 
-Updated: 2026-05-31 10:20 +07
+Updated: 2026-05-31 10:45 +07
 
 ## Bootstrap Evidence
 - Repository cwd: `E:\TUGAS AKHIR\SCPA`.
@@ -11,11 +11,11 @@ Updated: 2026-05-31 10:20 +07
 - `morph-mcp`: requested by prompt, but no callable morph tool was exposed by current tool discovery; normal local edit tooling is used.
 
 ## Evidence Index
-- Browser artifacts: pending, target `reports/debug/browser/`.
+- Browser artifacts: final authenticated Selenium audit saved under `reports/debug/browser/`.
 - API artifacts: focused API/database regression evidence collected for `H4-API-FEEDBACK-SLATE-FK`.
 - Model artifacts: pending.
-- Database artifacts: pending.
-- Docker artifacts: pending.
+- Database artifacts: live Alembic current/upgrade/current validation recorded.
+- Docker artifacts: compose build/up, service health, and browser re-check recorded.
 - Security artifacts: pending.
 
 ## Baseline Evidence
@@ -48,3 +48,20 @@ Updated: 2026-05-31 10:20 +07
   - Adjacent recommendation/pipeline suite passed with 6 tests.
   - Full backend suite passed with 390 tests.
 - Browser re-verification of the fix is pending because the live browser target currently uses an existing/stale gateway container and the current Docker gateway rebuild is separately broken.
+
+## Docker And Runtime Evidence
+- `docker compose build gateway`: pass. Gateway context dropped from prior 5.06GB failure to 286.56KB; image built successfully.
+- `docker run --rm ... scpa-gateway python -c "import services.gateway.main as gateway; print(gateway.app.title)"`: pass, printed `SCPA Gateway`.
+- First `docker compose up -d --build gateway` after gateway repair built images but failed because `scpa-pipeline-1` was unhealthy.
+- Pipeline logs showed `ModuleNotFoundError: No module named 'services'` from `stage_5_aggregate.py`.
+- After pipeline Dockerfile/package-entrypoint repair, `docker compose up -d --build` passed and all services were healthy.
+- Gateway health and readiness probes passed on port 9000.
+
+## Database Migration Evidence
+- `alembic current` before upgrade: `001_initial_schema`.
+- `alembic upgrade head`: pass, applied migrations through `012_ab_testing_and_monitoring`.
+- `alembic current` after upgrade: `012_ab_testing_and_monitoring (head)`.
+
+## Final Browser Evidence
+- Final authenticated Selenium audit against the rebuilt Docker runtime: 9 pages, 0 console errors, 0 network failures, 0 blank pages, 0 hydration errors.
+- Report artifact secret scan found no password, bearer token, authorization header, JWT-like token, or access-token strings.

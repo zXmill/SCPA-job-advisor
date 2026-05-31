@@ -36,3 +36,31 @@ Validation:
 - Focused test passed: `tests\test_recommendation_feedback_slate.py`.
 - Adjacent tests passed: recommendation reason filters, feedback outbox, and pipeline contracts.
 - Full backend suite passed: 390 passed, 3 warnings.
+
+## FIX-DOCKER-RUNTIME-BUILD
+
+Status: implemented, full compose build/up passed, current runtime healthy.
+
+Related hypotheses: `H1-DOCKER-GATEWAY-REQ`, `H2-DOCKER-CONTEXT`, `H3-DOCKER-GATEWAY-CMD`, and discovered `H5-DOCKER-PIPELINE-PACKAGE`.
+
+Bug:
+- Initial `docker compose up -d --build` failed in the gateway image dependency layer because pip could not open `requirements-db.txt`.
+- Gateway root build context transfer was about 5.06GB.
+- After the gateway image built, full compose startup exposed a pipeline runtime import failure: `ModuleNotFoundError: No module named 'services'`.
+
+Root cause:
+- Gateway Dockerfile copied root `requirements.txt` instead of `services/gateway/requirements.txt`.
+- Root `.dockerignore` was missing, so generated assets were sent to Docker.
+- Gateway command referenced `main:app` despite root package layout.
+- Pipeline Dockerfile ran `python main.py` from a service-local layout while stage 5 imports `services.pipeline.calibration`.
+
+Fix:
+- Added root `.dockerignore`.
+- Updated gateway Dockerfile to install service requirements, copy only required runtime package paths, and run `services.gateway.main:app`.
+- Updated pipeline compose build context to root and pipeline Dockerfile to run `services.pipeline.main:api`.
+
+Validation:
+- `docker compose build gateway` passed with a small context.
+- Gateway container import smoke passed.
+- `docker compose up -d --build` passed.
+- `docker compose ps`, gateway `/health`, and gateway `/ready` all passed.

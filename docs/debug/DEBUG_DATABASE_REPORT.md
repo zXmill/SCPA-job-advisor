@@ -1,8 +1,8 @@
 # Debug Database Report
 
-Updated: 2026-05-31 10:20 +07
+Updated: 2026-05-31 10:45 +07
 
-Status: baseline migration-head checks completed; live upgrade validation is still blocked by current Docker rebuild failure/current-image gap.
+Status: live migration validation completed against the running local PostgreSQL container.
 
 ## Required Checks
 - Alembic heads.
@@ -15,12 +15,13 @@ Status: baseline migration-head checks completed; live upgrade validation is sti
 ## Baseline Results
 - Local Alembic head command passed: `012_ab_testing_and_monitoring (head)`.
 - Existing postgres container responds to `pg_isready`.
-- Existing gateway container cannot run Alembic because `alembic` is not installed in that image.
+- Live database initially reported `001_initial_schema`.
+- `alembic upgrade head` applied migrations through `012_ab_testing_and_monitoring`.
+- `alembic current` now reports `012_ab_testing_and_monitoring (head)`.
 - Full pytest, including `db/tests/test_models.py` and `db/tests/test_seed_contracts.py`, passed.
 
 ## Open Validation
-- A live `alembic upgrade head` against a current-image/runtime database has not been proven in this session.
-- Current Docker rebuild failure must be resolved or a deliberate local DB migration path must be used before marking live migration validation as passed.
+- Container-local Alembic is still not part of the gateway runtime image by design; migration validation was run from the repo-local `.venv` against the local PostgreSQL container.
 
 ## Feedback/Slate Relationship Finding
 - The `feedback_events.slate_id` FK correctly rejects feedback for unknown served slates.

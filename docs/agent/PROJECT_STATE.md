@@ -125,5 +125,13 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Validation: focused regression, adjacent recommendation/pipeline tests, and full backend pytest pass. Full backend result: 390 passed, 3 warnings.
 - Commit: `342edb0` (`fix: persist recommendation served slates`).
 
+## Current Docker/Runtime Fix
+- Added root `.dockerignore` to keep generated data, models, reports, notebooks, frontend artifacts, documents, secrets, and local env files out of the root Docker context.
+- Gateway Dockerfile now installs `services/gateway/requirements.txt`, copies only gateway/shared/taxonomy runtime package paths, and runs `services.gateway.main:app`.
+- Pipeline now builds from the root context and runs `services.pipeline.main:api`, fixing the package import failure exposed during Compose startup.
+- Full `docker compose up -d --build` passes; postgres, scraper, SBERT, NCF, DQN, pipeline, and gateway are healthy.
+- Live database migration validation: `alembic upgrade head` passed and `alembic current` reports `012_ab_testing_and_monitoring (head)`.
+- Final authenticated Selenium audit against the rebuilt runtime passed with 9 pages, 0 console errors, 0 network failures, 0 blank pages, and 0 hydration errors.
+
 ## Next Task
-Continue `DEBUG-ULT-001`: address the Docker gateway build failure.
+Continue `DEBUG-ULT-001`: commit Docker/runtime fix and evidence, then continue remaining API/model/security audits.

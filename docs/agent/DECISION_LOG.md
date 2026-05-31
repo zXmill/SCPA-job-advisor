@@ -467,3 +467,10 @@
 - Validation commands: focused pre-fix regression, `py_compile`, focused post-fix regression, adjacent recommendation/pipeline tests, then full backend pytest before commit.
 - Browser caveat: the live port-9000 gateway is a stale container; browser re-verification of the fix waits for the Docker rebuild/current-runtime issue.
 
+## 2026-05-31 10:47 +07 - DEBUG-ULT-001 Docker runtime repair decision
+- Decision: Keep gateway and pipeline images aligned with the repo package layout instead of relying on service-local top-level imports.
+- Evidence: gateway failed at the root requirements layer and sent a multi-GB context; after gateway repair, pipeline failed with `ModuleNotFoundError: No module named 'services'`.
+- Expected files to touch: `.dockerignore`, `docker-compose.yml`, `services/gateway/Dockerfile`, `services/pipeline/Dockerfile`, browser artifacts, and debug/agent ledgers.
+- Chosen approach: use root context for services that import `services.*`, copy minimal runtime paths, and start package module ASGI apps.
+- Validation commands: gateway build, gateway image import smoke, compose up, compose ps, health/ready probes, Alembic current/upgrade/current, final Selenium audit, and artifact secret scan.
+

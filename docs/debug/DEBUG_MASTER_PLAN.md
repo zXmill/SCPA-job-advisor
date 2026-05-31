@@ -10,13 +10,13 @@ Updated: 2026-05-31 10:20 +07
 - Editing rule: no product code fix before reproduction evidence and root-cause notes exist.
 
 ## Current Phase
-First confirmed API/browser bug fixed and committed; next phase is Docker rebuild repair.
+First API/browser and Docker/runtime bugs fixed; remaining phase is broader API/model/security audit.
 
 ## Active Task
-Investigate and fix the separately confirmed Docker rebuild failure.
+Commit Docker/runtime fix and evidence, then continue remaining API/model/security probes.
 
 ## Next Exact Action
-Investigate `H1-DOCKER-GATEWAY-REQ` and `H2-DOCKER-CONTEXT`, then rebuild gateway with evidence.
+Commit Docker/runtime fix and refreshed browser artifacts, then continue remaining hypotheses from `DEBUG_HYPOTHESES.md`.
 
 ## Method
 1. Inventory the current repository surfaces from files, not memory.

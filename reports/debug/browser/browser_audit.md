@@ -1,31 +1,31 @@
 # Selenium Browser Audit
 
-- Started: 2026-05-31T02:48:56.573665+00:00
+- Started: 2026-05-31T03:20:06.842611+00:00
 - Frontend base URL: `http://localhost:3000`
 - API base URL: `http://localhost:9000`
-- Sample job id: `21b292cd-508a-5820-9029-b0806fd5c22d`
+- Sample job id: `09442211-b541-5235-a102-ca4b619faa81`
 - Auth attempted: `True`
 - Auth success: `True`
 - Routes audited: 9
-- Pages with console/network/blank-page findings: 1
+- Pages with console/network/blank-page findings: 0
 
 ## Route Results
 
 | Route | Status | Load ms | Console errors | Network failures | Blank | Screenshot |
 | --- | --- | ---: | ---: | ---: | --- | --- |
-| `/` | loaded | 7529.75 | 0 | 0 | no | `reports/debug/browser/screenshots/home.png` |
-| `/analytics` | loaded | 7241.06 | 0 | 0 | no | `reports/debug/browser/screenshots/analytics.png` |
-| `/apply` | loaded | 7186.74 | 0 | 0 | no | `reports/debug/browser/screenshots/apply.png` |
-| `/auth` | loaded | 7206.8 | 0 | 0 | no | `reports/debug/browser/screenshots/auth.png` |
-| `/dashboard` | loaded | 7201.64 | 0 | 0 | no | `reports/debug/browser/screenshots/dashboard.png` |
-| `/onboarding` | loaded | 7236.83 | 0 | 0 | no | `reports/debug/browser/screenshots/onboarding.png` |
-| `/profile` | loaded | 7181.06 | 0 | 0 | no | `reports/debug/browser/screenshots/profile.png` |
-| `/recommendations` | loaded | 7164.97 | 1 | 1 | no | `reports/debug/browser/screenshots/recommendations.png` |
-| `/jobs/21b292cd-508a-5820-9029-b0806fd5c22d` | loaded | 7252.89 | 0 | 0 | no | `reports/debug/browser/screenshots/jobs_21b292cd-508a-5820-9029-b0806fd5c22d.png` |
+| `/` | loaded | 7858.18 | 0 | 0 | no | `reports/debug/browser/screenshots/home.png` |
+| `/analytics` | loaded | 7535.7 | 0 | 0 | no | `reports/debug/browser/screenshots/analytics.png` |
+| `/apply` | loaded | 7328.69 | 0 | 0 | no | `reports/debug/browser/screenshots/apply.png` |
+| `/auth` | loaded | 7437.58 | 0 | 0 | no | `reports/debug/browser/screenshots/auth.png` |
+| `/dashboard` | loaded | 7366.42 | 0 | 0 | no | `reports/debug/browser/screenshots/dashboard.png` |
+| `/onboarding` | loaded | 7569.31 | 0 | 0 | no | `reports/debug/browser/screenshots/onboarding.png` |
+| `/profile` | loaded | 7868.14 | 0 | 0 | no | `reports/debug/browser/screenshots/profile.png` |
+| `/recommendations` | loaded | 7171.08 | 0 | 0 | no | `reports/debug/browser/screenshots/recommendations.png` |
+| `/jobs/09442211-b541-5235-a102-ca4b619faa81` | loaded | 7218.84 | 0 | 0 | no | `reports/debug/browser/screenshots/jobs_09442211-b541-5235-a102-ca4b619faa81.png` |
 
 ## Findings
 
-- `/recommendations`: 1 console errors, 1 network failures.
+- No console errors, network failures, or blank pages were detected.
 
 ## Auth Note
 

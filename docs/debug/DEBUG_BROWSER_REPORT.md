@@ -1,8 +1,8 @@
 # Debug Browser Report
 
-Updated: 2026-05-31 10:20 +07
+Updated: 2026-05-31 10:45 +07
 
-Status: Selenium/Chrome audit harness added and canonical authenticated audit completed.
+Status: Selenium/Chrome audit harness added; final authenticated audit against rebuilt Docker runtime passed.
 
 ## Required Coverage
 - Home page.
@@ -28,13 +28,13 @@ Status: Selenium/Chrome audit harness added and canonical authenticated audit co
 - Output: `reports/debug/browser/`.
 - Passwords are not written to reports.
 
-## Canonical Authenticated Audit
+## Final Canonical Authenticated Audit
 - Command: `python scripts/debug/selenium_full_audit.py --output reports\debug\browser --headless --email <demo-email> --password <redacted> --settle-seconds 7`.
 - Auth source: demo credentials visibly advertised on `/auth`.
 - Auth result: success; token present in browser storage.
 - Routes audited: 9.
-- Console errors: 1.
-- Network failures: 1.
+- Console errors: 0.
+- Network failures: 0.
 - Blank pages: 0.
 - Hydration errors: 0.
 - Screenshots: `reports/debug/browser/screenshots/`.
@@ -47,12 +47,12 @@ Status: Selenium/Chrome audit harness added and canonical authenticated audit co
 - `/dashboard`: loaded; no network failures.
 - `/onboarding`: loaded; no network failures.
 - `/profile`: loaded; no network failures.
-- `/recommendations`: loaded, but `POST /api/recommendations/feedback` returned HTTP 500 during impression tracking.
+- `/recommendations`: loaded; no network failures after served-slate persistence fix.
 - `/jobs/{sample_id}`: loaded; no network failures.
 
 ## Findings
-- `BROWSER-FEEDBACK-500`: authenticated recommendation impression tracking fails with HTTP 500 on the existing gateway container. Gateway logs show a foreign-key violation on `feedback_events.slate_id` because the returned `recommendation_id`/served slate ID has no matching row in `served_slates`.
-- `FIX-API-FEEDBACK-SLATE`: current source now persists the served slate before returning recommendations, verified by focused API/database tests. Browser re-verification remains pending because the existing container is stale and the current Docker rebuild is blocked by `H1-DOCKER-GATEWAY-REQ`.
+- `BROWSER-FEEDBACK-500`: fixed. Authenticated recommendation impression tracking no longer returns HTTP 500 against the rebuilt current gateway container.
+- `FIX-API-FEEDBACK-SLATE`: current source persists the served slate before returning recommendations, verified by focused API/database tests, full backend tests, and final Selenium audit.
 - `BROWSER-LOCALHOST-CONTRACT`: audits against `127.0.0.1` created false positives or CORS/login mismatch. The working local browser contract is `localhost:3000` -> `localhost:9000`, matching `frontend/.env.local` and compose CORS.
 - `BROWSER-WARN-THREE-CLOCK`: Chrome console reports `THREE.Clock` deprecation from the frontend animation stack. Non-blocking warning.
 

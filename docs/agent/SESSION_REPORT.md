@@ -137,3 +137,23 @@ Branch: `agent-run`
 - Adjacent recommendation/pipeline tests passed with 6 passed and 1 warning.
 - Full backend pytest passed with 390 passed and 3 warnings.
 - Commit: `342edb0` (`fix: persist recommendation served slates`).
+
+## Fix In Progress: FIX-DOCKER-RUNTIME-BUILD
+
+### Evidence
+- Initial Docker rebuild failed because gateway copied root `requirements.txt`, whose referenced files were absent in the image layer.
+- Gateway root build context was about 5.06GB before `.dockerignore`.
+- After gateway repair, Compose exposed a pipeline runtime failure: `ModuleNotFoundError: No module named 'services'`.
+
+### What changed
+- Added root `.dockerignore`.
+- Gateway Dockerfile now installs service requirements and starts `services.gateway.main:app`.
+- Pipeline Compose/Dockerfile now uses the repo-root package layout and starts `services.pipeline.main:api`.
+
+### Validation
+- `docker compose build gateway` passed; direct gateway context was 286.56KB.
+- Gateway image import smoke passed.
+- `docker compose up -d --build` passed.
+- `docker compose ps`, gateway `/health`, and gateway `/ready` passed.
+- Live Alembic database was upgraded from `001_initial_schema` to `012_ab_testing_and_monitoring (head)`.
+- Final Selenium audit against the rebuilt runtime passed with 0 console errors, 0 network failures, 0 blank pages, and 0 hydration errors.

@@ -1665,7 +1665,12 @@
         "docs/agent/VALIDATION_LEDGER.md",
         "services/gateway/main.py",
         "tests/conftest.py",
-        "tests/test_recommendation_feedback_slate.py"
+        "tests/test_recommendation_feedback_slate.py",
+        ".dockerignore",
+        "docker-compose.yml",
+        "services/gateway/Dockerfile",
+        "services/pipeline/Dockerfile",
+        "reports/debug/browser"
       ],
       "validation_commands": [
         ".\\.venv\\Scripts\\python.exe -m json.tool docs\\agent\\TASK_QUEUE.json",
@@ -1675,11 +1680,19 @@
         ".\\.venv\\Scripts\\python.exe -m py_compile services\\gateway\\main.py tests\\conftest.py tests\\test_recommendation_feedback_slate.py",
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_recommendation_feedback_slate.py -q",
         ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_recommendation_feedback_slate.py tests\\test_recommendation_reason_filters.py tests\\test_feedback_outbox.py tests\\test_pipeline_contracts.py -q",
-        ".\\.venv\\Scripts\\python.exe -m pytest -q"
+        ".\\.venv\\Scripts\\python.exe -m pytest -q",
+        "docker compose build gateway",
+        "docker compose up -d --build gateway (failed before pipeline Docker repair, passed after)",
+        ".\\.venv\\Scripts\\python.exe -m alembic -c alembic.ini upgrade head",
+        "docker compose up -d --build",
+        "docker compose ps",
+        "Invoke-WebRequest http://127.0.0.1:9000/health",
+        "Invoke-WebRequest http://127.0.0.1:9000/ready",
+        ".\\.venv\\Scripts\\python.exe scripts\\debug\\selenium_full_audit.py --output reports\\debug\\browser --headless --email <demo-email> --password <redacted> --settle-seconds 7"
       ],
       "validation_status": "passed",
       "commit": "342edb0",
-      "notes": "Initialization commit 0b55041; baseline/hypotheses commit 1fb59e5; Selenium harness commit 2ad62bc; served-slate fix commit 342edb0. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass, Docker rebuild fails at gateway requirements layer and missing .dockerignore causes huge context. Selenium authenticated browser audit found recommendation feedback 500 from missing served_slates row. Current source persists served_slates/served_slate_items before returning recommendations; focused, adjacent, and full backend tests pass. Next target is Docker build repair."
+      "notes": "Initialization commit 0b55041; baseline/hypotheses commit 1fb59e5; Selenium harness commit 2ad62bc; served-slate fix commit 342edb0. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass. Fixed gateway requirements/context/CMD Docker failures and pipeline package-entrypoint Docker failure. Selenium authenticated browser audit found recommendation feedback 500 from missing served_slates row; current source persists served_slates/served_slate_items before returning recommendations. Focused, adjacent, and full backend tests pass. Full compose build/up, health/ready probes, Alembic upgrade head, and final Selenium audit pass. Docker/runtime fix commit is pending."
     }
   ]
 }

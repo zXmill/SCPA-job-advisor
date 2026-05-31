@@ -122,7 +122,9 @@ services:
       start_period: 10s
 
   pipeline:
-    build: ./services/pipeline
+    build:
+      context: .
+      dockerfile: services/pipeline/Dockerfile
     environment:
       SCRAPER_URL: http://scraper:8001
       SBERT_URL: http://sbert:8002

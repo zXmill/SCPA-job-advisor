@@ -1,12 +1,12 @@
 # Compact Snapshot
 
-Updated: 2026-05-31 10:20 +07
+Updated: 2026-05-31 10:47 +07
 
 ## Current Objective
 Run `DEBUG-ULT-001`, an evidence-based full-stack debugging session covering frontend, backend/API, ML services, pipeline, database, Docker, browser flows, and security.
 
 ## Current Phase
-Docker rebuild repair
+Docker/runtime fixed; broader audit remaining
 
 ## Current Task ID
 DEBUG-ULT-001
@@ -21,7 +21,7 @@ Root: `342edb0` (`fix: persist recommendation served slates`).
 - Pre-existing root: `README.md`, `SCPAv2`, `notebooks/01_indonesian_hybrid_dataset_eda.ipynb`, and `notebooks/02_hybrid_dataset_validation.ipynb` were modified before this session.
 - Pre-existing root: many untracked project files/directories remain part of the live project and must not be bulk staged.
 - Pre-existing nested `frontend/` repo is dirty and must be committed separately if frontend code changes are made.
-- Current task owns `services/gateway/main.py`, `tests/conftest.py`, `tests/test_recommendation_feedback_slate.py`, and debug/agent state updates for the served-slate feedback fix.
+- Current task owns `services/gateway/main.py`, `tests/conftest.py`, `tests/test_recommendation_feedback_slate.py`, `.dockerignore`, `docker-compose.yml`, `services/gateway/Dockerfile`, `services/pipeline/Dockerfile`, browser artifacts, and debug/agent state updates for the active debug session.
 
 ## Files Changed This Session
 - `docs/debug/DEBUG_MASTER_PLAN.md`
@@ -48,6 +48,11 @@ Root: `342edb0` (`fix: persist recommendation served slates`).
 - `services/gateway/main.py`
 - `tests/conftest.py`
 - `tests/test_recommendation_feedback_slate.py`
+- `.dockerignore`
+- `docker-compose.yml`
+- `services/gateway/Dockerfile`
+- `services/pipeline/Dockerfile`
+- `reports/debug/browser/`
 
 ## Current Implementation Status
 - Debug documentation, static inventory, baseline validation, and Selenium harness have been initialized and committed.
@@ -55,6 +60,10 @@ Root: `342edb0` (`fix: persist recommendation served slates`).
 - Current source now persists `served_slates` and `served_slate_items` before returning recommendation data.
 - Focused, adjacent, and full backend tests for the fix pass.
 - Served-slate fix committed as `342edb0`.
+- Gateway and pipeline Docker package wiring is fixed.
+- Full `docker compose up -d --build` passes and all services are healthy.
+- Live DB has been migrated to Alembic head `012_ab_testing_and_monitoring`.
+- Final authenticated Selenium audit passes against the rebuilt current runtime.
 - `morph-mcp` was requested but is not exposed as a callable tool in this session.
 
 ## Commands Already Run
@@ -71,19 +80,26 @@ Root: `342edb0` (`fix: persist recommendation served slates`).
 - `.\.venv\Scripts\python.exe -m pytest tests\test_recommendation_feedback_slate.py -q` -> failed before fix, then passed after fix.
 - `.\.venv\Scripts\python.exe -m pytest tests\test_recommendation_feedback_slate.py tests\test_recommendation_reason_filters.py tests\test_feedback_outbox.py tests\test_pipeline_contracts.py -q` -> 6 passed, 1 warning.
 - `.\.venv\Scripts\python.exe -m pytest -q` -> 390 passed, 3 warnings.
+- `docker compose build gateway` -> passed, gateway context 286.56KB.
+- `docker run --rm ... scpa-gateway python -c "import services.gateway.main as gateway; print(gateway.app.title)"` -> passed.
+- `docker compose up -d --build gateway` -> first failed on pipeline package import, then passed after pipeline Docker repair.
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current` -> initially `001_initial_schema`, then `012_ab_testing_and_monitoring (head)` after upgrade.
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head` -> passed.
+- `docker compose up -d --build` -> passed.
+- Final Selenium audit -> 9 pages, 0 console errors, 0 network failures, 0 blank pages, 0 hydration errors.
 
 ## Validation Results
 - Backend import/compile and pytest passed.
 - Frontend lint/build passed.
 - Docker compose config passed.
-- Docker rebuild failed: gateway build copies root `requirements.txt`, but the referenced `requirements-db.txt` is not copied before `pip install`.
+- Docker rebuild now passes; prior gateway requirements/context and pipeline package-entrypoint failures are fixed.
 - Served-slate feedback fix passes focused, adjacent, and full backend validation.
 
 ## Known Errors
-- Confirmed: current Docker gateway rebuild fails at dependency install.
-- Confirmed: root `.dockerignore` is missing and gateway build context transfer reached about 5.06GB.
+- Fixed: current Docker gateway rebuild no longer fails at dependency install.
+- Fixed: root `.dockerignore` exists and gateway build context is small.
 - Confirmed: `localhost:8000/health` refused while gateway is currently reachable on `localhost:9000`.
-- Confirmed: existing gateway container lacks the `alembic` module, so container-local migration validation failed.
+- Resolved through repo-local migration path: live DB is at Alembic head.
 - Fixed in current source: authenticated `/recommendations` impression tracking called `POST /api/recommendations/feedback`, which returned 500 because `feedback_events.slate_id` referenced a missing `served_slates` row.
 
 ## Do-Not-Change Constraints
@@ -94,4 +110,4 @@ Root: `342edb0` (`fix: persist recommendation served slates`).
 - Do not claim all validation passed unless each command actually ran in this session.
 
 ## Next Exact Action
-Repair the Docker gateway dependency/build-context failure.
+Commit Docker/runtime fix and evidence, then continue remaining API/model/security audits from `docs/debug/DEBUG_HYPOTHESES.md`.
