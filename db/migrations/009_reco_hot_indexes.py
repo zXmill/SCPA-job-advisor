@@ -17,34 +17,60 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+def _create_index_concurrently(
+    index_name: str,
+    table_name: str,
+    columns: list[str | sa.sql.elements.TextClause],
+    where: sa.sql.elements.TextClause | None = None,
+) -> None:
+    cols_sql = ", ".join(
+        f'"{c}"' if isinstance(c, str) else str(c) for c in columns
+    )
+    where_sql = f" WHERE {str(where)}" if where is not None else ""
+    op.execute(
+        sa.text(
+            f'CREATE INDEX CONCURRENTLY IF NOT EXISTS "{index_name}" '
+            f'ON "{table_name}" ({cols_sql}){where_sql}'
+        )
+    )
+
+
+def _drop_index_concurrently(index_name: str) -> None:
+    op.execute(sa.text(f'DROP INDEX CONCURRENTLY IF EXISTS "{index_name}"'))
+
+
 def upgrade() -> None:
-    op.create_index(
-        "idx_jobs_active_posted_id",
-        "jobs",
-        [sa.text("posted_at DESC"), "id"],
-        postgresql_where=sa.text("is_active = true"),
-    )
-    op.create_index(
-        "idx_jobs_active_source_posted",
-        "jobs",
-        ["source", sa.text("posted_at DESC"), "id"],
-        postgresql_where=sa.text("is_active = true"),
-    )
-    op.create_index(
-        "idx_jobs_active_experience_posted",
-        "jobs",
-        ["experience_level", sa.text("posted_at DESC"), "id"],
-        postgresql_where=sa.text("is_active = true"),
-    )
-    op.create_index(
-        "idx_applications_user_applied",
-        "applications",
-        ["user_id", sa.text("applied_at DESC")],
-    )
+    # Hot jobs/application indexes can be large in production, so build them
+    # outside Alembic's transaction wrapper to avoid long write-blocking locks.
+    with op.get_context().autocommit_block():
+        _create_index_concurrently(
+            "idx_jobs_active_posted_id",
+            "jobs",
+            [sa.text("posted_at DESC"), "id"],
+            where=sa.text("is_active = true"),
+        )
+        _create_index_concurrently(
+            "idx_jobs_active_source_posted",
+            "jobs",
+            ["source", sa.text("posted_at DESC"), "id"],
+            where=sa.text("is_active = true"),
+        )
+        _create_index_concurrently(
+            "idx_jobs_active_experience_posted",
+            "jobs",
+            ["experience_level", sa.text("posted_at DESC"), "id"],
+            where=sa.text("is_active = true"),
+        )
+        _create_index_concurrently(
+            "idx_applications_user_applied",
+            "applications",
+            ["user_id", sa.text("applied_at DESC")],
+        )
 
 
 def downgrade() -> None:
-    op.drop_index("idx_applications_user_applied", table_name="applications")
-    op.drop_index("idx_jobs_active_experience_posted", table_name="jobs")
-    op.drop_index("idx_jobs_active_source_posted", table_name="jobs")
-    op.drop_index("idx_jobs_active_posted_id", table_name="jobs")
+    with op.get_context().autocommit_block():
+        _drop_index_concurrently("idx_applications_user_applied")
+        _drop_index_concurrently("idx_jobs_active_experience_posted")
+        _drop_index_concurrently("idx_jobs_active_source_posted")
+        _drop_index_concurrently("idx_jobs_active_posted_id")
