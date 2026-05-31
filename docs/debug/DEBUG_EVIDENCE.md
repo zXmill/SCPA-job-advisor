@@ -1,6 +1,6 @@
 # Debug Evidence
 
-Updated: 2026-05-31 20:34 +07
+Updated: 2026-05-31 20:52 +07
 
 ## Bootstrap Evidence
 - Repository cwd: `E:\TUGAS AKHIR\SCPA`.
@@ -112,3 +112,11 @@ Updated: 2026-05-31 20:34 +07
 - `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current` reported `013_hot_indexes_concurrent (head)`.
 - `.\.venv\Scripts\python.exe -m pytest tests/test_security.py tests/test_saved_jobs_skip.py tests/test_market_aware_skill_path.py -q` passed with 32 tests and 1 warning.
 - `docker compose config --quiet` passed.
+
+## Runtime Contract Debug Recovery Evidence
+- `git log --oneline -25` on 2026-05-31 20:52 +07 shows latest commit `5598297 docs: record code review remediation evidence`.
+- `git status --short --branch` confirms branch `agent-run` remains dirty with pre-existing unrelated modified/untracked files, including root docs/notebooks and a dirty nested `frontend/` repository.
+- Required debug reports were read before product-code changes: compact recovery, master plan, browser, frontend, API, evidence, validation ledger, fix log, hypotheses, security, and model reports.
+- `impeccable` product context was loaded from `PRODUCT.md`; register is `product`. The matching product reference was read.
+- Existing frontend conventions inspected: `frontend/src/app/globals.css`, `frontend/src/lib/api.ts`, `frontend/src/lib/auth-context.tsx`, `frontend/src/lib/theme-context.tsx`, and `frontend/src/components/shared/Navbar.tsx`.
+- Manual runtime symptoms were recorded in `docs/debug/RUNTIME_CONTRACT_FINDINGS.md`.

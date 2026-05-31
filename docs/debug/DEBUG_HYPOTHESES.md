@@ -1,8 +1,54 @@
 # Debug Hypotheses
 
-Updated: 2026-05-31 15:20 +07
+Updated: 2026-05-31 20:52 +07
 
 Status: generated from static inventory and baseline validation, reconciled after served-slate/Docker fixes, and updated after gateway API runtime probing. Fixes are allowed only after the related reproduction evidence is recorded.
+
+## Runtime Contract Hypotheses
+
+### H-RUNTIME-ABORT-AS-TIMEOUT
+Hypothesis: the frontend API client classifies browser `AbortError` as a 408 timeout, causing canceled stale requests to render user-facing timeout messages.
+
+Expected: Abort/cancel is tracked separately from real timeout and cannot set final error state after a newer success.
+
+Actual: current `frontend/src/lib/api.ts` maps `AbortError` to `ApiError(408, 'Permintaan kehabisan waktu...')`; runtime impact still needs reproduction.
+
+Test: run Selenium runtime-contract audit with jobs/recommendations request cancellation and inspect final DOM state.
+
+Evidence location: `reports/debug/runtime_contract/`.
+
+### H-RUNTIME-AUTH-REMOUNT-STORM
+Hypothesis: auth provider initialization or route navigation repeatedly calls `/api/auth/me`, causing dependent page requests to abort and occasionally show stale timeout UI.
+
+Expected: authenticated state stabilizes with minimal `/api/auth/me` calls; dependent requests do not cascade into timeout UI.
+
+Actual: user observed canceled `/api/auth/me` requests; exact count unknown.
+
+Test: audit reload and fast navigation scenarios with request counts and final UI state.
+
+Evidence location: `reports/debug/runtime_contract/`.
+
+### H-RUNTIME-ENDPOINT-TIMEOUT-MISMATCH
+Hypothesis: recommendation and learning-path routes can exceed frontend timeout expectations or gateway downstream timeout behavior, producing false timeout UI.
+
+Expected: endpoint timeout policy matches gateway/model latency and returns controlled degraded state.
+
+Actual: manual recommendation timeout text observed; previous model hypothesis noted SBERT p95 near 15s gateway timeout.
+
+Test: capture recommendation/learning-path request durations, gateway logs, and UI state in dev and production frontend modes.
+
+Evidence location: `reports/debug/runtime_contract/`, `DEBUG_MODEL_REPORT.md` if model latency is implicated.
+
+### H-RUNTIME-THEME-MOUNTED-GUARD
+Hypothesis: theme mounted/persistence behavior leaves the toggle icon or loading indicator visually stuck after repeated clicks or reload.
+
+Expected: icon and `localStorage.scpa_theme` agree after repeated toggles and reload with no hydration warning.
+
+Actual: manual visual defect observed; runtime evidence pending.
+
+Test: Selenium repeated-click scenario with screenshots and DOM/localStorage capture.
+
+Evidence location: `reports/debug/runtime_contract/`.
 
 ## Frontend
 

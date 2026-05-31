@@ -1,8 +1,8 @@
 # Debug Browser Report
 
-Updated: 2026-05-31 16:26 +07
+Updated: 2026-05-31 20:52 +07
 
-Status: route-level Selenium/Chrome audit passed against rebuilt Docker runtime. A separate semantic product-quality audit is now required because manual browser inspection found user-visible issues not covered by the prior harness.
+Status: route-level Selenium/Chrome audit passed against rebuilt Docker runtime. A bounded runtime-contract audit is now active because manual browser inspection found user-visible timeout/cancellation issues not covered by the prior harness.
 
 ## Required Coverage
 - Home page.
@@ -59,6 +59,12 @@ Status: route-level Selenium/Chrome audit passed against rebuilt Docker runtime.
 ## Current Product-Quality Gap
 - The previous audit did not assert semantic UI correctness after fetch cancellation, timeout, retry, sort/filter, save/skip, repeated theme toggle, skill autocomplete, or job-detail content interactions.
 - The new phase must capture evidence under `reports/debug/product_quality/` and classify manual findings before any frontend/product-code fix.
+
+## Runtime Contract Audit Gap
+- Required new artifact target: `reports/debug/runtime_contract/`.
+- Required new harness: `scripts/debug/runtime_contract_audit.py`.
+- Required modes: dev frontend at `http://localhost:3000` and production-mode frontend at `http://localhost:3001`, both against gateway `http://localhost:9000`.
+- Required scenarios: jobs timeout state, recommendations timeout state, systemic canceled fetches, auth/me repetition, saved-request cancellation, learning-path cancellation, gateway restart resilience, production frontend restart behavior, and theme toggle persistence.
 
 ## Artifact Files
 - `reports/debug/browser/browser_audit.md`

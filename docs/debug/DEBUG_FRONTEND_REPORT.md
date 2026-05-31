@@ -1,8 +1,8 @@
 # Debug Frontend Report
 
-Updated: 2026-05-31 16:26 +07
+Updated: 2026-05-31 20:52 +07
 
-Status: static/lint/build checks completed, route-level browser audit passed, and semantic product-quality browser checks are pending.
+Status: static/lint/build checks completed, route-level browser audit passed, and runtime-contract browser checks are active.
 
 ## Required Checks
 - Pages/routes.
@@ -48,3 +48,9 @@ Status: static/lint/build checks completed, route-level browser audit passed, an
 - Theme toggle repeated-click and persistence behavior.
 - Skill autocomplete taxonomy richness and duplicate handling.
 - Job detail content depth, structured fields, and skill-gap context.
+
+## Runtime Contract Checks Needed
+- API client currently maps browser `AbortError` to a 408 timeout-style `ApiError`; runtime evidence must determine whether this causes false timeout UI for stale canceled requests.
+- Auth provider calls `/api/auth/me` on mount when a token exists; runtime audit must count redundant calls and verify fast navigation/reload stability.
+- Theme provider uses a mounted guard and persisted `scpa_theme`; runtime audit must verify repeated toggle and reload behavior.
+- Broad frontend redesign is deferred in this phase; only runtime UI correctness and the isolated theme defect are in scope.
