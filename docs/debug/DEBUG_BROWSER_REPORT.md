@@ -1,6 +1,6 @@
 # Debug Browser Report
 
-Updated: 2026-05-31 20:52 +07
+Updated: 2026-05-31 21:09 +07
 
 Status: route-level Selenium/Chrome audit passed against rebuilt Docker runtime. A bounded runtime-contract audit is now active because manual browser inspection found user-visible timeout/cancellation issues not covered by the prior harness.
 
@@ -61,10 +61,21 @@ Status: route-level Selenium/Chrome audit passed against rebuilt Docker runtime.
 - The new phase must capture evidence under `reports/debug/product_quality/` and classify manual findings before any frontend/product-code fix.
 
 ## Runtime Contract Audit Gap
-- Required new artifact target: `reports/debug/runtime_contract/`.
-- Required new harness: `scripts/debug/runtime_contract_audit.py`.
+- Artifact target: `reports/debug/runtime_contract/`.
+- Harness: `scripts/debug/runtime_contract_audit.py`.
 - Required modes: dev frontend at `http://localhost:3000` and production-mode frontend at `http://localhost:3001`, both against gateway `http://localhost:9000`.
 - Required scenarios: jobs timeout state, recommendations timeout state, systemic canceled fetches, auth/me repetition, saved-request cancellation, learning-path cancellation, gateway restart resilience, production frontend restart behavior, and theme toggle persistence.
+
+## Runtime Contract Audit Run 1
+- Command: `python scripts/debug/runtime_contract_audit.py --mode both --dev-url http://localhost:3000 --prod-url http://localhost:3001 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --restart-gateway --exercise-actions --settle-seconds 3`.
+- Result: failed overall because 2 checks failed and production-mode login was blocked.
+- Dev jobs scenario: passed; successful jobs response rendered 25 job links and no timeout text.
+- Dev recommendations scenario: passed; successful recommendation response rendered recommendation cards and no timeout text.
+- Dev auth/session scenario: failed; `/api/auth/me` count was 6 across 4 fast navigated routes.
+- Dev theme-toggle scenario: failed; no stuck spinner was observed, but theme persistence after reload failed (`storedTheme` remained null).
+- Dev gateway-restart scenario: passed; gateway became healthy and jobs page did not retain a timeout state.
+- Production-mode scenarios: blocked by login automation failure; not accepted as product evidence yet.
+- Canceled request events captured: 0. A targeted cancellation scenario is still required to test the user-observed DevTools cancellation pattern.
 
 ## Artifact Files
 - `reports/debug/browser/browser_audit.md`

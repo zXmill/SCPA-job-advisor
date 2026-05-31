@@ -1,6 +1,6 @@
 # Debug Frontend Report
 
-Updated: 2026-05-31 20:52 +07
+Updated: 2026-05-31 21:09 +07
 
 Status: static/lint/build checks completed, route-level browser audit passed, and runtime-contract browser checks are active.
 
@@ -54,3 +54,11 @@ Status: static/lint/build checks completed, route-level browser audit passed, an
 - Auth provider calls `/api/auth/me` on mount when a token exists; runtime audit must count redundant calls and verify fast navigation/reload stability.
 - Theme provider uses a mounted guard and persisted `scpa_theme`; runtime audit must verify repeated toggle and reload behavior.
 - Broad frontend redesign is deferred in this phase; only runtime UI correctness and the isolated theme defect are in scope.
+
+## Runtime Contract Audit Run 1
+- Harness: `scripts/debug/runtime_contract_audit.py`.
+- Dev jobs and recommendations checks passed without visible false timeout UI.
+- No canceled request events were captured in the first run, so a targeted cancellation scenario is still needed before fixing cancellation handling.
+- Auth/session check failed with 6 `/api/auth/me` requests during fast navigation across 4 routes.
+- Theme check failed persistence after reload: the audit saw `data-theme=light` and `localStorage.scpa_theme=null` after repeated clicks and reload, while no spinner or hydration warning remained.
+- Production-mode frontend checks were blocked by login automation and must be rerun after harness hardening.

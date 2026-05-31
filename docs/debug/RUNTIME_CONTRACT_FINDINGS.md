@@ -1,8 +1,8 @@
 # Runtime Contract Findings
 
-Updated: 2026-05-31 20:52 +07
+Updated: 2026-05-31 21:09 +07
 
-Status: recovery and manual-finding intake complete. No product-code changes have been made in this phase.
+Status: recovery, manual-finding intake, and first runtime audit complete. No product-code changes have been made in this phase.
 
 ## Scope Boundary
 - Active phase: Bounded Full-Stack Runtime Contract Debugging Pass.
@@ -20,6 +20,7 @@ Status: recovery and manual-finding intake complete. No product-code changes hav
 - Evidence needed: Selenium network trace, DOM snapshot, screenshot, console log, gateway log, current request status, and stale/canceled request classification in dev and production frontend modes.
 - Reproduction plan: login if needed, open jobs page, wait for `/api/jobs?page=1&limit=25`, perform location/experience filtering, observe final UI state, repeat after gateway restart.
 - Pass condition: jobs page never shows timeout UI after a successful current jobs response; retry appears only after a current real failure.
+- Current evidence: first dev audit passed jobs checks with 25 job links rendered and no timeout text; production-mode evidence and targeted stale cancellation evidence remain pending.
 
 ## BUG-RUNTIME-RECOMMENDATIONS-TIMEOUT
 - Observed route: `/recommendations`.
@@ -31,6 +32,7 @@ Status: recovery and manual-finding intake complete. No product-code changes hav
 - Evidence needed: request timings, canceled request list, gateway logs, DOM final state, recommendation response shape, sort/save/skip feedback behavior.
 - Reproduction plan: login, open `/recommendations`, track all related endpoints, change sort, trigger save/skip/impression, repeat after gateway restart and production frontend restart.
 - Pass condition: no timeout text or `Coba Lagi` retry UI remains after successful current recommendation data.
+- Current evidence: first dev audit passed recommendation checks with recommendation cards rendered and no timeout text; production-mode evidence and targeted stale cancellation evidence remain pending.
 
 ## BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC
 - Observed route: cross-route symptom during jobs, recommendations, and authenticated navigation.
@@ -42,6 +44,7 @@ Status: recovery and manual-finding intake complete. No product-code changes hav
 - Evidence needed: network entries with initiator/component source, abort reason, current route, final UI state, and whether a later success was overwritten.
 - Reproduction plan: capture Selenium performance logs while navigating quickly across authenticated routes and while sorting/filtering recommendations/jobs.
 - Pass condition: canceled stale requests are either ignored or reported only in diagnostics; they do not show user-facing timeout/error UI.
+- Current evidence: first runtime audit captured 0 canceled request events, so this finding remains unconfirmed by harness and needs targeted cancellation reproduction.
 
 ## BUG-RUNTIME-AUTH-ME-REPEAT
 - Observed route: authenticated routes and reload/navigation flows.
@@ -53,6 +56,7 @@ Status: recovery and manual-finding intake complete. No product-code changes hav
 - Evidence needed: auth/me request count per scenario, token presence as boolean only, final route state, and no persisted auth-loading loops.
 - Reproduction plan: load app with valid token, reload, navigate quickly across dashboard/profile/recommendations/jobs, then test invalid token in an isolated run.
 - Pass condition: auth state stabilizes without request storms or persistent timeout/error states.
+- Current evidence: first dev audit failed the bounded auth/me count check with 6 `/api/auth/me` requests across 4 fast navigated routes. Final UI had no persistent timeout text. Production-mode evidence remains pending.
 
 ## BUG-RUNTIME-SAVED-REQUEST-CANCEL
 - Observed route: recommendations/jobs flows that load saved state.
@@ -64,6 +68,7 @@ Status: recovery and manual-finding intake complete. No product-code changes hav
 - Evidence needed: network trace, endpoint status, final saved state, save/skip action logs, stale-update classification.
 - Reproduction plan: open recommendations, save/unsave jobs, navigate away/back quickly, repeat after gateway restart.
 - Pass condition: saved state is correct after current successful request; stale cancellation does not show timeout UI.
+- Current evidence: first dev recommendations save-action check did not leave timeout UI. Canceled saved-request reproduction remains pending.
 
 ## BUG-RUNTIME-LEARNING-PATH-CANCEL
 - Observed route: `/recommendations` or dashboard/profile pages that fetch learning path.
@@ -75,6 +80,7 @@ Status: recovery and manual-finding intake complete. No product-code changes hav
 - Evidence needed: request timings, status codes, final page state, gateway response logs.
 - Reproduction plan: open `/recommendations`, wait for `/api/learning-path`, sort/change page state, then repeat during gateway restart.
 - Pass condition: recommendation UI remains truthful and recoverable even if learning-path request cancels or fails transiently.
+- Current evidence: first dev recommendations scenario did not leave timeout UI; targeted learning-path cancellation evidence remains pending.
 
 ## BUG-FE-THEME-TOGGLE-STUCK
 - Observed route: global nav/app shell.
@@ -86,3 +92,4 @@ Status: recovery and manual-finding intake complete. No product-code changes hav
 - Evidence needed: before/after/reload screenshots, DOM/class state, localStorage value, console warnings.
 - Reproduction plan: load major routes, click theme toggle 5 times, reload, verify persisted theme and no stuck indicator.
 - Pass condition: no permanent spinner/overlap; icon and persisted theme agree after repeated clicks and reload.
+- Current evidence: first dev audit found no stuck spinner and no hydration warning, but theme persistence failed because `localStorage.scpa_theme` remained null after repeated clicks and reload.

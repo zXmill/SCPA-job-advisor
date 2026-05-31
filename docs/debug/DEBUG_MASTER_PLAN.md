@@ -1,6 +1,6 @@
 # Ultimate Debugging Master Plan
 
-Updated: 2026-05-31 20:52 +07
+Updated: 2026-05-31 21:09 +07
 
 ## Session
 - Task ID: RUNTIME-CONTRACT-DEBUG-001
@@ -11,7 +11,15 @@ Updated: 2026-05-31 20:52 +07
 Investigate systemic runtime fetch, timeout, cancellation, auth/session, gateway contract, and UI state consistency defects from browser/runtime evidence.
 
 ## Next Exact Action
-Build `scripts/debug/runtime_contract_audit.py` and run baseline Selenium evidence in both dev frontend mode (`localhost:3000`) and production frontend mode (`localhost:3001`) before changing product code.
+Harden `scripts/debug/runtime_contract_audit.py` login/redaction behavior, add targeted cancellation scenarios, and rerun Selenium evidence in both dev frontend mode (`localhost:3000`) and production frontend mode (`localhost:3001`) before changing product code.
+
+## Runtime Audit Status
+- Harness commit: `0bb7c54 test: add runtime contract browser audit`.
+- Bootstrap fix commit: `745ac6f test: fix runtime audit storage bootstrap`.
+- First artifact set: `reports/debug/runtime_contract/`.
+- First dev-mode evidence: jobs, recommendations, and gateway restart checks passed; auth/session and theme checks failed.
+- First production-mode evidence: blocked at login automation, so production-mode scenarios are not yet valid evidence.
+- Product-code changes remain blocked until targeted cancellation and production-mode evidence are collected.
 
 ## Guardrails
 - Do not start broad award-style frontend redesign during this bounded runtime pass.

@@ -1,6 +1,6 @@
 # Debug Evidence
 
-Updated: 2026-05-31 20:52 +07
+Updated: 2026-05-31 21:09 +07
 
 ## Bootstrap Evidence
 - Repository cwd: `E:\TUGAS AKHIR\SCPA`.
@@ -114,9 +114,24 @@ Updated: 2026-05-31 20:52 +07
 - `docker compose config --quiet` passed.
 
 ## Runtime Contract Debug Recovery Evidence
-- `git log --oneline -25` on 2026-05-31 20:52 +07 shows latest commit `5598297 docs: record code review remediation evidence`.
+- `git log --oneline -25` on 2026-05-31 20:52 +07 showed latest commit `5598297 docs: record code review remediation evidence` before the runtime-contract phase began.
+- Follow-up recovery on 2026-05-31 21:09 +07 shows latest committed runtime checkpoint `745ac6f test: fix runtime audit storage bootstrap`.
 - `git status --short --branch` confirms branch `agent-run` remains dirty with pre-existing unrelated modified/untracked files, including root docs/notebooks and a dirty nested `frontend/` repository.
 - Required debug reports were read before product-code changes: compact recovery, master plan, browser, frontend, API, evidence, validation ledger, fix log, hypotheses, security, and model reports.
 - `impeccable` product context was loaded from `PRODUCT.md`; register is `product`. The matching product reference was read.
 - Existing frontend conventions inspected: `frontend/src/app/globals.css`, `frontend/src/lib/api.ts`, `frontend/src/lib/auth-context.tsx`, `frontend/src/lib/theme-context.tsx`, and `frontend/src/components/shared/Navbar.tsx`.
 - Manual runtime symptoms were recorded in `docs/debug/RUNTIME_CONTRACT_FINDINGS.md`.
+
+## Runtime Contract Audit Evidence
+- Harness commit: `0bb7c54 test: add runtime contract browser audit`.
+- Harness bootstrap fix commit: `745ac6f test: fix runtime audit storage bootstrap`.
+- `.\.venv\Scripts\python.exe -m py_compile scripts\debug\runtime_contract_audit.py` passed on 2026-05-31 21:09 +07.
+- First audit artifacts: `reports/debug/runtime_contract/runtime_contract_report.md`, `summary.json`, `network.ndjson`, `console.ndjson`, `gateway_logs.ndjson`, screenshots, and DOM snapshots.
+- First audit result: failed overall with 2 failed dev checks and production-mode login blocked.
+- Dev jobs evidence: `/analytics` rendered 25 job links after successful jobs response and did not show timeout text.
+- Dev recommendations evidence: `/recommendations` rendered recommendation cards after successful response and did not show timeout text.
+- Dev auth/session evidence: fast navigation produced 6 `/api/auth/me` calls across 4 routes; final UI had no persistent timeout text.
+- Dev theme evidence: repeated toggle produced no stuck spinner or hydration warning, but `localStorage.scpa_theme` remained null after reload.
+- Dev gateway restart evidence: `docker compose restart gateway` returned success; gateway recovered healthy and jobs page retained no timeout state.
+- Production-mode evidence: blocked because login automation did not submit successfully; production-mode runtime contract remains unverified.
+- First audit captured 0 canceled request events, so user-observed canceled fetches still require targeted reproduction.
