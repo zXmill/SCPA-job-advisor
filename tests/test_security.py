@@ -208,6 +208,20 @@ class TestJWTVerification:
             TokenManager(secret=VALID_ACCESS_SECRET, refresh_secret="short-secret")
 
 
+class _FakeRedis:
+    """In-memory async stand-in for redis client; captures JTI tracking calls."""
+
+    def __init__(self) -> None:
+        self._store: dict[str, str] = {}
+
+    async def get(self, key: str) -> bytes | None:
+        value = self._store.get(key)
+        return value.encode() if value is not None else None
+
+    async def setex(self, key: str, ttl: int, value: str) -> None:
+        self._store[key] = value
+
+
 class TestJWTRefreshRotation:
     """Verify refresh token rotation with one-time-use semantics."""
 
@@ -216,7 +230,7 @@ class TestJWTRefreshRotation:
         return TokenManager(
             secret=VALID_ACCESS_SECRET,
             refresh_secret=VALID_REFRESH_SECRET,
-            redis_client=None,  # No Redis = no JTI tracking
+            redis_client=_FakeRedis(),
         )
 
     @pytest.mark.anyio
@@ -245,20 +259,46 @@ class TestJWTRefreshRotation:
         assert payload["sub"] == "user-42"
 
     @pytest.mark.anyio
-    async def test_rotation_with_expired_refresh_fails(self, tm) -> None:
-        """Attempting to rotate an expired refresh token must fail."""
-        import jwt as pyjwt
-        from datetime import datetime, timedelta, timezone
+    async def test_rotation_marks_jti_as_used(self, tm) -> None:
+        """After rotation, the used jti must be recorded in the jti store.
 
-        now = datetime.now(timezone.utc)
-        payload = {
-            "sub": "user-001",
-            "type": "refresh",
-            "exp": now - timedelta(seconds=1),
-            "iat": now - timedelta(days=31),
-            "jti": "expired-jti",
-        }
-        expired_token = pyjwt.encode(payload, tm.refresh_secret, algorithm="HS256")
+        A second call to rotate the same refresh token must then fail,
+        enforcing one-time-use semantics.
+        """
+        refresh = tm.create_refresh_token("user-001")
+        payload = tm.verify_refresh_token(refresh)
+        jti = str(payload.get("jti") or "")
+
+        await tm.rotate_refresh_token(refresh)
+
+        # jti must be recorded as used
+        key = f"jwt:refresh:used:{jti}"
+        stored = await tm.redis_client.get(key)
+        assert stored == b"1"
+
+    @pytest.mark.anyio
+    async def test_reusing_refresh_token_after_rotation_fails(self, tm) -> None:
+        """Reusing a refresh token that has already been rotated must fail.
+
+        Exercises the Redis used-jti guard enforced by rotate_refresh_token.
+        """
+        refresh = tm.create_refresh_token("user-001")
+        await tm.rotate_refresh_token(refresh)
+
+        with pytest.raises(TokenError, match="Invalid refresh token"):
+            await tm.rotate_refresh_token(refresh)
+
+    @pytest.mark.anyio
+    async def test_rotation_with_expired_refresh_fails(self) -> None:
+        """Attempting to rotate an expired refresh token must fail."""
+        tm = TokenManager(
+            secret=VALID_ACCESS_SECRET,
+            refresh_secret=VALID_REFRESH_SECRET,
+            redis_client=_FakeRedis(),
+            refresh_ttl_seconds=-1,
+        )
+
+        refresh = tm.create_refresh_token("user-001")
 
         with pytest.raises(TokenError, match="expired"):
-            await tm.rotate_refresh_token(expired_token)
+            await tm.rotate_refresh_token(refresh)

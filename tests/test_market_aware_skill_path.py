@@ -32,7 +32,6 @@ async def _register(
 
 async def _insert_job_with_skills(db_session: AsyncSession) -> None:
     """Seed jobs and job_required_skills for market demand computation."""
-    # Insert skills
     skills = [
         ("Python", "technical", ["python", "py"]),
         ("SQL", "technical", ["sql"]),
@@ -51,7 +50,6 @@ async def _insert_job_with_skills(db_session: AsyncSession) -> None:
         )
         skill_ids[name] = result.scalar_one()
 
-    # Insert jobs (jobs.id is UUID)
     job_ids = {
         "job-1": str(uuid.uuid4()),
         "job-2": str(uuid.uuid4()),
@@ -72,7 +70,6 @@ async def _insert_job_with_skills(db_session: AsyncSession) -> None:
             {"id": job_ids[key], "title": title, "company": company, "location": location},
         )
 
-    # Link skills to jobs
     links = [
         ("job-1", "Python"),
         ("job-1", "SQL"),
@@ -108,9 +105,71 @@ async def test_market_demand_computation_from_jobs(client, db_session) -> None:
     assert "Python" in skills
     assert "SQL" in skills
     assert "Docker" in skills
-    # Python appears in 3 jobs, SQL in 2, Docker in 1
     assert skills["Python"]["demand"] >= skills["SQL"]["demand"]
     assert skills["SQL"]["demand"] >= skills["Docker"]["demand"]
+
+
+async def test_market_demand_job_count_does_not_inflate_with_skill_count(
+    client, db_session: AsyncSession
+) -> None:
+    """job_count must reflect raw normalized frequency, not multiplied by total skills."""
+    skill_ids = {}
+    for name in ("Python", "SQL", "Docker"):
+        result = await db_session.execute(
+            text(
+                "INSERT INTO skills (name, category, aliases) "
+                "VALUES (:name, 'technical', ARRAY['x']) "
+                "ON CONFLICT (name) DO UPDATE SET category = EXCLUDED.category "
+                "RETURNING id"
+            ),
+            {"name": name},
+        )
+        skill_ids[name] = result.scalar_one()
+
+    python_jobs = [str(uuid.uuid4()) for _ in range(5)]
+    sql_jobs = [str(uuid.uuid4()) for _ in range(3)]
+    docker_jobs = [str(uuid.uuid4()) for _ in range(2)]
+
+    for jid in python_jobs + sql_jobs + docker_jobs:
+        await db_session.execute(
+            text(
+                "INSERT INTO jobs (id, title, company, location, is_active) "
+                "VALUES (:id, 'Engineer', 'Acme', 'ID', true) "
+                "ON CONFLICT (id) DO NOTHING"
+            ),
+            {"id": jid},
+        )
+
+    links = (
+        [("Python", jid) for jid in python_jobs]
+        + [("SQL", jid) for jid in sql_jobs]
+        + [("Docker", jid) for jid in docker_jobs]
+    )
+    for skill, jid in links:
+        await db_session.execute(
+            text(
+                "INSERT INTO job_required_skills (job_id, skill_id, is_required) "
+                "VALUES (:job_id, :skill_id, true) "
+                "ON CONFLICT DO NOTHING"
+            ),
+            {"job_id": jid, "skill_id": skill_ids[skill]},
+        )
+    await db_session.commit()
+
+    reg = await _register(client)
+    response = await client.get(
+        "/api/market-demand",
+        headers=_auth_header(reg["access_token"]),
+    )
+    assert response.status_code == 200
+    data = response.json()
+    skill_map = {s["skill"]: s for s in data["skills"]}
+
+    assert skill_map["Python"]["job_count"] == 5
+    assert skill_map["SQL"]["job_count"] == 3
+    assert skill_map["Docker"]["job_count"] == 2
+    for entry in data["skills"]:
+        assert entry["job_count"] <= 5
 
 
 async def test_learning_path_includes_market_demand(client, db_session) -> None:

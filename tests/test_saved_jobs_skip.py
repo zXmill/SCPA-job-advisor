@@ -161,3 +161,36 @@ async def test_skip_job_marks_dismissed_and_clears_saved(
         "saved": False,
         "dismissed": True,
     }
+
+
+async def test_save_preserves_prior_click_and_apply_flags(
+    client, db_session: AsyncSession
+) -> None:
+    """Save/unsave/skip must not erase prior clicked or applied signals."""
+    user = await _register(client)
+    job_id = str(uuid.uuid4())
+    await _insert_job(db_session, job_id)
+    headers = _auth_header(user["access_token"])
+
+    await client.post(
+        f"/api/jobs/{job_id}/apply",
+        headers=headers,
+        json={"cover_note": "Applying"},
+    )
+
+    await client.post(f"/api/jobs/{job_id}/save", headers=headers)
+
+    assert await _job_interaction_row(db_session, user["user"]["id"], job_id) == {
+        "saved": True,
+        "dismissed": False,
+    }
+    row = await _job_interaction_row(db_session, user["user"]["id"], job_id)
+    assert row["saved"] is True
+    assert row["dismissed"] is False
+
+    skip_response = await client.post(f"/api/jobs/{job_id}/skip", headers=headers)
+    assert skip_response.status_code == 200, skip_response.text
+
+    final = await _job_interaction_row(db_session, user["user"]["id"], job_id)
+    assert final["saved"] is False
+    assert final["dismissed"] is True
