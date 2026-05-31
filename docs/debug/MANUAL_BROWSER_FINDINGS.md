@@ -1,8 +1,8 @@
 # Manual Browser Findings
 
-Updated: 2026-05-31 16:31 +07
+Updated: 2026-06-01 05:15 +07
 
-Status: user-reported manual browser findings recorded before product-code changes. These issues still require independent runtime evidence from the semantic Selenium product-quality audit.
+Status: user-reported manual browser findings were reproduced or confirmed by repository/runtime evidence, fixed in scoped product/data commits, and verified by semantic Selenium product-quality audit evidence.
 
 ## Scope
 - Frontend origin: `http://localhost:3000`.
@@ -279,3 +279,19 @@ Test plan:
 - Semantic Selenium audit verifies skill gap on sampled job detail pages.
 - Backend parser/unit tests later verify extraction from a rich fixture.
 - If data is shallow, create a data pipeline bug entry before implementing schema/parser/storage changes.
+
+## Final Status: 2026-06-01
+
+- `BUG-FE-JOBS-TIMEOUT`: Fixed/verified. Product-quality audit observed `/api/jobs`, rendered real job cards, and found no timeout/retry UI after settle or filter action.
+- `BUG-FE-RECOMMENDATIONS-TIMEOUT`: Fixed/verified. Product-quality audit rendered recommendation cards and found no timeout/retry UI after successful recommendation data.
+- `BUG-FE-CANCELED-FETCH-RACE`: Fixed/verified. The earlier runtime-contract fix prevents stale canceled requests from setting final timeout UI; product-quality audit found no visible stale timeout state.
+- `BUG-FE-THEME-TOGGLE-STUCK`: Fixed/verified in product UI. The custom cursor ring/dot that matched the user screenshots was removed, the theme provider/toggle state was stabilized, and audit checks saw no stuck spinner across major routes.
+- `BUG-DATA-SKILL-AUTOCOMPLETE-SPARSE`: Fixed/verified. Skill search now uses an 8888-entry taxonomy and returns multiple relevant suggestions for `s`, `machine`, `data`, and other target queries.
+- `BUG-DATA-JOB-DESCRIPTION-SHALLOW`: Fixed/verified for current real-source catalog. Existing job rows were purged and reloaded from real source paths; the top five audited detail pages had descriptions from 523 to 2655 characters and structured fields where available.
+- `BUG-DATA-SKILL-GAP-LOW-CONTEXT`: Fixed/verified for current data contract. Job detail payloads now expose required/preferred/extracted skill arrays and the frontend displays the skill-gap panel against those richer signals.
+
+Evidence:
+- Root commits: `7286d84` and `fccb8a4`.
+- Nested frontend commit: `999e2a8`.
+- Product audit: `reports/debug/product_quality/product_quality_report.md`.
+- Final result: 48 checks passed, 0 failed.

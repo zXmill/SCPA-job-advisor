@@ -158,3 +158,24 @@ Branch: `agent-run`
 - Live Alembic database was upgraded from `001_initial_schema` to `012_ab_testing_and_monitoring (head)`.
 - Final Selenium audit against the rebuilt runtime passed with 0 console errors, 0 network failures, 0 blank pages, and 0 hydration errors.
 - Commit: `b747954` (`fix: repair docker runtime packaging`).
+
+## Completed: DATA-QUALITY-PRODUCT-UI-001
+
+### Evidence
+- User screenshots showed shallow job detail content, sparse skill autocomplete, 0% low-context skill gap, and a blue ring overlapping theme/skill controls.
+- Pre-fix runtime evidence showed only 3 skills, empty `machine`/`data` searches, and 2614 shallow descriptions out of 2645 jobs.
+
+### What changed
+- Added product-quality Selenium audit harness.
+- Removed runtime sample/fallback job catalog paths and purged/reloaded the current Docker job catalog from real sources.
+- Added rich job-description schema/parser/API/UI fields and skill signal arrays.
+- Added 8888-entry O*NET/local-alias skill taxonomy and taxonomy-backed autocomplete.
+- Removed the custom cursor overlay and stabilized theme toggle state.
+
+### Validation
+- Focused backend/data tests passed.
+- Changed Python modules compile.
+- `docker compose config --quiet` passed.
+- Frontend `npm run lint` and `npm run build` passed.
+- Product-quality Selenium audit passed 48/48 checks.
+- Commits: root `7286d84`, root `fccb8a4`, frontend `999e2a8`.

@@ -1,8 +1,8 @@
 # Debug Database Report
 
-Updated: 2026-05-31 21:41 +07
+Updated: 2026-06-01 05:15 +07
 
-Status: running Docker PostgreSQL schema reconciled to repo head after API runtime probe found drift.
+Status: running Docker PostgreSQL schema reconciled and product-quality rich job/skill schema applied through `014_rich_job_desc_skill_sources`.
 
 ## Required Checks
 - Alembic heads.
@@ -41,3 +41,18 @@ Status: running Docker PostgreSQL schema reconciled to repo head after API runti
 - No database schema or migration changes were made during the runtime-contract pass.
 - The final fixes were frontend request-state handling and gateway CORS configuration only.
 - Runtime audit evidence used the existing running Docker PostgreSQL state; no new migration validation was required for this bounded phase.
+
+## Product Quality Schema/Data Update
+- Updated: 2026-06-01 05:15 +07.
+- Root commit: `fccb8a4 feat: require real job data with rich descriptions and skill taxonomy`.
+- New migration: `014_rich_job_desc_skill_sources`.
+- Job storage now supports rich description and data-signal fields: raw HTML, full text, parsed sections, responsibilities, requirements, nice-to-have, benefits, seniority, employment type, job function, industry, education/experience fields, required/preferred/extracted skills, source URL, and source update timestamp.
+- Current Docker PostgreSQL state after purge/rescrape:
+  - `jobs=10`
+  - `rich_jobs=10`
+  - `jobs_with_extracted_skills=10`
+  - `real_source_jobs=10`
+  - `skills=8888`
+  - `alembic_version=014_rich_job_desc_skill_sources`
+- Existing shallow/sample-like job rows were removed before the real-source refresh. The runtime catalog currently contains only real-source rows.
+- Remaining database limitation: the real-source refresh is intentionally bounded to 10 jobs for this phase; larger real scrape batches need a separate reliability pass.

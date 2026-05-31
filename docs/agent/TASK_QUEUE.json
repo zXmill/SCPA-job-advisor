@@ -1732,6 +1732,68 @@
       "validation_status": "passed",
       "commit": "52a6bb9",
       "notes": "All 8 P0/P1 findings fixed: auth rotation coverage (R-1), concurrent indexes (R-2), gateway startup (R-3), env example (R-4), weight volumes (R-5), interaction state preservation (R-6), feedback transitions (R-7), market demand formula (R-8). 5 scoped commits, 32 focused tests pass, 397 full suite pass."
+    },
+    {
+      "id": "DATA-QUALITY-PRODUCT-UI-001",
+      "phase": "debug",
+      "title": "Frontend product quality and real-data job signal remediation",
+      "priority": "P0",
+      "status": "done",
+      "scope": "large",
+      "depends_on": [
+        "DEBUG-ULT-001"
+      ],
+      "files_expected": [
+        "scripts/debug/selenium_product_quality_audit.py",
+        "services/shared/job_description.py",
+        "services/shared/skill_taxonomy.py",
+        "data/skills/skills_seed.json",
+        "data/skills/skill_aliases.json",
+        "db/migrations/014_rich_job_desc_skill_sources.py",
+        "services/gateway/main.py",
+        "services/scraper/main.py",
+        "services/pipeline/main.py",
+        "frontend/"
+      ],
+      "files_touched": [
+        "docs/debug/PRODUCT_QUALITY_FINAL_REPORT.md",
+        "docs/debug/COMPACT_RECOVERY.md",
+        "docs/debug/DEBUG_MASTER_PLAN.md",
+        "docs/debug/DEBUG_EVIDENCE.md",
+        "docs/debug/DEBUG_VALIDATION_LEDGER.md",
+        "docs/debug/DEBUG_FIX_LOG.md",
+        "docs/debug/DEBUG_BROWSER_REPORT.md",
+        "docs/debug/DEBUG_FRONTEND_REPORT.md",
+        "docs/debug/DEBUG_API_REPORT.md",
+        "docs/debug/DEBUG_MODEL_REPORT.md",
+        "docs/debug/DEBUG_DATABASE_REPORT.md",
+        "docs/debug/DEBUG_SECURITY_REPORT.md",
+        "docs/debug/DEBUG_HYPOTHESES.md",
+        "docs/debug/MANUAL_BROWSER_FINDINGS.md",
+        "scripts/debug/selenium_product_quality_audit.py",
+        "services/shared/job_description.py",
+        "services/shared/skill_taxonomy.py",
+        "services/gateway/main.py",
+        "services/scraper/main.py",
+        "services/pipeline/main.py",
+        "services/pipeline/stages/stage_1_scrape.py",
+        "db/models.py",
+        "db/migrations/014_rich_job_desc_skill_sources.py",
+        "data/skills/skills_seed.json",
+        "data/skills/skill_aliases.json",
+        "frontend/"
+      ],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests/test_job_description_quality.py tests/test_skill_taxonomy_search.py tests/test_full_pipeline_entrypoint.py tests/test_red_team_failure_modes.py::test_full_pipeline_refuses_sample_job_fallback_when_scraper_is_skipped -q",
+        ".\\.venv\\Scripts\\python.exe -m py_compile services\\scraper\\main.py services\\pipeline\\main.py services\\pipeline\\stages\\stage_1_scrape.py services\\gateway\\main.py services\\shared\\job_description.py services\\shared\\skill_taxonomy.py scripts\\data\\build_skill_taxonomy.py scripts\\run_full_pipeline.py",
+        "docker compose config --quiet",
+        "npm run lint (frontend)",
+        "npm run build (frontend)",
+        "python scripts\\debug\\selenium_product_quality_audit.py --base-url http://localhost:3000 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --headless --settle-seconds 1.5"
+      ],
+      "validation_status": "passed",
+      "commit": "7286d84, fccb8a4, frontend:999e2a8",
+      "notes": "Runtime sample/fallback jobs removed from product catalog paths, existing runtime jobs purged and reloaded from real sources, rich job description fields and skill signals added, skill taxonomy expanded to 8888 entries, cursor/theme visual bug fixed, and product-quality Selenium audit passed 48/48 checks."
     }
   ]
 }

@@ -1,8 +1,8 @@
 # Debug Model Report
 
-Updated: 2026-05-31 21:41 +07
+Updated: 2026-06-01 05:15 +07
 
-Status: static artifact inventory completed; runtime smoke checks pending.
+Status: static artifact inventory completed; product-quality data-signal inputs improved; live ML endpoint smoke checks pending.
 
 ## SBERT
 - Target artifact: `models/sbert-indonesian-hybrid-manual-research/best`.
@@ -31,3 +31,11 @@ Status: static artifact inventory completed; runtime smoke checks pending.
 - No SBERT, NCF, DQN, calibrator, model artifact, or ML training changes were made during the runtime-contract pass.
 - Recommendation timeout handling changed only in the frontend to avoid false timeout UI and to align the client timeout with hybrid gateway/model latency.
 - Dedicated ML runtime smoke checks remain a separate unfinished phase.
+
+## Product Quality Data-Signal Impact
+- Updated: 2026-06-01 05:15 +07.
+- No SBERT, NCF, DQN, calibrator artifact, or ML training changes were made.
+- Model input quality improved through data-contract changes: jobs now carry longer `description_text`, parsed `description_sections`, and required/preferred/extracted skill arrays.
+- Skill-gap and recommendation explanation surfaces can now use richer job text and explicit skill arrays instead of one-line card summaries.
+- Focused tests validated parser and skill extraction behavior against a rich CBI-style fixture, including Python, Linux, database design, REST APIs, Docker, Kubernetes, Airflow/Prefect, Git, MLOps, model monitoring, credit scoring, and ML/DL terminology.
+- Dedicated live ML endpoint smoke checks remain an unfinished separate phase.

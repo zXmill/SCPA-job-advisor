@@ -1,17 +1,17 @@
 # Ultimate Debugging Master Plan
 
-Updated: 2026-06-01 02:34 +07
+Updated: 2026-06-01 05:15 +07
 
 ## Session
 - Task ID: DATA-QUALITY-PRODUCT-UI-001
 - Branch: agent-run
-- Active Phase: Real-data job description, skill taxonomy, skill-gap context, and product UI evidence/fix pass.
+- Active Phase: Product-quality/data-quality evidence finalization.
 
 ## Active Task
-Investigate and remediate user-confirmed product-quality defects where job detail descriptions are too shallow, skill extraction/gap has too little context, skill autocomplete is too sparse, runtime paths still use sample jobs, and a global custom cursor ring looks like a stuck loader over controls.
+Finalize the evidence for user-confirmed product-quality defects where job detail descriptions were too shallow, skill extraction/gap had too little context, skill autocomplete was too sparse, runtime paths still used sample jobs, and a global custom cursor ring looked like a stuck loader over controls.
 
 ## Next Exact Action
-Commit the docs-only evidence update, then apply scoped product fixes in this order: custom cursor overlay, runtime sample fallback removal/purge path, rich job description storage/parser/API/frontend contract, real skill taxonomy baseline/search.
+Commit the final docs-only evidence/report update, then stop. Do not start skill taxonomy expansion, scraper redesign, ML training, or unrelated frontend redesign in this phase.
 
 ## Data Quality Evidence Status
 - User supplied manual screenshots of shallow job detail, 0% skill gap with one generic required skill, sparse skill autocomplete, and blue ring overlay around theme/skill controls.
@@ -20,6 +20,15 @@ Commit the docs-only evidence update, then apply scoped product fixes in this or
 - Live PostgreSQL confirmed `2645` jobs and `2614` shallow descriptions under 200 characters.
 - Current code confirms runtime sample/fallback paths in scraper, pipeline stage 1, and full pipeline scripts.
 - Current code confirms `custom-cursor-ring` with high z-index is rendered across product UI surfaces.
+
+## Product Quality Final Status
+- Root audit harness commit: `7286d84 test: add product quality selenium audit`.
+- Root product/data commit: `fccb8a4 feat: require real job data with rich descriptions and skill taxonomy`.
+- Nested frontend commit: `999e2a8 fix: stabilize product UI for rich jobs and skills`.
+- Product-quality audit artifacts: `reports/debug/product_quality/`.
+- Final audit result: 5 sections, 48 checks, 48 passed, 0 failed.
+- Runtime database state after purge/rescrape: 10 jobs, 10 rich descriptions, 10 jobs with extracted skills, 10 non-sample source jobs, 8888 skills, Alembic `014_rich_job_desc_skill_sources`.
+- Remaining limitation: the current real-source scrape is intentionally bounded to 10 jobs because larger live scrape batches can be slow or unstable. The runtime now returns real data only and does not fabricate sample jobs when real sources fail.
 
 ## Runtime Audit Status
 - Complete in `f6c97cc`; retained here as prior phase context.

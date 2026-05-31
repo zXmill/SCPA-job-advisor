@@ -134,5 +134,14 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Final authenticated Selenium audit against the rebuilt runtime passed with 9 pages, 0 console errors, 0 network failures, 0 blank pages, and 0 hydration errors.
 - Commit: `b747954` (`fix: repair docker runtime packaging`).
 
+## Latest Product Quality Task
+`DATA-QUALITY-PRODUCT-UI-001` completed on 2026-06-01. Root commits `7286d84` and `fccb8a4`, nested frontend commit `999e2a8`.
+
+- Runtime job catalog no longer uses sample/fallback jobs for product pages.
+- Existing runtime jobs were purged and reloaded from real source paths; current Docker DB has 10 real jobs, 10 rich descriptions, 10 jobs with extracted skills, and 8888 skills.
+- Job detail API/UI now supports rich descriptions, structured sections, metadata, and required/preferred/extracted skill signals.
+- Profile skill autocomplete uses the taxonomy-backed skill search.
+- Product-quality Selenium audit passed 48/48 checks.
+
 ## Next Task
-Continue `DEBUG-ULT-001`: continue remaining API/model/security audits.
+Continue only if requested: run the separate ML runtime smoke/security probe phase or harden larger-batch real-source scraper reliability.

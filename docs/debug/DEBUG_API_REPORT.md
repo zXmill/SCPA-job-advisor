@@ -1,8 +1,8 @@
 # Debug API Report
 
-Updated: 2026-05-31 21:41 +07
+Updated: 2026-06-01 05:15 +07
 
-Status: gateway API runtime probes completed and fixed; final rebuilt-runtime probe passed with 83/83 cases and runtime-contract production CORS fix passed browser validation.
+Status: gateway API runtime probes completed and fixed; final rebuilt-runtime probe passed with 83/83 cases, runtime-contract production CORS fix passed browser validation, and product-quality jobs/skills API contract updates are verified.
 
 ## Audit Rules
 - Determine method, path, and auth requirement for each route.
@@ -62,3 +62,14 @@ Status: gateway API runtime probes completed and fixed; final rebuilt-runtime pr
 - `docker-compose.yml` and `.env.example` local CORS defaults include `http://localhost:3001`.
 - `tests/test_cors_config.py::test_development_cors_defaults_to_localhost_origins` was updated.
 - Validation: CORS test suite passed, compose config passed, and final production-mode runtime browser audit authenticated successfully and passed all scenarios.
+
+## Product Quality API/Data Contract Update
+- Updated: 2026-06-01 05:15 +07.
+- Root commit: `fccb8a4 feat: require real job data with rich descriptions and skill taxonomy`.
+- `/api/jobs` and `/api/jobs/{id}` now expose richer job detail fields where available: `raw_description_html`, `description_text`, `description_sections`, `responsibilities`, `requirements`, `nice_to_have`, `benefits`, seniority/employment/job-function/industry metadata, source fields, and required/preferred/extracted skill arrays.
+- `/api/skills/search` now uses the taxonomy-backed search layer and returns category, source, aliases, and confidence. Verified examples:
+  - `q=s&limit=10` returns SQL, Statistics, and additional O*NET-backed tools.
+  - `q=machine&limit=5` returns Machine Learning plus related machine-control tool entries.
+  - `q=data&limit=5` returns Data Analysis, Data Engineering, Data Science, and related tools.
+- Current live `/api/jobs?page=1&limit=2` returns real Kalibrr-source rows with rich descriptions and structured skill fields.
+- `/sample` scraper fallback is disabled for runtime catalog use; real source failures now produce controlled empty/degraded results rather than fabricated sample jobs.

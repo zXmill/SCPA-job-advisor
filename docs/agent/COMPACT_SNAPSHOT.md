@@ -110,5 +110,15 @@ Root: `b747954` (`fix: repair docker runtime packaging`).
 - Do not fix before collecting reproduction evidence and root-cause notes.
 - Do not claim all validation passed unless each command actually ran in this session.
 
+## Data Quality Product UI Snapshot: 2026-06-01
+- Task: `DATA-QUALITY-PRODUCT-UI-001`.
+- Root commits: `7286d84` (audit harness), `fccb8a4` (real-data/rich-description/skill-taxonomy product fix).
+- Nested frontend commit: `999e2a8` (rich job/skill UI and cursor/theme stabilization).
+- Runtime DB after purge/rescrape: 10 jobs, 10 rich descriptions, 10 jobs with extracted skills, 10 real-source jobs, 8888 skills, Alembic `014_rich_job_desc_skill_sources`.
+- Product-quality Selenium audit: `reports/debug/product_quality/`, 48 checks passed, 0 failed.
+- Frontend validation: lint/build passed with existing warnings only.
+- Backend/data validation: focused job-description, skill-taxonomy, full-pipeline no-sample-fallback, and red-team fallback tests passed.
+- Current guardrail: runtime catalog does not fabricate sample jobs. Pre-existing untracked fixtures are not staged.
+
 ## Next Exact Action
-Commit Docker/runtime fix and evidence, then continue remaining API/model/security audits from `docs/debug/DEBUG_HYPOTHESES.md`.
+Stop after the scoped final docs commit. Continue only if requested with ML runtime smoke/security probes or real-source scraper reliability hardening.

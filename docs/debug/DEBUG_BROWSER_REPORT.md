@@ -1,8 +1,8 @@
 # Debug Browser Report
 
-Updated: 2026-05-31 21:20 +07
+Updated: 2026-06-01 05:15 +07
 
-Status: route-level Selenium/Chrome audit passed against rebuilt Docker runtime. A bounded runtime-contract audit is now active because manual browser inspection found user-visible timeout/cancellation issues not covered by the prior harness.
+Status: route-level Selenium audit, runtime-contract audit, and product-quality semantic audit have all passed against the rebuilt local runtime. Product-quality artifacts are under `reports/debug/product_quality/`.
 
 ## Required Coverage
 - Home page.
@@ -113,3 +113,16 @@ Status: route-level Selenium/Chrome audit passed against rebuilt Docker runtime.
 - `reports/debug/runtime_contract/summary.json`
 - `reports/debug/runtime_contract/screenshots/*.png`
 - `reports/debug/runtime_contract/dom_snapshots/*.html`
+
+## Product Quality Semantic Audit
+- Harness commit: `7286d84 test: add product quality selenium audit`.
+- Command: `python scripts/debug/selenium_product_quality_audit.py --base-url http://localhost:3000 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --headless --settle-seconds 1.5`.
+- Result: passed; 5 sections, 48 checks, 48 passed, 0 failed.
+- Sections: Job Vacancies, Recommendations, Theme Toggle, Skills Autocomplete, Job Detail Quality.
+- Job vacancies: `/analytics` observed successful `/api/jobs`, rendered 10 real job cards, and showed no timeout or retry state after settle/filter action.
+- Recommendations: `/recommendations` rendered cards and showed no false timeout or retry state after successful data and save/skip interactions.
+- Theme toggle: repeated toggle/reload checks passed on major routes with no stuck spinner, no hydration warning, and persisted theme state.
+- Skills autocomplete: target query checks passed; `s`, `machine`, `data`, `docker`, and `english` returned relevant taxonomy suggestions and duplicate selection was blocked.
+- Job detail quality: five real job detail pages were opened; description lengths ranged from 523 to 2655 characters and structured skill/section fields were exposed when available.
+- ChromeDriver note: authenticated-page WebDriver click/send_keys sometimes produced no trusted state change in this Windows ChromeDriver context, so the harness records a JS-click/input fallback when it is used. The fallback is captured in `summary.json` and does not store secrets.
+- Artifacts: `reports/debug/product_quality/product_quality_report.md`, `summary.json`, `console.ndjson`, `network.ndjson`, `screenshots/`, and `dom_snapshots/`.

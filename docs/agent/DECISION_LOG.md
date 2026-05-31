@@ -474,3 +474,11 @@
 - Chosen approach: use root context for services that import `services.*`, copy minimal runtime paths, and start package module ASGI apps.
 - Validation commands: gateway build, gateway image import smoke, compose up, compose ps, health/ready probes, Alembic current/upgrade/current, final Selenium audit, and artifact secret scan.
 
+## 2026-06-01 05:15 +07 - DATA-QUALITY-PRODUCT-UI-001 real-data decision
+- Decision: Remove sample/fallback jobs from runtime catalog paths and treat real-source empty/failure states as controlled empty/degraded results, not as permission to fabricate jobs.
+- Evidence: user screenshots and live probes showed shallow job details, sparse skill autocomplete, and weak skill-gap context; static code showed scraper/pipeline fallback sample paths.
+- Chosen approach: purge existing runtime jobs, reload a bounded real-source set, preserve rich job text/sections/skills in schema/API/UI, and use taxonomy-backed skill search.
+- Skipped option: LinkedIn scraping or committed LinkedIn-like sample seed data.
+- Reason skipped: the user required real data, and LinkedIn scraping must not be added without legal/robots/ToS clearance. The CBI description was used as evidence/test shape, not production data.
+- Validation commands: focused backend/data tests, Python compile, Docker config, frontend lint/build, live DB/API probes, product-quality Selenium audit, and product artifact secret scan.
+

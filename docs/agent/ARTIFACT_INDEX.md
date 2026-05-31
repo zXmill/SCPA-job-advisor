@@ -25,3 +25,10 @@
 - `testing/archive/manual-debug/insert_scraped.py`
 - `testing/archive/manual-debug/scrape_1000.json`
 - `reports/ml/calibration_layer_smoke.json`
+- `reports/debug/product_quality/product_quality_report.md`
+- `reports/debug/product_quality/summary.json`
+- `reports/debug/product_quality/console.ndjson`
+- `reports/debug/product_quality/network.ndjson`
+- `reports/debug/product_quality/screenshots/`
+- `reports/debug/product_quality/dom_snapshots/`
+- `docs/debug/PRODUCT_QUALITY_FINAL_REPORT.md`

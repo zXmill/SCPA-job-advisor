@@ -84,3 +84,42 @@ Status: **NOT FIXED, NOT REPRODUCED AFTER HARNESS HARDENING**
 - User-reported defect: theme icon/spinner appeared stuck or overlapping.
 - Evidence: final dev and prod runtime audits clicked the toggle 5 times, reloaded, saw `scpa_theme=dark`, no stuck spinner/loading state, and no hydration warning.
 - Decision: no product-code change was made because runtime evidence did not confirm a current defect.
+
+## PRODUCT-01 — Real Runtime Job Data Only
+Status: **FIXED** in root commit `fccb8a4`
+
+- Runtime sample/fallback job paths were removed from scraper and pipeline catalog refresh flows.
+- Scraper `/sample` now returns 410, and scraper/pipeline empty or failure paths return controlled empty/degraded results instead of fabricating sample job records.
+- Added `scripts/data/purge_jobs_for_real_rescrape.py` for explicit catalog purge before real-source refresh.
+- Validation: live DB now has 10 real-source jobs and 0 sample-source runtime jobs after purge/rescrape.
+
+## PRODUCT-02 — Rich Job Descriptions and Skill Signals
+Status: **FIXED** in root commit `fccb8a4` and nested frontend commit `999e2a8`
+
+- Added rich job-description parser/storage/API fields and migration `014_rich_job_desc_skill_sources`.
+- Gateway job responses now expose full `description_text`, parsed sections, metadata, and required/preferred/extracted skills.
+- Frontend job detail now renders structured sections and skill-gap context when fields are available.
+- Validation: product audit opened five real job details with 523 to 2655 character descriptions and structured skill/section payloads.
+
+## PRODUCT-03 — Real-World Skill Taxonomy Autocomplete
+Status: **FIXED** in root commit `fccb8a4` and nested frontend commit `999e2a8`
+
+- Added O*NET 30.3 plus local Indonesian/technical alias taxonomy with 8888 normalized entries.
+- Gateway skill search now returns taxonomy-ranked suggestions with category, source, aliases, and confidence.
+- Frontend profile autocomplete shows alias/category detail and blocks duplicate selected skills.
+- Validation: targeted API/Selenium checks passed for `s`, `machine`, `data`, `docker`, `english`, and related queries.
+
+## PRODUCT-04 — Theme/Control Overlay Visual Defect
+Status: **FIXED** in nested frontend commit `999e2a8`
+
+- Root cause: `custom-cursor-ring`/`custom-cursor-dot` overlaid controls and visually matched the blue stuck loading ring in user screenshots.
+- Removed the custom cursor overlay from the product shell and hid legacy cursor CSS classes.
+- Theme provider/toggle state was stabilized so icon state follows persisted theme.
+- Validation: product audit clicked theme toggle across major routes, reloaded, and saw no stuck spinner or hydration warning.
+
+## PRODUCT-05 — Product-Quality Selenium Audit Harness
+Status: **ADDED** in root commit `7286d84`
+
+- Added `scripts/debug/selenium_product_quality_audit.py`.
+- Harness records semantic checks, screenshots, DOM snapshots, console logs, and network events under `reports/debug/product_quality/`.
+- Validation: final run passed 48/48 checks and redacted auth material from artifacts.

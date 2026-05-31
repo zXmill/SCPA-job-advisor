@@ -1,8 +1,8 @@
 # Debug Frontend Report
 
-Updated: 2026-05-31 21:41 +07
+Updated: 2026-06-01 05:15 +07
 
-Status: static/lint/build checks completed, route-level browser audit passed, and runtime-contract browser checks passed after confirmed cancellation fixes.
+Status: static/lint/build checks completed, route-level browser audit passed, runtime-contract browser checks passed, and product-quality frontend checks passed after rich jobs/skills UI fixes.
 
 ## Required Checks
 - Pages/routes.
@@ -82,3 +82,15 @@ Status: static/lint/build checks completed, route-level browser audit passed, an
   - Runtime audit: dev and production-mode jobs/recommendations/targeted-cancellation/auth/theme/gateway-restart scenarios all passed.
 - Theme toggle was tested but not changed: repeated clicks and reload persisted `scpa_theme=dark`, with no stuck spinner and no hydration warning.
 - Broad award-style redesign remains deferred by runtime-contract scope; only truthful loading/error state and runtime UI consistency were changed.
+
+## Product Quality Data/UI Final Result
+- Updated: 2026-06-01 05:15 +07.
+- Nested frontend commit: `999e2a8 fix: stabilize product UI for rich jobs and skills`.
+- The custom product cursor overlay was removed from `AppLayout`/global CSS because the blue cursor ring matched the user's screenshots and visually overlapped the theme and skill controls.
+- Theme provider state was stabilized with lazy initial theme resolution and a functional `toggleTheme()` path. Product-quality audit clicked theme controls across `/analytics`, `/recommendations`, `/profile`, and `/dashboard`; no stuck spinner remained and theme persisted after reload.
+- Profile skill autocomplete now renders taxonomy-backed suggestions with aliases/categories and prevents duplicate additions. Audit checks for target queries passed.
+- Job detail UI now renders structured description sections, metadata, and richer skill signals when the API exposes them; five real job detail pages were audited successfully.
+- Frontend validation:
+  - `npm run lint`: pass, 0 errors with 15 existing warnings.
+  - `npm run build`: pass.
+- Remaining frontend warnings are pre-existing lint warnings and were not in scope unless tied to a confirmed P0/P1 product-quality defect.

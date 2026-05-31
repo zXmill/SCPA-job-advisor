@@ -1,6 +1,6 @@
 # Debug Validation Ledger
 
-Updated: 2026-06-01 02:34 +07
+Updated: 2026-06-01 05:15 +07
 
 | Timestamp | Command | Result | Related ID | Summary |
 | --- | --- | --- | --- | --- |
@@ -107,3 +107,14 @@ Updated: 2026-06-01 02:34 +07
 | 2026-06-01 02:34 +07 | `docker compose exec -T postgres psql ... select count(*) from skills` | fail | BUG-DATA-SKILL-AUTOCOMPLETE-SPARSE | Runtime `skills` table contains only 3 rows: English, Python, SQL. |
 | 2026-06-01 02:34 +07 | `Invoke-WebRequest http://localhost:9000/api/jobs?page=1&limit=5` | fail | BUG-DATA-JOB-DESCRIPTION-SHALLOW | Returned short sample-like job descriptions and no structured detail fields. |
 | 2026-06-01 02:34 +07 | `docker compose exec -T postgres psql ... jobs shallow description summary` | fail | BUG-DATA-JOB-DESCRIPTION-SHALLOW | Runtime DB has 2645 jobs, 2614 with descriptions under 200 characters. |
+| 2026-06-01 04:55 +07 | `.\.venv\Scripts\python.exe -m py_compile scripts\debug\selenium_product_quality_audit.py` | pass | PRODUCT-QUALITY-AUDIT | Product-quality Selenium audit harness compiles. |
+| 2026-06-01 04:58 +07 | `.\.venv\Scripts\python.exe -m pytest tests/test_job_description_quality.py tests/test_skill_taxonomy_search.py tests/test_full_pipeline_entrypoint.py tests/test_red_team_failure_modes.py::test_full_pipeline_refuses_sample_job_fallback_when_scraper_is_skipped -q` | pass | PRODUCT-QUALITY-DATA | Focused backend/data regressions passed: 9 passed, 1 warning. |
+| 2026-06-01 04:59 +07 | `.\.venv\Scripts\python.exe -m py_compile services\scraper\main.py services\pipeline\main.py services\pipeline\stages\stage_1_scrape.py services\gateway\main.py services\shared\job_description.py services\shared\skill_taxonomy.py scripts\data\build_skill_taxonomy.py scripts\run_full_pipeline.py` | pass | PRODUCT-QUALITY-DATA | Changed Python modules compile. |
+| 2026-06-01 05:00 +07 | `docker compose config --quiet` | pass | PRODUCT-QUALITY-DOCKER | Compose validates after scraper/pipeline/gateway data-volume and env updates. |
+| 2026-06-01 05:02 +07 | `npm run lint` in `frontend/` | pass | PRODUCT-QUALITY-FRONTEND | 0 errors, 15 existing warnings. |
+| 2026-06-01 05:04 +07 | `npm run build` in `frontend/` | pass | PRODUCT-QUALITY-FRONTEND | Next production build completed. |
+| 2026-06-01 05:06 +07 | `python scripts\debug\selenium_product_quality_audit.py --base-url http://localhost:3000 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --headless --settle-seconds 1.5` | pass | PRODUCT-QUALITY-AUDIT | Semantic product audit passed: 5 sections, 48 checks, 48 passed, 0 failed. |
+| 2026-06-01 05:08 +07 | `rg -n "<redacted secret-patterns>" reports/debug/product_quality scripts/debug/selenium_product_quality_audit.py` | pass | SECRET-SCAN | No demo password, demo email, token values, bearer header, JWT-like value, internal service token, or JWT secret found. |
+| 2026-06-01 05:12 +07 | `docker compose exec -T postgres psql ... jobs/skills/alembic summary` | pass | PRODUCT-QUALITY-DATA | Runtime DB shows 10 jobs, 10 rich descriptions, 10 jobs with extracted skills, 10 real-source jobs, 8888 skills, revision `014_rich_job_desc_skill_sources`. |
+| 2026-06-01 05:13 +07 | `Invoke-WebRequest http://localhost:9000/api/skills/search?q=s&limit=10`; `q=machine`; `q=data` | pass | BUG-DATA-SKILL-AUTOCOMPLETE-SPARSE | Skill endpoint returns multiple realistic taxonomy suggestions with category/source/confidence. |
+| 2026-06-01 05:13 +07 | `Invoke-WebRequest http://localhost:9000/api/jobs?page=1&limit=2` | pass | BUG-DATA-JOB-DESCRIPTION-SHALLOW | Jobs API returns real Kalibrr rows with rich `description_text`, structured fields, and required/extracted skill arrays. |

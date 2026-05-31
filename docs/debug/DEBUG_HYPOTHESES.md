@@ -611,3 +611,57 @@ Test: theme-toggle scenario in `scripts/debug/runtime_contract_audit.py`.
 Evidence location: `DEBUG_BROWSER_REPORT.md`, `reports/debug/runtime_contract/summary.json`.
 
 Status: **not fixed, no current runtime reproduction**.
+
+## Product Quality / Data Signal
+
+### H1-DATA-RUNTIME-SAMPLE-JOBS
+Hypothesis: runtime scraper/pipeline fallback paths insert sample jobs into the product catalog when real source fetches fail or are not configured.
+
+Expected: runtime catalog refresh either stores real source jobs or returns a controlled empty/degraded result; it never fabricates sample jobs for production-facing pages.
+
+Actual: confirmed before fix by static code and live shallow/sample-like catalog evidence. Fixed in `fccb8a4`; scraper `/sample` is disabled and pipeline fallback no longer fabricates jobs.
+
+Test: focused full-pipeline/red-team fallback tests plus live DB real-source count after purge/rescrape.
+
+Evidence location: `DEBUG_EVIDENCE.md`, `DEBUG_DATABASE_REPORT.md`, `reports/debug/product_quality/summary.json`.
+
+Status: **fixed**.
+
+### H2-DATA-JOB-DESCRIPTION-SHALLOW
+Hypothesis: the app stored/displayed card-level summaries instead of rich job detail text, leaving skill extraction and skill-gap with too little context.
+
+Expected: job detail API and UI expose full description text plus parsed sections and skill signals when source data provides them.
+
+Actual: confirmed before fix by 2614 shallow descriptions out of 2645 jobs and one-line detail UI. Fixed in `fccb8a4` and `frontend/` commit `999e2a8`.
+
+Test: parser/unit tests, live `/api/jobs`, and Selenium job-detail semantic audit over five real jobs.
+
+Evidence location: `DEBUG_DATABASE_REPORT.md`, `DEBUG_BROWSER_REPORT.md`, `reports/debug/product_quality/summary.json`.
+
+Status: **fixed for current real-source catalog**.
+
+### H3-DATA-SKILL-AUTOCOMPLETE-SPARSE
+Hypothesis: skill autocomplete was backed by a tiny skill table/hardcoded list, causing queries such as `s`, `machine`, and `data` to return too few or no useful suggestions.
+
+Expected: taxonomy-backed skill search returns multiple real-world suggestions with aliases/categories and duplicate handling.
+
+Actual: confirmed before fix by live skill count of 3 and empty `machine`/`data` search. Fixed in `fccb8a4` and `frontend/` commit `999e2a8`.
+
+Test: `tests/test_skill_taxonomy_search.py`, live skill-search probes, and product-quality Selenium autocomplete checks.
+
+Evidence location: `DEBUG_API_REPORT.md`, `DEBUG_FRONTEND_REPORT.md`, `reports/debug/product_quality/summary.json`.
+
+Status: **fixed**.
+
+### H4-FE-CUSTOM-CURSOR-OVERLAY
+Hypothesis: the blue ring in screenshots is not the theme icon itself but a global custom cursor ring with high z-index overlapping controls.
+
+Expected: product controls should not have an unrelated cursor ring/spinner overlay.
+
+Actual: confirmed by code inspection and screenshots. Fixed in nested frontend commit `999e2a8` by removing the cursor overlay from the shell and hiding legacy cursor classes.
+
+Test: product-quality Selenium theme/skills screenshots and repeated theme-toggle checks.
+
+Evidence location: `DEBUG_FRONTEND_REPORT.md`, `reports/debug/product_quality/screenshots/`.
+
+Status: **fixed**.

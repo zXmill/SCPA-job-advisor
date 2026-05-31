@@ -196,3 +196,38 @@ Updated: 2026-06-01 02:34 +07
   - `scripts/run_full_pipeline.py` imports and merges `scripts.sample_dataset` into pipeline jobs and calls scraper `/sample`.
   - `services/pipeline/pipeline/extractors/skills.py` contains a small hand list plus fake generated `Skill 001` to `Skill 429`.
   - `services/gateway/main.py::_job_skill_gap` builds required skills only from `match_data.skills`.
+
+## Product Quality Data/UI Final Evidence
+- Root audit harness commit: `7286d84 test: add product quality selenium audit`.
+- Root product/data commit: `fccb8a4 feat: require real job data with rich descriptions and skill taxonomy`.
+- Nested frontend commit: `999e2a8 fix: stabilize product UI for rich jobs and skills`.
+- Runtime DB state after purge/rescrape:
+  - `jobs=10`
+  - `rich_jobs=10`
+  - `jobs_with_extracted_skills=10`
+  - `real_source_jobs=10`
+  - `skills=8888`
+  - `alembic_version=014_rich_job_desc_skill_sources`
+- API evidence:
+  - `/api/skills/search?q=s&limit=10` returns SQL, Statistics, and additional O*NET-backed suggestions.
+  - `/api/skills/search?q=machine&limit=5` returns Machine Learning plus related machine-control tool entries.
+  - `/api/skills/search?q=data&limit=5` returns Data Analysis, Data Engineering, Data Science, and related entries.
+  - `/api/jobs?page=1&limit=2` returns real Kalibrr-source rows with `description_text`, `description_sections`, required skills, and extracted skills.
+- Browser/product audit evidence:
+  - Harness: `scripts/debug/selenium_product_quality_audit.py`.
+  - Artifacts: `reports/debug/product_quality/product_quality_report.md`, `summary.json`, `console.ndjson`, `network.ndjson`, `screenshots/`, and `dom_snapshots/`.
+  - Final result: 5 sections, 48 checks, 48 passed, 0 failed.
+  - Job vacancies: 10 real job cards rendered; no false timeout/retry UI.
+  - Recommendations: cards rendered; no false timeout/retry UI after successful data and save/skip actions.
+  - Theme toggle: repeated toggle/reload checks passed; no stuck spinner or hydration warning.
+  - Skills autocomplete: taxonomy suggestions rendered and duplicate selection was blocked.
+  - Job detail quality: five real detail pages opened; descriptions ranged from 523 to 2655 characters and structured skill fields were present.
+- Validation evidence:
+  - Focused backend/data tests passed: 9 passed, 1 warning.
+  - Changed Python modules compile.
+  - `docker compose config --quiet` passed.
+  - Frontend `npm run lint` passed with existing warnings only.
+  - Frontend `npm run build` passed.
+  - Secret scan over product-quality artifacts and harness found no auth/token/secret material.
+- Limitation:
+  - The current real-source scrape is intentionally bounded to 10 jobs. Larger live scrape batches remain a separate reliability concern because external job-board access can be slow or unstable. The fixed runtime path does not fabricate sample jobs when real sources are unavailable.
