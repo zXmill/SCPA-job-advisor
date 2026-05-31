@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "current_phase": "debug",
-  "current_task_id": "CODE-REVIEW-REMEDIATION-001",
+  "current_task_id": "",
   "tasks": [
     {
       "id": "INIT-001",
@@ -1616,7 +1616,7 @@
       "phase": "debug",
       "title": "Ultimate evidence-based full-stack debugging session",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "done",
       "scope": "large",
       "depends_on": [
         "P5-ML-007"
@@ -1690,8 +1690,8 @@
         ".\\.venv\\Scripts\\python.exe scripts\\debug\\selenium_full_audit.py --output reports\\debug\\browser --headless --email <demo-email> --password <redacted> --settle-seconds 7"
       ],
       "validation_status": "passed",
-      "commit": "342edb0, b747954",
-      "notes": "Initialization commit 0b55041; baseline/hypotheses commit 1fb59e5; Selenium harness commit 2ad62bc; served-slate fix commit 342edb0; Docker/runtime fix commit b747954. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass. Fixed gateway requirements/context/CMD Docker failures and pipeline package-entrypoint Docker failure. Selenium authenticated browser audit found recommendation feedback 500 from missing served_slates row; current source persists served_slates/served_slate_items before returning recommendations. Focused, adjacent, and full backend tests pass. Full compose build/up, health/ready probes, Alembic upgrade head, and final Selenium audit pass."
+      "commit": "342edb0, b747954, 52a6bb9 (remediation), 12cad09 (state)",
+      "notes": "Initialization commit 0b55041; baseline/hypotheses commit 1fb59e5; Selenium harness commit 2ad62bc; served-slate fix commit 342edb0; Docker/runtime fix commit b747954. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass. Fixed gateway requirements/context/CMD Docker failures and pipeline package-entrypoint Docker failure. Selenium authenticated browser audit found recommendation feedback 500 from missing served_slates row; current source persists served_slates/served_slate_items before returning recommendations. Focused, adjacent, and full backend tests pass. Full compose build/up, health/ready probes, Alembic upgrade head, and final Selenium audit pass. Code-review remediation completed as child task. All P0/P1 findings addressed."
     },
     {
       "id": "CODE-REVIEW-REMEDIATION-001",
