@@ -10,13 +10,13 @@ Updated: 2026-05-31 09:12 +07
 - Editing rule: no product code fix before reproduction evidence and root-cause notes exist.
 
 ## Current Phase
-Bootstrap and baseline discovery.
+Hypothesis generation after static inventory and baseline validation.
 
 ## Active Task
-Create required debug documentation, checkpoint durable state, then run static inventory and baseline validation.
+Document baseline evidence, generate subsystem hypotheses, then add the Selenium/Chrome browser audit harness.
 
 ## Next Exact Action
-Validate `docs/agent/TASK_QUEUE.json`, inspect the staged doc diff, and commit the initialization docs as `docs: initialize ultimate debugging session`.
+Commit static inventory, baseline validation, and initial hypotheses. Then create `scripts/debug/selenium_full_audit.py`.
 
 ## Method
 1. Inventory the current repository surfaces from files, not memory.
@@ -30,3 +30,9 @@ Validate `docs/agent/TASK_QUEUE.json`, inspect the staged doc diff, and commit t
 - Do not log secrets, tokens, full CV contents, or private user data.
 - Keep commits scoped; this repository started dirty.
 - `morph-mcp` was requested but no callable morph tool was exposed by tool discovery; use normal local editing tools.
+
+## Baseline Summary
+- Backend: import/compile passed; full pytest passed with `389 passed, 3 warnings`.
+- Frontend: `npm run lint` passed with 16 warnings; `npm run build` passed and generated 12 static pages.
+- Database: Alembic head is `012_ab_testing_and_monitoring`; live migration upgrade still needs a current-image database run.
+- Docker: `docker compose config` passed, but `docker compose up -d --build` failed while rebuilding gateway because `requirements-db.txt` is not present inside the gateway image build context.

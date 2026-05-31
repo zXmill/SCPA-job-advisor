@@ -447,3 +447,10 @@
 - `morph-mcp`: requested by the prompt, but current tool discovery exposed no callable morph tool, so standard local edit tooling is used.
 - Risk and mitigation: the repo started dirty with many untracked project files, so all commits must stage explicit task-owned paths only.
 
+## 2026-05-31 09:55 +07 - DEBUG-ULT-001 baseline decision
+- Decision: Treat the current Docker rebuild failure as the first confirmed root-cause target, but finish browser/API/model evidence collection before product-code edits unless the Docker failure blocks that evidence.
+- Evidence: backend pytest/import/compile passed, frontend lint/build passed, Docker config passed, and Docker rebuild failed at the gateway dependency layer.
+- Root-cause direction: compose builds gateway with root context `.` and `services/gateway/Dockerfile`; `COPY requirements.txt .` copies root `requirements.txt`, whose referenced files are not copied before pip install. Root `.dockerignore` is also missing, causing a multi-GB context transfer.
+- Risk and mitigation: existing containers are healthy but stale relative to current source, so browser/runtime results must label whether they use existing containers or current rebuilt services.
+- Next action: commit the inventory/baseline/hypotheses docs, then create and run the Selenium browser audit harness.
+

@@ -1669,9 +1669,9 @@
         "git status --short --branch",
         "git diff --cached -- docs/debug docs/agent"
       ],
-      "validation_status": "pending",
+      "validation_status": "mixed_baseline",
       "commit": "",
-      "notes": "Session bootstrap for hypothesis-driven debugging across frontend, backend/API, ML, database, Docker, browser, and security. No product code fixes until evidence exists."
+      "notes": "Initialization commit 0b55041. Baseline: backend pytest/import/compile pass, frontend lint/build pass, Docker config pass, Docker rebuild fails at gateway requirements layer and missing .dockerignore causes huge context. No product code fixes until evidence exists."
     }
   ]
 }

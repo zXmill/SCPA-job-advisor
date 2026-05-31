@@ -1,6 +1,6 @@
 # Compact Recovery
 
-Updated: 2026-05-31 09:12 +07
+Updated: 2026-05-31 09:52 +07
 
 ## Current Task
 DEBUG-ULT-001: ultimate evidence-based debugging session bootstrap.
@@ -9,7 +9,7 @@ DEBUG-ULT-001: ultimate evidence-based debugging session bootstrap.
 agent-run
 
 ## Latest Commit Hash
-79b1614
+0b55041
 
 ## Dirty Files
 - Pre-existing before this session: `README.md`, `SCPAv2`, `notebooks/01_indonesian_hybrid_dataset_eda.ipynb`, `notebooks/02_hybrid_dataset_validation.ipynb`.
@@ -18,10 +18,10 @@ agent-run
 - This session owns only the new/updated debugging docs and durable agent-state checkpoint until product evidence confirms a fix.
 
 ## Active Hypothesis
-None confirmed. Seed hypotheses exist in `DEBUG_HYPOTHESES.md`; full hypotheses pending inventory and baseline validation.
+H1-DOCKER-GATEWAY-REQ is confirmed by baseline rebuild evidence: `docker compose up -d --build` fails in the gateway image because pip cannot open `requirements-db.txt`. H2-DOCKER-CONTEXT is also supported by evidence: gateway build context transferred about 5.06GB and root `.dockerignore` is missing.
 
 ## Latest Validation Status
-Bootstrap in progress. Baseline commands not yet run in this session.
+Backend pytest passed (`389 passed, 3 warnings`), frontend lint/build passed, Docker config passed, Docker rebuild failed at gateway. Existing containers are healthy but predate the failed rebuild.
 
 ## Next Exact Action
-Validate `docs/agent/TASK_QUEUE.json`, inspect doc diffs, commit initialization docs, then run full static inventory and baseline validation.
+Commit static inventory, baseline validation, and hypotheses, then add and run the Selenium/Chrome audit harness against the current frontend on port 3000 and gateway on port 9000.

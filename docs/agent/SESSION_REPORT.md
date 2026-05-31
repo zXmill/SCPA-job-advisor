@@ -93,3 +93,19 @@ Branch: `agent-run`
 - `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
 - `git status --short --branch`
 - staged diff inspection before committing initialization docs.
+
+### Baseline results
+- Initialization commit: `0b55041`.
+- Static inventory completed for FastAPI routes, frontend routes/components, migrations, Docker services, CI workflow, and ML artifacts.
+- Backend: `.\.venv\Scripts\python.exe scripts\verify_project.py --only import compile` passed.
+- Backend: `.\.venv\Scripts\python.exe -m pytest -q` passed with 389 tests and 3 warnings.
+- Frontend: `npm run lint` passed with 16 warnings.
+- Frontend: `npm run build` passed.
+- Docker: `docker compose config --quiet` passed.
+- Docker: `docker compose up -d --build` failed while rebuilding gateway because pip could not open `requirements-db.txt`; the gateway build context transfer reached about 5.06GB.
+- Runtime caveat: existing Docker containers report healthy on gateway port 9000, but they were created before the failed rebuild and are not current-image proof.
+
+### Confirmed issues
+- `H1-DOCKER-GATEWAY-REQ`: gateway Docker build dependency layer is broken.
+- `H2-DOCKER-CONTEXT`: root `.dockerignore` is missing, producing an oversized build context.
+- `H4-DOCKER-PORT-CONTRACT`: current frontend env uses port 9000, while port 8000 is not listening.

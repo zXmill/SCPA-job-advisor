@@ -2,7 +2,7 @@
 
 Updated: 2026-05-31 09:12 +07
 
-Status: initialized. Model smoke checks are pending.
+Status: static artifact inventory completed; runtime smoke checks pending.
 
 ## SBERT
 - Target artifact: `models/sbert-indonesian-hybrid-manual-research/best`.
@@ -16,3 +16,13 @@ Status: initialized. Model smoke checks are pending.
 
 ## Calibrator
 - Required checks: feature vector shape, static fallback, learned model loading, ranking output.
+
+## Static Artifact Inventory
+- SBERT best checkpoint includes `model.safetensors`, tokenizer files, `modules.json`, pooling config, and `sbert_artifact_metadata.json`.
+- SBERT fine-tuning reports include baseline/final metrics, comparison CSVs, per-query CSVs, metadata, and training history.
+- NCF weights include PyTorch checkpoints, manifest, online JSON state, and metrics.
+- DQN weights include PyTorch checkpoint, manifest, online JSON state, and metrics.
+- Calibration smoke output exists at `reports/ml/calibration_layer_smoke.json`.
+
+## Runtime Evidence Still Needed
+- Live `/health`, `/encode`, `/match/semantic`, `/predict`, `/recommend/ncf`, `/rank`, `/learning-path`, and calibration smoke checks against current code/runtime.

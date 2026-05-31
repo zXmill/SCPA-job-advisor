@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-31 09:12 +07
+Updated: 2026-05-31 09:55 +07
 
 ## Current Objective
 Run `DEBUG-ULT-001`, an evidence-based full-stack debugging session covering frontend, backend/API, ML services, pipeline, database, Docker, browser flows, and security.
 
 ## Current Phase
-debug bootstrap
+debug hypothesis generation / browser harness setup
 
 ## Current Task ID
 DEBUG-ULT-001
 
 ## Latest Commit Hash
-Root: `79b1614` (`fix: increase gateway HTTP_TIMEOUT_SECONDS to 15s for pipeline stability`).
+Root: `0b55041` (`docs: initialize ultimate debugging session`).
 
 ## Current Git Branch
 `agent-run`
@@ -47,19 +47,33 @@ Root: `79b1614` (`fix: increase gateway HTTP_TIMEOUT_SECONDS to 15s for pipeline
 - `docs/agent/VALIDATION_LEDGER.md`
 
 ## Current Implementation Status
-- Debug documentation has been initialized.
+- Debug documentation has been initialized and committed.
+- Static inventory and baseline validation have been recorded in `docs/debug/`.
 - No product code has been changed.
 - `morph-mcp` was requested but is not exposed as a callable tool in this session.
 
 ## Commands Already Run
 - `git status --short --branch`
 - `tool_search morph-mcp`
+- `.\.venv\Scripts\python.exe -m pytest --collect-only -q` -> 389 collected.
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads` -> `012_ab_testing_and_monitoring`.
+- `.\.venv\Scripts\python.exe -m pytest -q` -> 389 passed, 3 warnings.
+- `npm run lint` -> passed with 16 warnings.
+- `npm run build` -> passed.
+- `docker compose config --quiet` -> passed.
+- `docker compose up -d --build` -> failed at gateway dependency layer.
 
 ## Validation Results
-- Baseline validation is pending.
+- Backend import/compile and pytest passed.
+- Frontend lint/build passed.
+- Docker compose config passed.
+- Docker rebuild failed: gateway build copies root `requirements.txt`, but the referenced `requirements-db.txt` is not copied before `pip install`.
 
 ## Known Errors
-- None confirmed in this session yet. Prior durable state recorded frontend lint warnings and backend warning-only test output.
+- Confirmed: current Docker gateway rebuild fails at dependency install.
+- Confirmed: root `.dockerignore` is missing and gateway build context transfer reached about 5.06GB.
+- Confirmed: `localhost:8000/health` refused while gateway is currently reachable on `localhost:9000`.
+- Confirmed: existing gateway container lacks the `alembic` module, so container-local migration validation failed.
 
 ## Do-Not-Change Constraints
 - Do not stage or revert pre-existing root `README.md`, `SCPAv2`, notebooks, or broad untracked project files unless the active debug task explicitly owns them.
@@ -69,4 +83,4 @@ Root: `79b1614` (`fix: increase gateway HTTP_TIMEOUT_SECONDS to 15s for pipeline
 - Do not claim all validation passed unless each command actually ran in this session.
 
 ## Next Exact Action
-Validate `docs/agent/TASK_QUEUE.json`, inspect the initialization diff, commit `docs: initialize ultimate debugging session`, then run static inventory and baseline validation.
+Commit static inventory, baseline validation, and hypotheses, then add and run `scripts/debug/selenium_full_audit.py`.

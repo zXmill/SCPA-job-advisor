@@ -1766,3 +1766,59 @@
 - Summary: Durable task queue parsed after adding the active ultimate debugging task and bootstrap docs.
 - Related commit hash: pending.
 
+## 2026-05-31 09:22 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m pytest --collect-only -q
+- Result: pass
+- Summary: 389 tests collected.
+- Related commit hash: pending.
+
+## 2026-05-31 09:22 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m alembic -c alembic.ini heads
+- Result: pass
+- Summary: Alembic reported 012_ab_testing_and_monitoring as the current head.
+- Related commit hash: pending.
+
+## 2026-05-31 09:30 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m pytest -q
+- Result: pass
+- Summary: Full backend suite passed with 389 passed and 3 warnings.
+- Related commit hash: pending.
+
+## 2026-05-31 09:34 +07
+- Task ID: DEBUG-ULT-001
+- Command: npm run lint (frontend)
+- Result: pass
+- Summary: ESLint completed with 0 errors and 16 warnings.
+- Related commit hash: pending.
+
+## 2026-05-31 09:36 +07
+- Task ID: DEBUG-ULT-001
+- Command: npm run build (frontend)
+- Result: pass
+- Summary: Next.js 16.2.6 production build completed.
+- Related commit hash: pending.
+
+## 2026-05-31 09:37 +07
+- Task ID: DEBUG-ULT-001
+- Command: docker compose config --quiet
+- Result: pass
+- Summary: Compose configuration validated with dummy required env vars.
+- Related commit hash: pending.
+
+## 2026-05-31 09:47 +07
+- Task ID: DEBUG-ULT-001
+- Command: docker compose up -d --build
+- Result: fail
+- Summary: Gateway image build failed because pip could not open requirements-db.txt. The gateway build context transfer reached about 5.06GB.
+- Related commit hash: pending.
+
+## 2026-05-31 09:49 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe scripts\verify_project.py --only import compile
+- Result: pass
+- Summary: Selected imports and compileall passed.
+- Related commit hash: pending.
+

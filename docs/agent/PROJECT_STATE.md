@@ -110,5 +110,12 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 ## Current Debug Session
 `DEBUG-ULT-001` is active as of 2026-05-31 09:12 +07. The session is an evidence-based full-stack debugging audit. It must update `docs/debug/*` and `docs/agent/*`, collect runtime evidence before fixes, and keep commits scoped because the repository started dirty.
 
+## Current Debug Baseline
+- Initialization commit: `0b55041`.
+- Backend baseline: import/compile passed; full pytest passed with 389 tests and 3 warnings.
+- Frontend baseline: lint passed with 16 warnings; production build passed.
+- Docker baseline: compose config passed, but `docker compose up -d --build` failed while rebuilding gateway because the Dockerfile copies root `requirements.txt` without the referenced requirement files. Root `.dockerignore` is missing and the gateway build context transfer reached about 5.06GB.
+- Runtime caveat: existing containers are healthy on port 9000 but predate the failed rebuild; do not use them as proof that the current Docker source builds.
+
 ## Next Task
-Continue `DEBUG-ULT-001`: commit the initialized debug-session docs, then run static inventory and baseline validation.
+Continue `DEBUG-ULT-001`: commit static inventory/baseline/hypotheses, then add and run the Selenium browser audit harness.
