@@ -42,6 +42,8 @@ _DNS_RESOLVE_TIMEOUT_SECONDS = float(os.getenv("SCRAPER_DNS_TIMEOUT_SECONDS", "2
 _SEED_TASK_TIMEOUT_SECONDS = float(os.getenv("SCRAPER_SEED_TASK_TIMEOUT_SECONDS", "30"))
 _SEED_PARSE_TIMEOUT_SECONDS = float(os.getenv("SCRAPER_SEED_PARSE_TIMEOUT_SECONDS", "8"))
 _MAX_SOURCE_RESPONSE_BYTES = int(os.getenv("SCRAPER_MAX_SOURCE_RESPONSE_BYTES", "1500000"))
+_RUNTIME_URL_CAP = max(1, int(os.getenv("SCRAPER_RUNTIME_URL_CAP", "12")))
+_RUNTIME_CONCURRENCY_CAP = max(1, int(os.getenv("SCRAPER_RUNTIME_CONCURRENCY_CAP", "1")))
 SCRAPER_ALLOWED_HOST_SUFFIXES = {
     "linkedin.com",
     "indeed.com",
@@ -332,7 +334,7 @@ def _enabled_sources() -> list[str]:
     for source, env_name in SOURCE_ENV_FLAGS.items():
         if _env_bool(env_name, True):
             enabled.append(source)
-    return enabled
+    return sorted(enabled, key=_source_priority_key)
 
 
 def _configured_seed_urls() -> list[SeedUrl]:
@@ -1071,6 +1073,24 @@ _DETAIL_FETCH_TIMEOUT_SECONDS = float(os.getenv("SCRAPER_DETAIL_TIMEOUT_SECONDS"
 _DETAIL_FETCH_CONCURRENCY = int(os.getenv("SCRAPER_DETAIL_CONCURRENCY", "4"))
 _DETAIL_FETCH_MAX_PER_RUN = int(os.getenv("SCRAPER_DETAIL_MAX_PER_RUN", "30"))
 _DETAIL_FULL_DESC_MIN_CHARS = 200
+_SCRAPE_QUALITY_MIN_DESC_CHARS = int(os.getenv("SCRAPER_QUALITY_MIN_DESC_CHARS", "300"))
+_SCRAPE_QUALITY_CANDIDATE_MULTIPLIER = max(1, int(os.getenv("SCRAPER_QUALITY_CANDIDATE_MULTIPLIER", "2")))
+_SOURCE_PRIORITY = {
+    "kalibrr": 0,
+    "linkedin": 1,
+    "jobstreet": 2,
+    "karir": 3,
+    "techinasia": 4,
+    "glints": 5,
+    "indeed": 6,
+}
+_GENERIC_LISTING_DESCRIPTION_MARKERS = (
+    "temukan lebih dari",
+    "lowongan kerja dan loker terbaru",
+    "lamar cepat, cukup sekali tap",
+    "explore jobs",
+    "search jobs",
+)
 
 
 def _is_thin_description(job: JobItem) -> bool:
@@ -1090,6 +1110,47 @@ def _is_thin_description(job: JobItem) -> bool:
     if title_echo and desc.startswith(title_echo[: len(desc)]):
         return True
     return False
+
+
+def _source_priority_key(source: str) -> tuple[int, str]:
+    return (_SOURCE_PRIORITY.get((source or "").lower(), 100), source or "")
+
+
+def _job_quality_rejection_reasons(job: JobItem) -> list[str]:
+    """Return reasons a scraped job is not good enough for runtime catalog use."""
+    reasons: list[str] = []
+    desc = clean_text(job.description_text or job.description or "")
+    lower_desc = desc.lower()
+    if not clean_text(job.title):
+        reasons.append("missing_title")
+    if not clean_text(job.company):
+        reasons.append("missing_company")
+    if not clean_text(job.source_url):
+        reasons.append("missing_source_url")
+    if (job.source or "").lower() == "sample" or str(job.source_url or "").lower().startswith("sample:"):
+        reasons.append("sample_source")
+    if len(desc) < _SCRAPE_QUALITY_MIN_DESC_CHARS:
+        reasons.append("short_description")
+    if any(marker in lower_desc for marker in _GENERIC_LISTING_DESCRIPTION_MARKERS):
+        reasons.append("generic_listing_description")
+    skill_count = len(set(job.required_skills + job.preferred_skills + job.extracted_skills))
+    if skill_count <= 0:
+        reasons.append("missing_skill_signal")
+    return reasons
+
+
+def _quality_filter_jobs(jobs: list[JobItem]) -> tuple[list[JobItem], dict[str, int]]:
+    """Keep only real jobs with enough description and skill signal for matching."""
+    accepted: list[JobItem] = []
+    rejections: dict[str, int] = {}
+    for job in jobs:
+        reasons = _job_quality_rejection_reasons(job)
+        if not reasons:
+            accepted.append(job)
+            continue
+        for reason in reasons:
+            rejections[reason] = rejections.get(reason, 0) + 1
+    return accepted, rejections
 
 
 def _extract_detail_description(soup: BeautifulSoup) -> str:
@@ -1342,9 +1403,16 @@ async def scrape_run(limit: int = 100):
     deduplicated = 0
     source_stats: list[dict[str, Any]] = []
     target = max(1, min(int(limit or 100), int(os.getenv("JOBS_TARGET", "2000"))))
+    raw_target = max(
+        target,
+        min(target * _SCRAPE_QUALITY_CANDIDATE_MULTIPLIER, int(os.getenv("JOBS_TARGET", "2000"))),
+    )
     max_urls = max(1, int(os.getenv("SCRAPER_MAX_URLS_PER_RUN", "80")))
-    concurrency = max(1, int(os.getenv("SCRAPER_CONCURRENCY", "6")))
-    selected_urls = seed_urls[:max_urls]
+    concurrency = min(
+        max(1, int(os.getenv("SCRAPER_CONCURRENCY", "6"))),
+        _RUNTIME_CONCURRENCY_CAP,
+    )
+    selected_urls = seed_urls[: min(max_urls, _RUNTIME_URL_CAP)]
     semaphore = asyncio.Semaphore(concurrency)
 
     async def fetch_seed(client: httpx.AsyncClient, seed: SeedUrl) -> tuple[SeedUrl, ScrapeResponse | None, str | None]:
@@ -1363,7 +1431,7 @@ async def scrape_run(limit: int = 100):
                         response.text,
                         response.headers.get("content-type", ""),
                         seed.url,
-                        target,
+                        raw_target,
                     ),
                     timeout=_SEED_PARSE_TIMEOUT_SECONDS,
                 )
@@ -1408,7 +1476,7 @@ async def scrape_run(limit: int = 100):
                             "error": error,
                         }
                     )
-            if len({job.content_hash for job in all_jobs}) >= target:
+            if len({job.content_hash for job in all_jobs}) >= raw_target:
                 break
 
         seen: set[str] = set()
@@ -1420,13 +1488,13 @@ async def scrape_run(limit: int = 100):
             seen.add(job.content_hash)
             jobs_by_source.setdefault(job.source or "scraper", []).append(job)
         unique: list[JobItem] = []
-        while len(unique) < target and any(jobs_by_source.values()):
-            for source in sorted(jobs_by_source):
+        while len(unique) < raw_target and any(jobs_by_source.values()):
+            for source in sorted(jobs_by_source, key=_source_priority_key):
                 bucket = jobs_by_source[source]
                 if not bucket:
                     continue
                 unique.append(bucket.pop(0))
-                if len(unique) >= target:
+                if len(unique) >= raw_target:
                     break
         if not unique:
             return ScrapeResponse(
@@ -1449,12 +1517,44 @@ async def scrape_run(limit: int = 100):
         # Bounded detail-page enrichment: pulls full description + salary_text
         # for the top N jobs whose listing-card description is just the title
         # echo. Disabled with SCRAPER_DETAIL_MAX_PER_RUN=0 if needed.
-        enriched_jobs = unique[:target]
+        enriched_jobs = unique[:raw_target]
         if _DETAIL_FETCH_MAX_PER_RUN > 0:
             enriched_jobs = await _enrich_jobs_with_detail(client, enriched_jobs)
+        quality_jobs, quality_rejections = _quality_filter_jobs(enriched_jobs)
+        quality_jobs = quality_jobs[:target]
+        if quality_rejections:
+            source_stats.append(
+                {
+                    "source": "quality_gate",
+                    "url": None,
+                    "count": len(quality_jobs),
+                    "deduplicated": deduplicated,
+                    "status": "filtered",
+                    "rejected": sum(quality_rejections.values()),
+                    "rejection_reasons": quality_rejections,
+                    "min_description_chars": _SCRAPE_QUALITY_MIN_DESC_CHARS,
+                }
+            )
+        if not quality_jobs:
+            return ScrapeResponse(
+                count=0,
+                jobs=[],
+                deduplicated=deduplicated,
+                source_stats=[
+                    *source_stats,
+                    {
+                        "source": "quality_gate",
+                        "url": None,
+                        "count": 0,
+                        "deduplicated": deduplicated,
+                        "status": "empty",
+                        "error": "real sources returned jobs, but none met runtime quality criteria",
+                    },
+                ],
+            )
     return ScrapeResponse(
-        count=len(enriched_jobs),
-        jobs=enriched_jobs,
+        count=len(quality_jobs),
+        jobs=quality_jobs,
         deduplicated=deduplicated,
         source_stats=source_stats,
     )

@@ -11,18 +11,35 @@ from bs4 import BeautifulSoup
 
 
 SECTION_ALIASES: tuple[tuple[str, str], ...] = (
+    ("who_we_are", "about us"),
+    ("who_we_are", "about the company"),
+    ("who_we_are", "about astro"),
     ("who_we_are", "who we are"),
     ("why_join_us", "why join us"),
+    ("why_join_us", "why this role is different"),
     ("role_overview", "role overview"),
+    ("role_overview", "about this position"),
     ("responsibilities", "job responsibilities"),
+    ("responsibilities", "job description"),
     ("responsibilities", "responsibilities"),
+    ("responsibilities", "what you'll be doing"),
+    ("responsibilities", "what you’ll be doing"),
+    ("responsibilities", "your missions are"),
+    ("responsibilities", "technical & engineering focus"),
+    ("responsibilities", "data & performance analysis"),
+    ("responsibilities", "cross-functional collaboration"),
     ("requirements", "job requirements"),
     ("requirements", "requirements"),
     ("requirements", "qualifications"),
+    ("requirements", "essential criteria"),
+    ("requirements", "what we're looking for"),
+    ("requirements", "what we’re looking for"),
     ("nice_to_have", "nice to have"),
     ("nice_to_have", "preferred qualifications"),
+    ("nice_to_have", "our stack"),
     ("benefits", "benefits"),
     ("benefits", "what we offer"),
+    ("benefits", "how to apply"),
 )
 
 METADATA_LABELS: dict[str, tuple[str, ...]] = {
