@@ -179,3 +179,31 @@ Branch: `agent-run`
 - Frontend `npm run lint` and `npm run build` passed.
 - Product-quality Selenium audit passed 48/48 checks.
 - Commits: root `7286d84`, root `fccb8a4`, frontend `999e2a8`.
+
+## Completed: CONTINUOUS-SCRAPE-001
+
+### Evidence
+- User clarified that the current production-quality realtime data path is Kalibrr through internal scraper `POST /scrape/run?limit=10`, pipeline `POST /pipeline/run` with `refresh_jobs=true`, PostgreSQL table `jobs`, and app API `GET /api/jobs?page=1&limit=10`.
+- The previous quality-gated scrape was still finite; there was no worker mode that could keep discovering, validating, deduplicating, and upserting jobs indefinitely.
+- Audit confirmed `/scrape/run` and `/pipeline/run refresh_jobs=true` should remain finite request handlers, with continuous behavior placed in a separate process.
+
+### What Changed
+- Added `services.pipeline.continuous_scraper` as a continuous worker with graceful stop, cycle interval, empty-cycle backoff, allowed-source guard, bounded test mode, structured cycle metrics, and redacted report artifacts.
+- Added Docker Compose `scraper-worker` service under profile `continuous`.
+- Added bounded harness entry points: `scripts/harness_continuous_scrape.py` and `scripts/check_realtime_job_quality.py`.
+- Added migration `015_continuous_scrape_metadata` and ORM fields for `external_id`, `scraped_at`, `first_seen_at`, `last_seen_at`, `quality_status`, `quality_reject_reason`, and `content_hash`.
+- Updated stage 1 upsert to prefer normalized non-empty `source_url` as the stable identity and conflict target, preserving `first_seen_at` and updating seen/content metadata across repeated cycles.
+- Added tests for bounded runner behavior, quality guard failure visibility, backoff capping, and stable source-URL upsert identity.
+
+### Validation
+- Continuous runner/upsert tests passed: `5 passed, 1 warning`.
+- Adjacent model/index/pipeline contract tests passed: `5 passed, 1 warning`.
+- Scraper quality/parser regression checks passed: `8 passed, 1 warning`.
+- `docker compose config --quiet` and `docker compose --profile continuous config --quiet` passed.
+- Alembic head/current validated at `015_continuous_scrape_metadata`; running Docker PostgreSQL was verified with the same revision and metadata columns.
+- `docker compose build pipeline scraper-worker` passed.
+- Bounded 1-cycle Docker harness passed: DB total `7 -> 8`, quality guard clean, API total matched DB.
+- Bounded 2-cycle Docker harness passed: DB total stayed `8` across both cycles, inserted estimate `0` each cycle, no duplicate explosion.
+- Pipeline `refresh_jobs=true` remained compatible and returned 200 with `ranked=8`, `total_candidates=8`, and `scraper_run+database:upserted=8`.
+- Final DB/API guard: 8 Kalibrr jobs, 8 distinct source URLs, 0 sample jobs, 0 under-min descriptions, 0 jobs without skill signal, 0 missing source URLs, API total equals DB total.
+- Secret scan over continuous scrape reports and harness code found no token/secret/password patterns.

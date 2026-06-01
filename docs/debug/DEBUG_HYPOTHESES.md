@@ -665,3 +665,44 @@ Test: product-quality Selenium theme/skills screenshots and repeated theme-toggl
 Evidence location: `DEBUG_FRONTEND_REPORT.md`, `reports/debug/product_quality/screenshots/`.
 
 Status: **fixed**.
+
+## Continuous Realtime Scraping
+
+### H1-CONTINUOUS-FINITE-ONLY
+Hypothesis: the current realtime data path is quality-gated but finite only; there is no safe worker mode that can continue scraping indefinitely without a fixed final target.
+
+Expected: production scraping can run as a separate process in repeated cycles until stopped by the operator, while `/scrape/run` and `/pipeline/run` remain finite request/response paths.
+
+Actual: confirmed before fix by code audit. `/scrape/run?limit=N` and `/pipeline/run refresh_jobs=true` were one-shot only.
+
+Test: bounded continuous harness with `SCRAPER_TEST_MAX_CYCLES=1` and `2`, plus Docker Compose `continuous` profile validation.
+
+Evidence location: `docs/CONTINUOUS_SCRAPING_EVIDENCE.md`, `reports/debug/continuous_scrape/`.
+
+Status: **fixed** in root commit `f26b208`.
+
+### H2-CONTINUOUS-DUPLICATE-EXPLOSION
+Hypothesis: repeated realtime cycles can create duplicate rows because identity is derived from mutable scraper job IDs/content hashes instead of stable source identity.
+
+Expected: repeated cycles against the same source jobs do not increase DB total unless genuinely new source URLs are discovered.
+
+Actual: current code risk confirmed by audit; source-url-based identity was added and verified.
+
+Test: `tests/test_job_upsert_idempotency.py` and bounded 2-cycle Docker harness.
+
+Evidence location: `docs/CONTINUOUS_SCRAPING_EVIDENCE.md`.
+
+Status: **fixed** in root commit `f26b208`.
+
+### H3-CONTINUOUS-QUALITY-REGRESSION
+Hypothesis: continuous mode could bypass the realtime quality gate and insert sample/short/generic/no-skill rows.
+
+Expected: every accepted continuous row has a real allowed source, non-empty source URL, description length at least 300, non-generic detail text, and required/preferred/extracted skill signal.
+
+Actual: not reproduced after implementation. Bounded worker runs report zero quality guard violations.
+
+Test: `tests/test_continuous_scraper.py`, scraper quality tests, and worker quality guard summaries after each cycle.
+
+Evidence location: `reports/debug/continuous_scrape/bounded_1/summary.json`, `reports/debug/continuous_scrape/bounded_2/summary.json`.
+
+Status: **guarded**.

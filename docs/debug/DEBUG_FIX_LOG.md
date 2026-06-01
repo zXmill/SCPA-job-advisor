@@ -131,3 +131,13 @@ Status: **FIXED** in root commit `f236820`
 - Files changed: `services/scraper/main.py`, `services/shared/job_description.py`, `docker-compose.yml`, `tests/test_job_description_quality.py`.
 - Fix: prioritize higher-signal sources, cap realtime URL/concurrency to avoid timeout storms, fetch more candidates before filtering, reject short/generic/missing-skill candidates, and parse additional inline job-description headings.
 - Validation: focused scraper/parser tests passed; Docker compose config passed; rebuilt scraper passed direct `/scrape/run?limit=10`; pipeline `refresh_jobs=true` upserted 7 quality-gated real jobs; DB guard checks show `sample_jobs=0`, `under_300_desc=0`, `no_skill_signal=0`.
+
+## CONTINUOUS-01 — Continuous Realtime Scraper Worker
+Status: **FIXED** in root commit `f26b208`
+
+- Root cause: the realtime scraper/pipeline path was quality-gated but still finite. `/scrape/run?limit=N` and `/pipeline/run refresh_jobs=true` could refresh a bounded catalog, but there was no operator-safe worker that could keep discovering, validating, deduplicating, and upserting jobs over time.
+- Files changed: `.env.example`, `docker-compose.yml`, `db/models.py`, `db/migrations/015_continuous_scrape_metadata.py`, `services/pipeline/stages/stage_1_scrape.py`, `services/pipeline/continuous_scraper.py`, `scripts/harness_continuous_scrape.py`, `scripts/check_realtime_job_quality.py`, `tests/test_continuous_scraper.py`, `tests/test_job_upsert_idempotency.py`.
+- Fix: added a separate continuous worker process under Compose profile `continuous`, kept request handlers finite, added bounded test mode through `SCRAPER_TEST_MAX_CYCLES`, added structured per-cycle evidence output, and made upsert identity stable through normalized non-empty `source_url`.
+- Database lifecycle metadata added: `external_id`, `scraped_at`, `first_seen_at`, `last_seen_at`, `quality_status`, `quality_reject_reason`, and `content_hash`.
+- Quality gate remains strict: sample/fake jobs, missing source URLs, descriptions under 300 characters, generic listing summaries, jobs without skill signals, and disallowed sources remain rejected.
+- Validation: continuous runner/upsert tests passed, model/pipeline contract checks passed, scraper quality tests passed, Compose config passed with and without the continuous profile, Docker images built, bounded 1-cycle and 2-cycle harness runs passed, pipeline `refresh_jobs=true` remained compatible, and final DB/API guard showed 8 Kalibrr rows with no duplicate explosion or quality violations.

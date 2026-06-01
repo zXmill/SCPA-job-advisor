@@ -1962,3 +1962,24 @@
 - Summary: Direct realtime scraper now returns only quality-gated real Kalibrr jobs; pipeline upserted 7; final DB has 0 sample jobs, 0 descriptions under 300 chars, and 0 jobs without skill signal.
 - Related commit hash: f236820.
 
+## 2026-06-01 19:21 +07
+- Task ID: CONTINUOUS-SCRAPE-001
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_continuous_scraper.py tests\test_job_upsert_idempotency.py -q`
+- Result: pass
+- Summary: Continuous runner and stable source-URL upsert tests passed: 5 passed, 1 warning.
+- Related commit hash: f26b208.
+
+## 2026-06-01 19:21 +07
+- Task ID: CONTINUOUS-SCRAPE-001
+- Command: `docker compose --profile continuous run --rm ... --test-max-cycles 1`; `docker compose --profile continuous run --rm ... --test-max-cycles 2`
+- Result: pass
+- Summary: Bounded Docker harness passed. One-cycle run grew DB from 7 to 8 with a clean quality guard; two-cycle run kept DB at 8 in both cycles, proving no duplicate explosion.
+- Related commit hash: f26b208.
+
+## 2026-06-01 19:21 +07
+- Task ID: CONTINUOUS-SCRAPE-001
+- Command: `docker compose exec -T pipeline ... POST /pipeline/run refresh_jobs=true`; Docker DB/API guard queries
+- Result: pass
+- Summary: Pipeline refresh stayed compatible with continuous changes; final DB/API guard reported 8 Kalibrr jobs, 8 distinct source URLs, 0 sample/short/no-skill/missing-source rows, and API total matching DB total.
+- Related commit hash: f26b208.
+

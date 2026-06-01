@@ -1,17 +1,17 @@
 # Ultimate Debugging Master Plan
 
-Updated: 2026-06-01 05:15 +07
+Updated: 2026-06-01 19:28 +07
 
 ## Session
-- Task ID: DATA-QUALITY-PRODUCT-UI-001
+- Task ID: CONTINUOUS-SCRAPE-001
 - Branch: agent-run
-- Active Phase: Product-quality/data-quality evidence finalization.
+- Active Phase: Continuous realtime scraping worker complete; docs/evidence state update.
 
 ## Active Task
-Finalize the evidence for user-confirmed product-quality defects where job detail descriptions were too shallow, skill extraction/gap had too little context, skill autocomplete was too sparse, runtime paths still used sample jobs, and a global custom cursor ring looked like a stuck loader over controls.
+Convert the finite realtime scrape/refresh path into an operator-safe continuous scraping system while preserving strict real-data quality gates, PostgreSQL as app source of truth, and bounded local harness validation.
 
 ## Next Exact Action
-Commit the final docs-only evidence/report update, then stop. Do not start skill taxonomy expansion, scraper redesign, ML training, or unrelated frontend redesign in this phase.
+Commit the scoped debug/agent state update, then stop. Do not start source expansion, LinkedIn scraping, skill taxonomy expansion, ML training, or frontend redesign.
 
 ## Data Quality Evidence Status
 - User supplied manual screenshots of shallow job detail, 0% skill gap with one generic required skill, sparse skill autocomplete, and blue ring overlay around theme/skill controls.
@@ -68,3 +68,12 @@ Commit the final docs-only evidence/report update, then stop. Do not start skill
 - Full backend suite passed 390 tests.
 - Final Selenium audit passed 9 pages with 0 errors/blank/hydration failures.
 - Code review remediation completed through `5598297`; deploy-safe migration validation passed.
+
+## Continuous Scraping Phase
+- Task ID: CONTINUOUS-SCRAPE-001.
+- Active status: complete in root commit `f26b208`.
+- Architecture: `/scrape/run` and `/pipeline/run refresh_jobs=true` remain finite one-shot paths; new `scraper-worker` profile service runs `services.pipeline.continuous_scraper` as a separate continuous process.
+- App source of truth remains PostgreSQL `jobs`; app API `/api/jobs` reads from DB.
+- No LinkedIn production scraping was added. Current allowed production source is Kalibrr.
+- Final runtime evidence: bounded 1-cycle and 2-cycle Docker harness runs passed, final DB/API guard reports 8 Kalibrr jobs, 8 distinct source URLs, 0 sample jobs, 0 under-300 descriptions, 0 missing skill-signal jobs, and API total matches DB total.
+- Next exact action: commit this debug/agent state update, then stop unless a separate source-reliability or broader scraper-source expansion phase is requested.

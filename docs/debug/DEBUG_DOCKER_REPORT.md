@@ -1,6 +1,6 @@
 # Debug Docker Report
 
-Updated: 2026-05-31 10:45 +07
+Updated: 2026-06-01 19:21 +07
 
 Status: full rebuild and current runtime now pass.
 
@@ -52,3 +52,18 @@ Status: full rebuild and current runtime now pass.
 
 ## Runtime Caveat
 The current containers now come from the repaired build path. Browser artifacts were refreshed against this runtime.
+
+## Continuous Scraper Worker Profile
+- Updated: 2026-06-01 19:21 +07.
+- Added `scraper-worker` service under the Docker Compose `continuous` profile.
+- Runtime design: the worker runs `python -m services.pipeline.continuous_scraper --run-forever` as a separate process; it does not turn `/scrape/run` into an infinite request handler.
+- Dependencies: `postgres` and `scraper` health checks only. It does not require SBERT, NCF, DQN, or gateway to start continuous collection.
+- Evidence volume: `./reports/debug/continuous_scrape:/app/reports/debug/continuous_scrape`.
+- Config validation passed:
+  - `docker compose config --quiet`
+  - `docker compose --profile continuous config --quiet`
+- Build validation passed: `docker compose build pipeline scraper-worker`.
+- Bounded runtime validation passed:
+  - `docker compose --profile continuous run --rm ... --test-max-cycles 1`
+  - `docker compose --profile continuous run --rm ... --test-max-cycles 2`
+- Final guard from Docker runtime: 8 Kalibrr DB rows, 8 distinct source URLs, no sample/short/no-skill/missing-source rows, and API total matches DB total.

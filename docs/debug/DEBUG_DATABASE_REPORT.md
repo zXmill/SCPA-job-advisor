@@ -1,6 +1,6 @@
 # Debug Database Report
 
-Updated: 2026-06-01 05:15 +07
+Updated: 2026-06-01 19:21 +07
 
 Status: running Docker PostgreSQL schema reconciled and product-quality rich job/skill schema applied through `014_rich_job_desc_skill_sources`.
 
@@ -71,3 +71,18 @@ Status: running Docker PostgreSQL schema reconciled and product-quality rich job
   - `under_300_desc=0`
   - `no_skill_signal=0`
 - The current product catalog therefore contains only real-source, quality-gated rows.
+
+## Continuous Scrape Metadata and Idempotent Upsert
+- Updated: 2026-06-01 19:21 +07.
+- New migration: `015_continuous_scrape_metadata`.
+- New `jobs` lifecycle metadata fields: `external_id`, `scraped_at`, `first_seen_at`, `last_seen_at`, `quality_status`, `quality_reject_reason`, and `content_hash`.
+- Upsert identity now prefers normalized `source_url`; non-empty `source_url` has a partial unique index and is used as the conflict target for repeated realtime cycles.
+- Migration deactivates duplicate legacy rows with the same non-empty `source_url` before adding the uniqueness contract, then creates/drops the partial unique index concurrently to reduce deploy lock risk.
+- `first_seen_at` is preserved on conflict; `last_seen_at`, `scraped_at`, `content_hash`, and rich job payload fields update when the source is seen again.
+- Host Alembic validation: `heads` and `current` both reported `015_continuous_scrape_metadata (head)`.
+- Running Docker PostgreSQL was repaired/verified at `015_continuous_scrape_metadata`; all continuous metadata columns are present.
+- Repeated bounded worker evidence:
+  - 1 cycle: DB total `7 -> 8`, inserted estimate `1`, duplicate/update estimate `7`.
+  - 2 cycles: DB total stayed `8` in both cycles, inserted estimate `0` each cycle, duplicate/update estimate `8` each cycle.
+- Final database guard: `source=kalibrr`, `jobs=8`, `distinct_source_urls=8`, `min_desc=476`, `avg_desc=1398.4`, `max_desc=2655`, `with_source_url=8`, `with_skill_signal=8`.
+- Quality guard remains clean: `sample_jobs=0`, `under_min_description=0`, `no_skill_signal=0`, `missing_source_url=0`, and app API total matches DB total.

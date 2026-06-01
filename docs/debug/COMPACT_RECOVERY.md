@@ -1,20 +1,20 @@
 ﻿# Compact Recovery
 
-Updated: 2026-06-01 09:05 +07
+Updated: 2026-06-01 19:21 +07
 
 ## Current Task
-DATA-QUALITY-PRODUCT-UI-001 complete with realtime scraper quality follow-up.
+CONTINUOUS-SCRAPE-001 complete.
 
 ## Current Branch
 agent-run
 
-## Latest Root Commit
-f236820
+## Latest Root Implementation Commit
+f26b208
 
-Note: product/data changes are committed in root commit `fccb8a4`; the product-quality audit harness is committed in `7286d84`; nested frontend app state is committed in `frontend/` commit `999e2a8`; realtime scraper quality gate follow-up is committed in `f236820`.
+Note: realtime scrape quality gate is committed in `f236820`; realtime evidence is committed in `b87238c`; continuous scraping implementation/evidence is committed in `f26b208`. This recovery file is maintained in the follow-up docs/evidence state commit, so use `git log --oneline -5` for the current top commit.
 
 ## Active Phase
-Final evidence/report update for the data-quality and product UI remediation pass.
+Continuous realtime scraping worker and harness complete; docs/evidence state update in progress.
 
 ## Completion Summary
 - Runtime sample/fallback jobs were removed from scraper and pipeline user-facing refresh paths; `/sample` now returns 410 and pipeline skip/fallback paths do not fabricate sample catalog jobs.
@@ -28,7 +28,17 @@ Final evidence/report update for the data-quality and product UI remediation pas
 - Realtime scraper follow-up found `/scrape/run` could still return Glints listing summaries or empty descriptions. Fixed with source priority, bounded realtime URL/concurrency caps, a minimum description/skill-signal quality gate, and richer inline heading parsing.
 - Current direct realtime scraper evidence: `/scrape/run?limit=10` returned 7 Kalibrr jobs, all 476-2655 description characters, all with source URLs and skill signals; quality gate rejected 11 bad candidates.
 - Current DB/API evidence after purge and `refresh_jobs=true`: 7 Kalibrr jobs, `sample_jobs=0`, `under_300_desc=0`, `no_skill_signal=0`.
+- Continuous scraping architecture decision: keep `/scrape/run` and `/pipeline/run refresh_jobs=true` finite, and run indefinite scraping through a separate `scraper-worker` process under the Docker Compose `continuous` profile.
+- Continuous worker module: `services.pipeline.continuous_scraper`.
+- Bounded harness scripts: `scripts/harness_continuous_scrape.py` and `scripts/check_realtime_job_quality.py`.
+- Continuous metadata migration: `015_continuous_scrape_metadata`; running Docker PostgreSQL was verified at revision `015_continuous_scrape_metadata`.
+- Stable upsert identity now prefers normalized `source_url` and uses `ON CONFLICT (source_url)` for non-empty URLs, preventing duplicate explosions across cycles.
+- Bounded Docker harness evidence:
+  - 1 cycle: DB total `7 -> 8`, quality guard passed, API total matched DB.
+  - 2 cycles: DB total stayed `8` across both cycles, inserted estimate `0` per cycle, quality guard passed after each cycle.
+- Pipeline `refresh_jobs=true` remains compatible and returned 200 with `ranked=8`, `total_candidates=8`, and `scraper_run+database:upserted=8`.
+- Final DB/API guard: 8 Kalibrr jobs, 8 distinct source URLs, descriptions 476-2655 chars, `sample_jobs=0`, `under_min_description=0`, `no_skill_signal=0`, `missing_source_url=0`, API total equals DB total.
 - Pre-existing unrelated dirty/untracked work remains present and must not be staged.
 
 ## Next Action
-After the scoped final documentation/evidence commit, stop. Next unfinished phase is a separate broader ML runtime smoke/security probe or larger-source scraper coverage/reliability hardening if requested.
+Commit this scoped debug/agent state update, then stop. Next unfinished phase is larger-source scraper coverage/reliability hardening or broader ML/security runtime probes if explicitly requested.

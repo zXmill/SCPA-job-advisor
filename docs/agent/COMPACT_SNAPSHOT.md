@@ -1,18 +1,18 @@
 # Compact Snapshot
 
-Updated: 2026-05-31 10:47 +07
+Updated: 2026-06-01 19:21 +07
 
 ## Current Objective
-Run `DEBUG-ULT-001`, an evidence-based full-stack debugging session covering frontend, backend/API, ML services, pipeline, database, Docker, browser flows, and security.
+Complete `CONTINUOUS-SCRAPE-001`: convert the finite quality-gated realtime scraper refresh into a production-grade continuous worker with bounded local harness validation.
 
 ## Current Phase
-Docker/runtime fixed; broader audit remaining
+Continuous scraper final validation and scoped commit
 
 ## Current Task ID
-DEBUG-ULT-001
+CONTINUOUS-SCRAPE-001
 
 ## Latest Commit Hash
-Root: `b747954` (`fix: repair docker runtime packaging`).
+Root implementation commit: `f26b208` (`feat: add continuous realtime scraper worker`). This snapshot is part of the follow-up docs/evidence state commit.
 
 ## Current Git Branch
 `agent-run`
@@ -21,7 +21,7 @@ Root: `b747954` (`fix: repair docker runtime packaging`).
 - Pre-existing root: `README.md`, `SCPAv2`, `notebooks/01_indonesian_hybrid_dataset_eda.ipynb`, and `notebooks/02_hybrid_dataset_validation.ipynb` were modified before this session.
 - Pre-existing root: many untracked project files/directories remain part of the live project and must not be bulk staged.
 - Pre-existing nested `frontend/` repo is dirty and must be committed separately if frontend code changes are made.
-- Current task owns `services/gateway/main.py`, `tests/conftest.py`, `tests/test_recommendation_feedback_slate.py`, `.dockerignore`, `docker-compose.yml`, `services/gateway/Dockerfile`, `services/pipeline/Dockerfile`, browser artifacts, and debug/agent state updates for the active debug session.
+- Current task owns `.env.example`, `docker-compose.yml`, `db/models.py`, `db/migrations/015_continuous_scrape_metadata.py`, `services/pipeline/stages/stage_1_scrape.py`, `services/pipeline/continuous_scraper.py`, `scripts/harness_continuous_scrape.py`, `scripts/check_realtime_job_quality.py`, `tests/test_continuous_scraper.py`, `tests/test_job_upsert_idempotency.py`, `docs/CONTINUOUS_SCRAPING_ARCHITECTURE.md`, `docs/CONTINUOUS_SCRAPING_EVIDENCE.md`, `reports/debug/continuous_scrape/`, and scoped debug/agent state updates.
 
 ## Files Changed This Session
 - `docs/debug/DEBUG_MASTER_PLAN.md`
@@ -121,5 +121,15 @@ Root: `b747954` (`fix: repair docker runtime packaging`).
 - Backend/data validation: focused job-description, skill-taxonomy, full-pipeline no-sample-fallback, and red-team fallback tests passed.
 - Current guardrail: runtime catalog does not fabricate sample jobs. Pre-existing untracked fixtures are not staged.
 
+## Continuous Scrape Snapshot: 2026-06-01
+- Task: `CONTINUOUS-SCRAPE-001`.
+- Architecture decision: continuous mode is a separate `scraper-worker` process under Compose profile `continuous`; `/scrape/run` and `/pipeline/run refresh_jobs=true` remain finite.
+- Worker module: `services.pipeline.continuous_scraper`.
+- Harness artifacts: `reports/debug/continuous_scrape/bounded_1/` and `reports/debug/continuous_scrape/bounded_2/`.
+- Database contract: stable normalized `source_url` identity, partial unique index on non-empty source URLs, lifecycle metadata fields, and idempotent upsert that preserves `first_seen_at`.
+- Bounded evidence: 1-cycle run grew DB `7 -> 8`; 2-cycle run kept DB at `8` in both cycles with no duplicate explosion.
+- Quality guard evidence: 8 Kalibrr jobs, 8 distinct source URLs, descriptions 476-2655 chars, 0 sample/short/no-skill/missing-source rows, API total equals DB total.
+- Source policy: no LinkedIn production scraping was added; Kalibrr remains the only current production-quality realtime source.
+
 ## Next Exact Action
-Stop after the scoped final docs commit. Continue only if requested with ML runtime smoke/security probes or real-source scraper reliability hardening.
+Run final focused validation and secret scan, commit scoped continuous-scrape code/evidence, then stop. Continue only if requested with real-source scraper reliability/source expansion, ML runtime smoke, or security probes.

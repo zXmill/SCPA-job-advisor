@@ -1794,6 +1794,53 @@
       "validation_status": "passed",
       "commit": "7286d84, fccb8a4, f236820, frontend:999e2a8",
       "notes": "Runtime sample/fallback jobs removed from product catalog paths, existing runtime jobs purged and reloaded from real sources, rich job description fields and skill signals added, skill taxonomy expanded to 8888 entries, cursor/theme visual bug fixed, product-quality Selenium audit passed 48/48 checks, and realtime scraper quality gate now rejects shallow/listing-summary jobs before pipeline ingestion."
+    },
+    {
+      "id": "CONTINUOUS-SCRAPE-001",
+      "phase": "debug",
+      "title": "Continuous realtime scraping worker and harness",
+      "priority": "P0",
+      "status": "done",
+      "scope": "medium",
+      "depends_on": [
+        "DATA-QUALITY-PRODUCT-UI-001"
+      ],
+      "files_expected": [
+        "services/pipeline/continuous_scraper.py",
+        "scripts/harness_continuous_scrape.py",
+        "scripts/check_realtime_job_quality.py",
+        "tests/test_continuous_scraper.py",
+        "tests/test_job_upsert_idempotency.py",
+        "db/migrations/015_continuous_scrape_metadata.py",
+        "docs/CONTINUOUS_SCRAPING_ARCHITECTURE.md",
+        "docs/CONTINUOUS_SCRAPING_EVIDENCE.md"
+      ],
+      "files_touched": [
+        ".env.example",
+        "docker-compose.yml",
+        "db/models.py",
+        "db/migrations/015_continuous_scrape_metadata.py",
+        "services/pipeline/stages/stage_1_scrape.py",
+        "services/pipeline/continuous_scraper.py",
+        "scripts/harness_continuous_scrape.py",
+        "scripts/check_realtime_job_quality.py",
+        "tests/test_continuous_scraper.py",
+        "tests/test_job_upsert_idempotency.py",
+        "docs/CONTINUOUS_SCRAPING_ARCHITECTURE.md",
+        "docs/CONTINUOUS_SCRAPING_EVIDENCE.md",
+        "docs/debug/COMPACT_RECOVERY.md"
+      ],
+      "validation_commands": [
+        ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_continuous_scraper.py tests\\test_job_upsert_idempotency.py -q",
+        "docker compose --profile continuous run --rm ... --test-max-cycles 1",
+        "docker compose --profile continuous run --rm ... --test-max-cycles 2",
+        "docker compose exec -T pipeline ... POST /pipeline/run refresh_jobs=true",
+        "docker compose exec -T postgres psql ... quality guard queries",
+        "docker compose config --quiet"
+      ],
+      "validation_status": "passed",
+      "commit": "f26b208",
+      "notes": "Added separate continuous scraper-worker mode with bounded harness validation. Runtime DB final state: 8 Kalibrr jobs, 8 distinct source URLs, 0 sample jobs, 0 under-300 descriptions, 0 jobs without skill signal, API total matches DB total."
     }
   ]
 }

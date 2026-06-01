@@ -259,3 +259,15 @@ Updated: 2026-06-01 02:34 +07
   - Runtime DB source summary: 7 Kalibrr jobs, min description 476, average description 1334.9, max description 2655, all with source URLs and skill signals.
   - Guard query: `sample_jobs=0`, `under_300_desc=0`, `no_skill_signal=0`.
   - Gateway `/api/jobs?page=1&limit=10` returns the same real-source rows with structured sections and skill arrays.
+
+## Continuous Scrape Evidence
+- Updated: 2026-06-01 19:15 +07.
+- Task ID: CONTINUOUS-SCRAPE-001.
+- Architecture decision: keep `/scrape/run` and `/pipeline/run refresh_jobs=true` finite; add separate `scraper-worker` process for continuous cycles.
+- New bounded harness artifacts: `reports/debug/continuous_scrape/bounded_1/` and `reports/debug/continuous_scrape/bounded_2/`.
+- One-shot scrape validation: direct Docker scraper `/scrape/run?limit=10` returned 8 Kalibrr jobs, min/max descriptions `476/2655`, and rejected 11 low-quality candidates.
+- Bounded 1-cycle validation: DB total `7 -> 8`, estimated inserted `1`, estimated updated/duplicate `7`, quality guard passed, API total matched DB total.
+- Bounded 2-cycle validation: both cycles kept DB total at `8`, estimated inserted `0` each cycle, estimated updated/duplicate `8` each cycle, proving no duplicate explosion.
+- Pipeline refresh compatibility: Docker pipeline `/pipeline/run refresh_jobs=true` returned 200 with `ranked=8`, `total_candidates=8`, and scrape summary `scraper_run+database:upserted=8`.
+- Final DB/API guard: source `kalibrr`, `jobs=8`, `distinct_source_urls=8`, min/avg/max desc `476/1398.4/2655`, `sample_jobs=0`, `under_min_description=0`, `no_skill_signal=0`, `missing_source_url=0`, `app_api_db_total_mismatch=false`.
+- Secret scan over `reports/debug/continuous_scrape`, continuous harness scripts, and `services/pipeline/continuous_scraper.py` found no token/secret matches.
