@@ -28,10 +28,14 @@ Updated: 2026-06-01 05:15 +07
 - Added a rerunnable semantic Selenium product-quality audit harness.
 
 ## Runtime Data State
-- `jobs=10`
-- `rich_jobs=10`
-- `jobs_with_extracted_skills=10`
-- `real_source_jobs=10`
+- `jobs=7` after the realtime quality-gated refresh on 2026-06-01 09:00 +07.
+- `source=kalibrr`
+- `sample_jobs=0`
+- `under_300_desc=0`
+- `no_skill_signal=0`
+- `min_desc=476`
+- `avg_desc=1334.9`
+- `max_desc=2655`
 - `skills=8888`
 - `alembic_version=014_rich_job_desc_skill_sources`
 
@@ -54,7 +58,7 @@ Updated: 2026-06-01 05:15 +07
 - DOM snapshots: `reports/debug/product_quality/dom_snapshots/`
 
 ## Remaining Limitations
-- The current real-source refresh is bounded to 10 jobs. Larger real scrape batches may still be slow or unstable due external source behavior and need a separate scraper reliability pass.
+- The current quality-gated real-source refresh returned 7 jobs for `limit=10` because low-quality candidates are now rejected instead of padded with shallow rows. Larger real scrape batches may still be slow or unstable due external source behavior and need a separate scraper reliability pass.
 - LinkedIn was not scraped. The CBI LinkedIn-style description supplied by the user was used as product evidence and parser-test shape, not as production seed data.
 - Pre-existing untracked sample/test fixture files remain outside the runtime catalog and were not staged. No runtime job fallback uses them for product pages.
 - Dedicated live SBERT/NCF/DQN endpoint smoke checks remain a separate unfinished phase.

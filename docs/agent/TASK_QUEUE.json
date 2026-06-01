@@ -1792,8 +1792,8 @@
         "python scripts\\debug\\selenium_product_quality_audit.py --base-url http://localhost:3000 --api-base http://localhost:9000 --email <demo-email> --password <redacted> --headless --settle-seconds 1.5"
       ],
       "validation_status": "passed",
-      "commit": "7286d84, fccb8a4, frontend:999e2a8",
-      "notes": "Runtime sample/fallback jobs removed from product catalog paths, existing runtime jobs purged and reloaded from real sources, rich job description fields and skill signals added, skill taxonomy expanded to 8888 entries, cursor/theme visual bug fixed, and product-quality Selenium audit passed 48/48 checks."
+      "commit": "7286d84, fccb8a4, f236820, frontend:999e2a8",
+      "notes": "Runtime sample/fallback jobs removed from product catalog paths, existing runtime jobs purged and reloaded from real sources, rich job description fields and skill signals added, skill taxonomy expanded to 8888 entries, cursor/theme visual bug fixed, product-quality Selenium audit passed 48/48 checks, and realtime scraper quality gate now rejects shallow/listing-summary jobs before pipeline ingestion."
     }
   ]
 }

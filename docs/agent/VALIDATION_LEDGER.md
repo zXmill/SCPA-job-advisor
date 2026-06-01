@@ -1955,3 +1955,10 @@
 - Summary: Backend/data regressions passed, changed Python modules compile, `docker compose config --quiet` passed, frontend lint/build passed, runtime DB has 10 real rich jobs and 8888 skills, and product-quality Selenium audit passed 48/48 checks.
 - Related commit hash: 7286d84, fccb8a4, frontend:999e2a8.
 
+## 2026-06-01 09:05 +07
+- Task ID: DATA-QUALITY-PRODUCT-UI-001
+- Command: realtime scraper direct run, focused scraper/parser tests, Docker config, scraper rebuild, pipeline `refresh_jobs=true`, and DB/API quality queries
+- Result: pass
+- Summary: Direct realtime scraper now returns only quality-gated real Kalibrr jobs; pipeline upserted 7; final DB has 0 sample jobs, 0 descriptions under 300 chars, and 0 jobs without skill signal.
+- Related commit hash: f236820.
+

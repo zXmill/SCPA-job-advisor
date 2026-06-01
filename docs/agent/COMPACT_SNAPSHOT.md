@@ -112,10 +112,11 @@ Root: `b747954` (`fix: repair docker runtime packaging`).
 
 ## Data Quality Product UI Snapshot: 2026-06-01
 - Task: `DATA-QUALITY-PRODUCT-UI-001`.
-- Root commits: `7286d84` (audit harness), `fccb8a4` (real-data/rich-description/skill-taxonomy product fix).
+- Root commits: `7286d84` (audit harness), `fccb8a4` (real-data/rich-description/skill-taxonomy product fix), `f236820` (realtime scrape quality gate).
 - Nested frontend commit: `999e2a8` (rich job/skill UI and cursor/theme stabilization).
 - Runtime DB after purge/rescrape: 10 jobs, 10 rich descriptions, 10 jobs with extracted skills, 10 real-source jobs, 8888 skills, Alembic `014_rich_job_desc_skill_sources`.
 - Product-quality Selenium audit: `reports/debug/product_quality/`, 48 checks passed, 0 failed.
+- Realtime scraper follow-up: direct `/scrape/run?limit=10` returns 7 quality-gated Kalibrr jobs; final DB after purge/refresh has `sample_jobs=0`, `under_300_desc=0`, and `no_skill_signal=0`.
 - Frontend validation: lint/build passed with existing warnings only.
 - Backend/data validation: focused job-description, skill-taxonomy, full-pipeline no-sample-fallback, and red-team fallback tests passed.
 - Current guardrail: runtime catalog does not fabricate sample jobs. Pre-existing untracked fixtures are not staged.

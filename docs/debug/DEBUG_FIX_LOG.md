@@ -123,3 +123,11 @@ Status: **ADDED** in root commit `7286d84`
 - Added `scripts/debug/selenium_product_quality_audit.py`.
 - Harness records semantic checks, screenshots, DOM snapshots, console logs, and network events under `reports/debug/product_quality/`.
 - Validation: final run passed 48/48 checks and redacted auth material from artifacts.
+
+## PRODUCT-06 — Realtime Scrape Quality Gate
+Status: **FIXED** in root commit `f236820`
+
+- Root cause: the direct realtime scraper endpoint could return listing-page summaries or empty descriptions when external sources exposed only search-card content. This meant the database could be real-source but still too shallow for skill extraction and skill-gap.
+- Files changed: `services/scraper/main.py`, `services/shared/job_description.py`, `docker-compose.yml`, `tests/test_job_description_quality.py`.
+- Fix: prioritize higher-signal sources, cap realtime URL/concurrency to avoid timeout storms, fetch more candidates before filtering, reject short/generic/missing-skill candidates, and parse additional inline job-description headings.
+- Validation: focused scraper/parser tests passed; Docker compose config passed; rebuilt scraper passed direct `/scrape/run?limit=10`; pipeline `refresh_jobs=true` upserted 7 quality-gated real jobs; DB guard checks show `sample_jobs=0`, `under_300_desc=0`, `no_skill_signal=0`.

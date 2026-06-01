@@ -1,17 +1,17 @@
 ﻿# Compact Recovery
 
-Updated: 2026-06-01 05:15 +07
+Updated: 2026-06-01 09:05 +07
 
 ## Current Task
-DATA-QUALITY-PRODUCT-UI-001 complete; final evidence/report files prepared for scoped docs commit.
+DATA-QUALITY-PRODUCT-UI-001 complete with realtime scraper quality follow-up.
 
 ## Current Branch
 agent-run
 
-## Latest Root Product Commit Before Final Docs
-fccb8a4
+## Latest Root Commit
+f236820
 
-Note: product/data changes are committed in root commit `fccb8a4 feat: require real job data with rich descriptions and skill taxonomy`; the product-quality audit harness is committed in `7286d84`; the nested frontend app state is committed in `frontend/` commit `999e2a8 fix: stabilize product UI for rich jobs and skills`.
+Note: product/data changes are committed in root commit `fccb8a4`; the product-quality audit harness is committed in `7286d84`; nested frontend app state is committed in `frontend/` commit `999e2a8`; realtime scraper quality gate follow-up is committed in `f236820`.
 
 ## Active Phase
 Final evidence/report update for the data-quality and product UI remediation pass.
@@ -25,7 +25,10 @@ Final evidence/report update for the data-quality and product UI remediation pas
 - Product-quality Selenium audit passed: `48/48` semantic checks across jobs, recommendations, theme toggle, skills autocomplete, and five real job detail pages.
 - Frontend validation passed: `npm run lint` with existing warnings only and `npm run build`.
 - Backend focused validation passed: job description parser, skill taxonomy search, full-pipeline sample-fallback guard, and red-team fallback guard tests.
+- Realtime scraper follow-up found `/scrape/run` could still return Glints listing summaries or empty descriptions. Fixed with source priority, bounded realtime URL/concurrency caps, a minimum description/skill-signal quality gate, and richer inline heading parsing.
+- Current direct realtime scraper evidence: `/scrape/run?limit=10` returned 7 Kalibrr jobs, all 476-2655 description characters, all with source URLs and skill signals; quality gate rejected 11 bad candidates.
+- Current DB/API evidence after purge and `refresh_jobs=true`: 7 Kalibrr jobs, `sample_jobs=0`, `under_300_desc=0`, `no_skill_signal=0`.
 - Pre-existing unrelated dirty/untracked work remains present and must not be staged.
 
 ## Next Action
-After the scoped final documentation/evidence commit, stop. Next unfinished phase is a separate broader ML runtime smoke/security probe or real-source scraper reliability hardening if requested.
+After the scoped final documentation/evidence commit, stop. Next unfinished phase is a separate broader ML runtime smoke/security probe or larger-source scraper coverage/reliability hardening if requested.

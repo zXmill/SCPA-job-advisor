@@ -231,3 +231,31 @@ Updated: 2026-06-01 02:34 +07
   - Secret scan over product-quality artifacts and harness found no auth/token/secret material.
 - Limitation:
   - The current real-source scrape is intentionally bounded to 10 jobs. Larger live scrape batches remain a separate reliability concern because external job-board access can be slow or unstable. The fixed runtime path does not fabricate sample jobs when real sources are unavailable.
+
+## Realtime Scrape Quality Follow-Up Evidence
+- Updated: 2026-06-01 09:05 +07.
+- User question: where is the realtime scraping data, and does it meet the requested criteria?
+- Pre-fix direct runtime evidence:
+  - `POST /scrape/run?limit=10` returned 10 Glints rows.
+  - 8 rows had empty descriptions.
+  - 2 rows had generic listing text: "Temukan lebih dari 100.000 lowongan kerja...".
+  - This did not meet the rich-description/skill-signal criteria and was not acceptable for runtime ingestion.
+- Fix commit: `f236820 fix: enforce realtime scrape quality gate`.
+- Fix summary:
+  - Prioritize higher-signal sources for realtime runs.
+  - Bound realtime source URL count and per-run concurrency to avoid source timeout storms.
+  - Reject sample URLs, missing source URLs, descriptions under 300 characters, generic listing summaries, and jobs without required/preferred/extracted skill signal.
+  - Parse more inline section headings such as `What You’ll Be Doing`, `Essential Criteria`, `About this Position`, `Job Description`, and `Our Stack`.
+- Post-fix direct runtime evidence:
+  - `POST /scrape/run?limit=10` returned 7 jobs.
+  - All 7 are `kalibrr` source rows.
+  - Description lengths: 2655, 2059, 1070, 523, 1173, 476, 1388.
+  - Quality gate rejected 11 low-quality candidates with `missing_skill_signal` or `short_description`.
+- Post-fix pipeline refresh evidence:
+  - Direct internal `POST /pipeline/run` with `refresh_jobs=true` returned 200.
+  - Scrape stage summary: `source=scraper_run+database:upserted=7`, `returned_jobs=7`.
+  - Total pipeline timing: about 74.4s.
+- Post-fix database/API evidence:
+  - Runtime DB source summary: 7 Kalibrr jobs, min description 476, average description 1334.9, max description 2655, all with source URLs and skill signals.
+  - Guard query: `sample_jobs=0`, `under_300_desc=0`, `no_skill_signal=0`.
+  - Gateway `/api/jobs?page=1&limit=10` returns the same real-source rows with structured sections and skill arrays.

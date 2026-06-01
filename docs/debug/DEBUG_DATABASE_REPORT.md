@@ -56,3 +56,18 @@ Status: running Docker PostgreSQL schema reconciled and product-quality rich job
   - `alembic_version=014_rich_job_desc_skill_sources`
 - Existing shallow/sample-like job rows were removed before the real-source refresh. The runtime catalog currently contains only real-source rows.
 - Remaining database limitation: the real-source refresh is intentionally bounded to 10 jobs for this phase; larger real scrape batches need a separate reliability pass.
+
+## Realtime Scrape Quality Refresh: 2026-06-01
+- After fixing the realtime quality gate, local job-derived runtime tables were purged and the pipeline was run with `refresh_jobs=true`.
+- Final Docker PostgreSQL quality state:
+  - `source=kalibrr`
+  - `jobs=7`
+  - `min_desc=476`
+  - `avg_desc=1334.9`
+  - `max_desc=2655`
+  - `with_source_url=7`
+  - `with_skill_signal=7`
+  - `sample_jobs=0`
+  - `under_300_desc=0`
+  - `no_skill_signal=0`
+- The current product catalog therefore contains only real-source, quality-gated rows.

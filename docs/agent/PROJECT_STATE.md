@@ -135,13 +135,14 @@ Current `docker-compose.yml` publishes only the gateway on host port 8000. Postg
 - Commit: `b747954` (`fix: repair docker runtime packaging`).
 
 ## Latest Product Quality Task
-`DATA-QUALITY-PRODUCT-UI-001` completed on 2026-06-01. Root commits `7286d84` and `fccb8a4`, nested frontend commit `999e2a8`.
+`DATA-QUALITY-PRODUCT-UI-001` completed on 2026-06-01. Root commits `7286d84`, `fccb8a4`, and follow-up realtime scraper quality commit `f236820`; nested frontend commit `999e2a8`.
 
 - Runtime job catalog no longer uses sample/fallback jobs for product pages.
 - Existing runtime jobs were purged and reloaded from real source paths; current Docker DB has 10 real jobs, 10 rich descriptions, 10 jobs with extracted skills, and 8888 skills.
 - Job detail API/UI now supports rich descriptions, structured sections, metadata, and required/preferred/extracted skill signals.
 - Profile skill autocomplete uses the taxonomy-backed skill search.
 - Product-quality Selenium audit passed 48/48 checks.
+- Follow-up realtime scraper validation found direct `/scrape/run` could still return listing summaries, so `f236820` added a quality gate. Current DB/API state after purge + `refresh_jobs=true`: 7 Kalibrr jobs, min description 476 chars, average description 1334.9 chars, 0 sample jobs, 0 descriptions under 300 chars, and 0 jobs without skill signal.
 
 ## Next Task
 Continue only if requested: run the separate ML runtime smoke/security probe phase or harden larger-batch real-source scraper reliability.

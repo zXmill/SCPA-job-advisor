@@ -1,6 +1,6 @@
 # Debug Validation Ledger
 
-Updated: 2026-06-01 05:15 +07
+Updated: 2026-06-01 09:05 +07
 
 | Timestamp | Command | Result | Related ID | Summary |
 | --- | --- | --- | --- | --- |
@@ -118,3 +118,11 @@ Updated: 2026-06-01 05:15 +07
 | 2026-06-01 05:12 +07 | `docker compose exec -T postgres psql ... jobs/skills/alembic summary` | pass | PRODUCT-QUALITY-DATA | Runtime DB shows 10 jobs, 10 rich descriptions, 10 jobs with extracted skills, 10 real-source jobs, 8888 skills, revision `014_rich_job_desc_skill_sources`. |
 | 2026-06-01 05:13 +07 | `Invoke-WebRequest http://localhost:9000/api/skills/search?q=s&limit=10`; `q=machine`; `q=data` | pass | BUG-DATA-SKILL-AUTOCOMPLETE-SPARSE | Skill endpoint returns multiple realistic taxonomy suggestions with category/source/confidence. |
 | 2026-06-01 05:13 +07 | `Invoke-WebRequest http://localhost:9000/api/jobs?page=1&limit=2` | pass | BUG-DATA-JOB-DESCRIPTION-SHALLOW | Jobs API returns real Kalibrr rows with rich `description_text`, structured fields, and required/extracted skill arrays. |
+| 2026-06-01 08:45 +07 | `docker compose exec -T scraper python -c "... POST /scrape/run?limit=10 ..."` | fail | REALTIME-SCRAPE-QUALITY | Pre-fix realtime scrape returned Glints listing-summary/empty-description rows; direct realtime output did not meet rich-description criteria. |
+| 2026-06-01 08:52 +07 | `.\.venv\Scripts\python.exe -m pytest tests\test_job_description_quality.py tests\test_red_team_failure_modes.py::test_scraper_handles_zero_partial_duplicate_and_blocked_sources tests\test_red_team_failure_modes.py::test_scraper_normalizes_kalibrr_indonesia_next_payload_with_logo tests\test_red_team_failure_modes.py::test_scraper_rejects_global_remote_jobs_when_indonesia_only -q` | pass | REALTIME-SCRAPE-QUALITY | Focused scraper/parser regression suite passed: 10 passed, 1 warning. |
+| 2026-06-01 08:53 +07 | `docker compose config --quiet` | pass | REALTIME-SCRAPE-QUALITY | Compose validates after realtime scraper runtime cap env additions. |
+| 2026-06-01 08:55 +07 | `docker compose up -d --build scraper` | pass | REALTIME-SCRAPE-QUALITY | Rebuilt scraper image and restarted healthy service with quality gate changes. |
+| 2026-06-01 08:56 +07 | `docker compose exec -T scraper python -c "... POST /scrape/run?limit=10 ..."` | pass | REALTIME-SCRAPE-QUALITY | Direct realtime scrape returned 7 quality-gated Kalibrr jobs; descriptions 476-2655 chars; all had skill signals; quality gate rejected 11 bad candidates. |
+| 2026-06-01 08:58 +07 | `TRUNCATE TABLE ... jobs ... CASCADE` in local Docker PostgreSQL | pass | REALTIME-SCRAPE-QUALITY | Cleared existing job-derived runtime tables before real-quality refresh. |
+| 2026-06-01 09:00 +07 | `docker compose exec -T pipeline ... POST /pipeline/run refresh_jobs=true ...` | pass | REALTIME-SCRAPE-QUALITY | Pipeline refresh upserted 7 quality-gated real jobs and returned 7 ranked candidates. |
+| 2026-06-01 09:02 +07 | `docker compose exec -T postgres psql ... quality guard queries`; `GET /api/jobs?page=1&limit=10` | pass | REALTIME-SCRAPE-QUALITY | DB/API final: 7 Kalibrr jobs, min desc 476, avg desc 1334.9, sample_jobs=0, under_300_desc=0, no_skill_signal=0. |
