@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import json
 import logging
 import os
 import uuid
 from typing import Any
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import httpx
 from sqlalchemy import Text as SqlText
@@ -20,6 +22,17 @@ JOB_CACHE: list[dict[str, Any]] = []
 logger = logging.getLogger("scpa.pipeline.stage_1")
 _db_engine: AsyncEngine | None = None
 SCRAPER_RUN_TIMEOUT_SECONDS = float(os.getenv("SCRAPER_RUN_TIMEOUT_SECONDS", "120"))
+_TRACKING_QUERY_KEYS = {
+    "fbclid",
+    "gclid",
+    "igshid",
+    "mc_cid",
+    "mc_eid",
+    "ref",
+    "ref_src",
+    "source",
+    "trk",
+}
 
 
 def _async_db_url(url: str | None) -> str | None:
@@ -57,6 +70,65 @@ def _stable_uuid(value: str) -> uuid.UUID:
         return uuid.UUID(str(value))
     except ValueError:
         return uuid.uuid5(uuid.NAMESPACE_DNS, str(value))
+
+
+def _normalize_source_url(value: Any) -> str:
+    """Return a stable posting URL for cross-cycle deduplication."""
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    parsed = urlparse(raw)
+    if not parsed.scheme or not parsed.netloc:
+        return raw.rstrip("/")
+    query_pairs = [
+        (key, val)
+        for key, val in parse_qsl(parsed.query, keep_blank_values=True)
+        if not key.lower().startswith("utm_") and key.lower() not in _TRACKING_QUERY_KEYS
+    ]
+    normalized = parsed._replace(
+        scheme=parsed.scheme.lower(),
+        netloc=parsed.netloc.lower(),
+        path=parsed.path.rstrip("/") or parsed.path,
+        params="",
+        query=urlencode(query_pairs, doseq=True),
+        fragment="",
+    )
+    return urlunparse(normalized)
+
+
+def _job_identity_key(job: dict[str, Any]) -> str:
+    """Prefer source URL identity so repeated continuous cycles hit one DB row."""
+    source_url = _normalize_source_url(job.get("source_url"))
+    if source_url:
+        return f"source_url:{source_url}"
+    source = _clean_source(job.get("source")) or "unknown"
+    external_id = str(job.get("external_id") or job.get("job_id") or job.get("id") or "").strip()
+    if external_id:
+        return f"{source}:external:{external_id}"
+    return "|".join(
+        [
+            source,
+            str(job.get("title") or "").strip().lower(),
+            str(job.get("company") or "").strip().lower(),
+            str(job.get("location") or "").strip().lower(),
+        ]
+    )
+
+
+def _payload_content_hash(job: dict[str, Any]) -> str:
+    """Hash mutable job content separately from stable identity."""
+    payload = {
+        "title": job.get("title") or "",
+        "company": job.get("company") or "",
+        "location": job.get("location") or "",
+        "description": job.get("description_text") or job.get("description") or "",
+        "required_skills": job.get("required_skills") or job.get("required_skill_names") or [],
+        "preferred_skills": job.get("preferred_skills") or job.get("preferred_skill_names") or [],
+        "extracted_skills": job.get("extracted_skills") or job.get("extracted_skill_names") or [],
+        "source_url": _normalize_source_url(job.get("source_url")),
+    }
+    encoded = json.dumps(payload, sort_keys=True, ensure_ascii=True, default=str)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
 def _parse_match_data(value: Any) -> dict[str, Any]:
@@ -154,12 +226,27 @@ def _normalize_scraped_jobs(raw_jobs: list[dict[str, Any]], limit: int) -> list[
                 "source": raw.get("source"),
                 "source_updated_at": raw.get("source_updated_at"),
                 "salary_text": raw.get("salary_text"),
+                "content_hash": raw.get("content_hash"),
             }
         )
     return jobs
 
 
-async def _fetch_jobs(client: httpx.AsyncClient, scraper_url: str, limit: int) -> tuple[list[dict[str, Any]], str]:
+def _quality_gate_summary(source_stats: list[dict[str, Any]]) -> dict[str, Any]:
+    for item in source_stats:
+        if item.get("source") == "quality_gate":
+            return {
+                "accepted": item.get("count", 0),
+                "rejected": item.get("rejected", 0),
+                "rejection_reasons": item.get("rejection_reasons", {}),
+                "min_description_chars": item.get("min_description_chars"),
+            }
+    return {"accepted": 0, "rejected": 0, "rejection_reasons": {}}
+
+
+async def _fetch_jobs(
+    client: httpx.AsyncClient, scraper_url: str, limit: int
+) -> tuple[list[dict[str, Any]], str, dict[str, Any]]:
     try:
         response = await client.post(
             f"{scraper_url}/scrape/run",
@@ -169,13 +256,21 @@ async def _fetch_jobs(client: httpx.AsyncClient, scraper_url: str, limit: int) -
         response.raise_for_status()
         data = response.json()
         jobs = _normalize_scraped_jobs(data.get("jobs", []), limit)
+        source_stats = data.get("source_stats", [])
+        source_stats = source_stats if isinstance(source_stats, list) else []
+        meta = {
+            "count": data.get("count", len(jobs)),
+            "deduplicated": data.get("deduplicated", 0),
+            "source_stats": source_stats,
+            "quality_gate": _quality_gate_summary(source_stats),
+        }
         if jobs:
-            return jobs, "scraper_run"
+            return jobs, "scraper_run", meta
         logger.warning("scraper returned no real jobs; continuing with empty candidate pool")
-        return [], "scraper_empty"
+        return [], "scraper_empty", meta
     except httpx.HTTPError as exc:
         logger.warning("scraper unavailable; refusing sample job fallback: %s", exc)
-        return [], "scraper_unavailable"
+        return [], "scraper_unavailable", {"count": 0, "error": str(exc)}
 
 
 async def _load_db_jobs(limit: int) -> list[dict[str, Any]]:
@@ -234,7 +329,9 @@ async def _upsert_scraped_jobs(jobs: list[dict[str, Any]]) -> int:
         company = str(job.get("company") or "").strip() or "Unknown Company"
         if not title:
             continue
+        identity_key = _job_identity_key(job)
         original_id = str(job.get("job_id") or job.get("id") or job.get("content_hash") or title)
+        normalized_source_url = _normalize_source_url(job.get("source_url"))
         skills = job.get("skills") or job.get("tags") or []
         if not isinstance(skills, list):
             skills = [str(skills)]
@@ -243,7 +340,8 @@ async def _upsert_scraped_jobs(jobs: list[dict[str, Any]]) -> int:
         extracted_skills = job.get("extracted_skills") or job.get("extracted_skill_names") or skills
         params.append(
             {
-                "id": _stable_uuid(original_id),
+                "id": _stable_uuid(identity_key),
+                "external_id": original_id,
                 "title": title,
                 "company": company,
                 "company_logo": job.get("company_logo"),
@@ -266,15 +364,19 @@ async def _upsert_scraped_jobs(jobs: list[dict[str, Any]]) -> int:
                 "required_skill_names": required_skills,
                 "preferred_skill_names": preferred_skills,
                 "extracted_skill_names": extracted_skills,
-                "source_url": job.get("source_url"),
+                "source_url": normalized_source_url or job.get("source_url"),
                 "source_updated_at": job.get("source_updated_at"),
                 "salary_text": job.get("salary_text") or None,
                 "source": _clean_source(job.get("source")),
                 "is_active": bool(job.get("is_active", True)),
+                "quality_status": "accepted",
+                "quality_reject_reason": None,
+                "content_hash": job.get("content_hash") or _payload_content_hash(job),
                 "match_data": json.dumps(
                     {
                         "original_job_id": original_id,
-                        "source_url": job.get("source_url"),
+                        "identity_key": identity_key,
+                        "source_url": normalized_source_url or job.get("source_url"),
                         "skills": required_skills or extracted_skills or skills,
                         "tags": job.get("tags") or skills,
                         "required_skills": required_skills,
@@ -294,15 +396,17 @@ async def _upsert_scraped_jobs(jobs: list[dict[str, Any]]) -> int:
                 "description_sections, responsibilities, requirements, nice_to_have, benefits, seniority_level, "
                 "employment_type, job_function, industry, education_level, years_experience_min, years_experience_max, "
                 "required_skill_names, preferred_skill_names, extracted_skill_names, source_url, source_updated_at, "
-                "salary_text, source, is_active, match_data"
+                "salary_text, source, is_active, external_id, scraped_at, first_seen_at, last_seen_at, "
+                "quality_status, quality_reject_reason, content_hash, match_data"
                 ") VALUES ("
                 ":id, :title, :company, :company_logo, :location, :description, :raw_description_html, :description_text, "
                 "CAST(:description_sections AS jsonb), :responsibilities, :requirements, :nice_to_have, :benefits, :seniority_level, "
                 ":employment_type, :job_function, :industry, :education_level, :years_experience_min, :years_experience_max, "
                 ":required_skill_names, :preferred_skill_names, :extracted_skill_names, :source_url, :source_updated_at, "
-                ":salary_text, :source, :is_active, CAST(:match_data AS jsonb)"
+                ":salary_text, :source, :is_active, :external_id, NOW(), NOW(), NOW(), "
+                ":quality_status, :quality_reject_reason, :content_hash, CAST(:match_data AS jsonb)"
                 ") "
-                "ON CONFLICT (id) DO UPDATE SET "
+                "ON CONFLICT (source_url) WHERE source_url IS NOT NULL AND source_url <> '' DO UPDATE SET "
                 "title = EXCLUDED.title, company = EXCLUDED.company, company_logo = EXCLUDED.company_logo, "
                 "location = EXCLUDED.location, description = EXCLUDED.description, raw_description_html = EXCLUDED.raw_description_html, "
                 "description_text = EXCLUDED.description_text, description_sections = EXCLUDED.description_sections, "
@@ -312,7 +416,11 @@ async def _upsert_scraped_jobs(jobs: list[dict[str, Any]]) -> int:
                 "years_experience_min = EXCLUDED.years_experience_min, years_experience_max = EXCLUDED.years_experience_max, "
                 "required_skill_names = EXCLUDED.required_skill_names, preferred_skill_names = EXCLUDED.preferred_skill_names, "
                 "extracted_skill_names = EXCLUDED.extracted_skill_names, source_url = EXCLUDED.source_url, source_updated_at = EXCLUDED.source_updated_at, "
-                "salary_text = EXCLUDED.salary_text, source = EXCLUDED.source, is_active = EXCLUDED.is_active, match_data = EXCLUDED.match_data, posted_at = NOW()"
+                "salary_text = EXCLUDED.salary_text, source = EXCLUDED.source, is_active = EXCLUDED.is_active, "
+                "external_id = COALESCE(EXCLUDED.external_id, jobs.external_id), scraped_at = EXCLUDED.scraped_at, "
+                "first_seen_at = COALESCE(jobs.first_seen_at, EXCLUDED.first_seen_at), last_seen_at = EXCLUDED.last_seen_at, "
+                "quality_status = EXCLUDED.quality_status, quality_reject_reason = EXCLUDED.quality_reject_reason, "
+                "content_hash = EXCLUDED.content_hash, match_data = EXCLUDED.match_data"
             ).bindparams(
                 bindparam("responsibilities", type_=ARRAY(SqlText())),
                 bindparam("requirements", type_=ARRAY(SqlText())),
@@ -364,6 +472,9 @@ async def run_scrape_stage(
     skipped = bool(JOB_CACHE) and not refresh_jobs
 
     db_jobs = await _load_db_jobs(limit)
+    scraped_jobs: list[dict[str, Any]] = []
+    scrape_meta: dict[str, Any] = {}
+    upserted = 0
 
     if db_jobs and not refresh_jobs:
         jobs = db_jobs
@@ -372,7 +483,7 @@ async def run_scrape_stage(
         jobs = JOB_CACHE[:limit]
         source = "cache"
     else:
-        scraped_jobs, source = await _fetch_jobs(client, scraper_url.rstrip("/"), limit)
+        scraped_jobs, source, scrape_meta = await _fetch_jobs(client, scraper_url.rstrip("/"), limit)
         upserted = await _upsert_scraped_jobs(scraped_jobs)
         refreshed_db_jobs = await _load_db_jobs(limit)
         jobs = _merge_jobs(refreshed_db_jobs, scraped_jobs, limit)
@@ -390,6 +501,9 @@ async def run_scrape_stage(
             "source": source,
             "cached_jobs": len(JOB_CACHE),
             "database_jobs": len(db_jobs),
+            "scraped_jobs": len(scraped_jobs),
+            "upserted_jobs": upserted,
             "returned_jobs": len(jobs[:limit]),
+            "scraper": scrape_meta,
         },
     )

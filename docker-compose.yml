@@ -79,6 +79,39 @@ services:
       retries: 5
       start_period: 10s
 
+  scraper-worker:
+    profiles: ["continuous"]
+    build:
+      context: .
+      dockerfile: services/pipeline/Dockerfile
+    command: ["python", "-m", "services.pipeline.continuous_scraper", "--run-forever"]
+    environment:
+      SCRAPER_URL: http://scraper:8001
+      DATABASE_URL: ${GATEWAY_DATABASE_URL:?GATEWAY_DATABASE_URL required}
+      PIPELINE_USE_DB_CANDIDATES: "true"
+      SCRAPER_CONTINUOUS_ENABLED: ${SCRAPER_CONTINUOUS_ENABLED:-true}
+      SCRAPER_CYCLE_LIMIT: ${SCRAPER_CYCLE_LIMIT:-10}
+      SCRAPER_CYCLE_INTERVAL_SECONDS: ${SCRAPER_CYCLE_INTERVAL_SECONDS:-900}
+      SCRAPER_MAX_EMPTY_CYCLES_BEFORE_BACKOFF: ${SCRAPER_MAX_EMPTY_CYCLES_BEFORE_BACKOFF:-3}
+      SCRAPER_BACKOFF_MIN_SECONDS: ${SCRAPER_BACKOFF_MIN_SECONDS:-60}
+      SCRAPER_BACKOFF_MAX_SECONDS: ${SCRAPER_BACKOFF_MAX_SECONDS:-1800}
+      SCRAPER_ALLOWED_SOURCES: ${SCRAPER_ALLOWED_SOURCES:-kalibrr}
+      SCRAPER_RUN_FOREVER: ${SCRAPER_RUN_FOREVER:-true}
+      SCRAPER_TEST_MAX_CYCLES: ${SCRAPER_TEST_MAX_CYCLES:-}
+      SCRAPER_CYCLE_JITTER_SECONDS: ${SCRAPER_CYCLE_JITTER_SECONDS:-5}
+      SCRAPER_REPORT_DIR: /app/reports/debug/continuous_scrape
+      SCRAPER_RUN_TIMEOUT_SECONDS: ${SCRAPER_RUN_TIMEOUT_SECONDS:-180}
+      SCRAPER_QUALITY_MIN_DESC_CHARS: ${SCRAPER_QUALITY_MIN_DESC_CHARS:-300}
+      LOG_LEVEL: INFO
+    volumes:
+      - ./reports/debug/continuous_scrape:/app/reports/debug/continuous_scrape
+    depends_on:
+      postgres:
+        condition: service_healthy
+      scraper:
+        condition: service_healthy
+    restart: unless-stopped
+
   sbert:
     build: ./services/sbert
     environment:

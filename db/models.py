@@ -345,6 +345,15 @@ class Job(Base):
     )
     source_url: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)
     source_updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    external_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    scraped_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    first_seen_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_seen_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    quality_status: Mapped[str] = mapped_column(
+        String(32), server_default=text("'accepted'"), nullable=False
+    )
+    quality_reject_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    content_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     experience_level: Mapped[Optional[ExperienceLevel]] = mapped_column(
         Enum(
             ExperienceLevel,
@@ -391,6 +400,16 @@ class Job(Base):
         Index("idx_jobs_location", "location"),
         Index("idx_jobs_source", "source"),
         Index("idx_jobs_source_url", "source_url"),
+        Index(
+            "uq_jobs_source_url_present",
+            "source_url",
+            unique=True,
+            postgresql_where=text("source_url IS NOT NULL AND source_url <> ''"),
+        ),
+        Index("idx_jobs_external_id", "external_id"),
+        Index("idx_jobs_last_seen_at", "last_seen_at"),
+        Index("idx_jobs_quality_status", "quality_status"),
+        Index("idx_jobs_content_hash", "content_hash"),
         Index("idx_jobs_posted_at", posted_at.desc()),
         Index(
             "idx_jobs_active",
