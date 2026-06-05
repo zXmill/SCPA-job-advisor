@@ -1,0 +1,86 @@
+# ============================================================
+# SCPA .gitignore
+# ============================================================
+
+# === SECRETS — NEVER COMMIT ===
+.env
+.env.*
+!.env.example
+.env.local
+.env.development
+.env.test
+secrets/*.txt
+
+# === Python ===
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.whl
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg
+
+
+# === Node.js / Frontend ===
+node_modules/
+.next/
+*.local
+
+# === Docker ===
+docker-compose.override.yml
+*.tar.gz
+
+# === Logs ===
+logs/
+*.log
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Internal Tool State ===
+.omc/
+.claude/
+
+# === Crash Dumps ===
+*.stackdump
+
+# === Database ===
+*.dump
+*.sql.gz
+backups/
+
+# === Test artifacts ===
+.reports/
+results/
+
+# === ML model artifacts ===
+services/*/weights/
+services/*/models/
+*.pt
+*.pth
+*.safetensors
+notebooks/data/
+notebooks/training_runs/
+
+# === Temporary ===
+/tmp/
+*.tmp
+
+# Large ML artifacts and datasets
+services/sbert/models/
+services/sbert/weights/
+services/sbert/training/data/*.jsonl
+*.safetensors

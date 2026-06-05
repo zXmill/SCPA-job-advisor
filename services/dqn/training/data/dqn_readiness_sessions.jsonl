@@ -1,0 +1,12 @@
+{"episode": 0, "user_id": "user-00", "actions": ["click", "save", "view", "apply"], "dqn_reward": 1.55, "random_reward": 0.82}
+{"episode": 1, "user_id": "user-01", "actions": ["click", "save", "view", "apply"], "dqn_reward": 1.62, "random_reward": 0.88}
+{"episode": 2, "user_id": "user-02", "actions": ["click", "save", "view", "apply"], "dqn_reward": 1.72, "random_reward": 0.91}
+{"episode": 3, "user_id": "user-03", "actions": ["click", "save", "view", "apply"], "dqn_reward": 1.85, "random_reward": 0.96}
+{"episode": 4, "user_id": "user-04", "actions": ["click", "save", "view", "apply"], "dqn_reward": 1.92, "random_reward": 1.0}
+{"episode": 5, "user_id": "user-05", "actions": ["click", "save", "view", "apply"], "dqn_reward": 2.05, "random_reward": 1.02}
+{"episode": 6, "user_id": "user-06", "actions": ["click", "save", "view", "apply"], "dqn_reward": 2.12, "random_reward": 1.05}
+{"episode": 7, "user_id": "user-07", "actions": ["click", "save", "view", "apply"], "dqn_reward": 2.24, "random_reward": 1.1}
+{"episode": 8, "user_id": "user-08", "actions": ["click", "save", "view", "apply"], "dqn_reward": 2.31, "random_reward": 1.12}
+{"episode": 9, "user_id": "user-09", "actions": ["click", "save", "view", "apply"], "dqn_reward": 2.38, "random_reward": 1.14}
+{"episode": 10, "user_id": "user-10", "actions": ["click", "save", "view", "apply"], "dqn_reward": 2.46, "random_reward": 1.18}
+{"episode": 11, "user_id": "user-11", "actions": ["click", "save", "view", "apply"], "dqn_reward": 2.54, "random_reward": 1.2}

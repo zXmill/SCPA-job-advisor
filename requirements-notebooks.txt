@@ -1,0 +1,7 @@
+# Notebook and reporting dependencies for local evaluation artifacts.
+nbformat>=5.10
+nbconvert>=7.16
+pandas>=2.2
+numpy>=1.24
+matplotlib>=3.8
+pdfplumber>=0.11

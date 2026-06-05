@@ -1,0 +1,15 @@
+# SCPA local development and CI dependencies.
+# Keep service-specific requirements in their service folders; this file ties
+# them together for clone/install/test workflows.
+
+-r requirements-db.txt
+-r requirements-notebooks.txt
+-r services/scraper/requirements.txt
+-r services/sbert/requirements.txt
+-r services/ncf/requirements.txt
+-r services/dqn/requirements.txt
+-r services/pipeline/requirements.txt
+-r services/gateway/requirements.txt
+
+pytest>=8.0,<10.0
+greenlet>=3.0,<4.0
