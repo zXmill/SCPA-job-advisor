@@ -1,1 +1,0 @@
-# SCPA NCF Service Package
