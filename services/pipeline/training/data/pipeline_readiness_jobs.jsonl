@@ -1,0 +1,12 @@
+{"job_id": "raw-000", "title": "Backend Engineer", "company": "Nusantara Tech", "source": "jobstreet", "url": "https://example.com/jobs/0", "raw_hash": "h001", "valid_after_normalize": true}
+{"job_id": "raw-001", "title": "Backend Engineer", "company": "Nusantara Tech", "source": "jobstreet", "url": "https://example.com/jobs/1", "raw_hash": "h001", "valid_after_normalize": true}
+{"job_id": "raw-002", "title": "Data Analyst", "company": "Gopay", "source": "linkedin", "url": "https://example.com/jobs/2", "raw_hash": "h002", "valid_after_normalize": true}
+{"job_id": "raw-003", "title": "ML Engineer", "company": "Traveloka", "source": "glints", "url": "https://example.com/jobs/3", "raw_hash": "h003", "valid_after_normalize": true}
+{"job_id": "raw-004", "title": "DevOps Engineer", "company": "OVO", "source": "kalibrr", "url": "https://example.com/jobs/4", "raw_hash": "h004", "valid_after_normalize": true}
+{"job_id": "raw-005", "title": "Product Manager", "company": "Gojek", "source": "karir", "url": "https://example.com/jobs/5", "raw_hash": "h005", "valid_after_normalize": true}
+{"job_id": "raw-006", "title": "Frontend Developer", "company": "Bukalapak", "source": "techinasia", "url": "https://example.com/jobs/6", "raw_hash": "h006", "valid_after_normalize": true}
+{"job_id": "raw-007", "title": "QA Engineer", "company": "Dana", "source": "indeed", "url": "https://example.com/jobs/7", "raw_hash": "h007", "valid_after_normalize": true}
+{"job_id": "raw-008", "title": "Cloud Engineer", "company": "Telkom", "source": "remotive", "url": "https://example.com/jobs/8", "raw_hash": "h008", "valid_after_normalize": true}
+{"job_id": "raw-009", "title": "Cybersecurity Analyst", "company": "Mandiri", "source": "jobstreet", "url": "https://example.com/jobs/9", "raw_hash": "h009", "valid_after_normalize": true}
+{"job_id": "raw-010", "title": "Mobile Flutter Developer", "company": "Blibli", "source": "glints", "url": "https://example.com/jobs/10", "raw_hash": "h010", "valid_after_normalize": true}
+{"job_id": "raw-011", "title": "Data Engineer", "company": "Grab", "source": "linkedin", "url": "https://example.com/jobs/11", "raw_hash": "h011", "valid_after_normalize": true}

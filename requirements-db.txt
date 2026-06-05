@@ -1,0 +1,13 @@
+# Database Management Dependencies for SCPA
+# Install with: pip install -r requirements-db.txt
+
+# Database drivers
+psycopg2-binary>=2.9.9    # PostgreSQL adapter (sync, for migrations)
+asyncpg>=0.29.0           # PostgreSQL adapter (async, for runtime)
+
+# ORM and migrations
+SQLAlchemy>=2.0.23        # SQL toolkit and ORM
+alembic>=1.13.1           # Database migration tool
+
+# Environment and utilities
+python-dotenv>=1.0.0      # Load environment variables from .env
