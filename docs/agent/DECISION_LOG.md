@@ -1,0 +1,484 @@
+# Decision Log
+
+## 2026-05-25 19:33 +07 - Initializer operating mode
+- Decision: Create permanent lightweight instructions in `AGENTS.md` and durable task/state files under `docs/agent/` before product changes.
+- Reason: The user requested a long-running workflow that survives compaction and interruption.
+- Trade-off: This duplicates some information from existing docs, but keeps agent state in one predictable location.
+- Skipped option: Storing the full task plan in `AGENTS.md`; it belongs in `TASK_QUEUE.json`.
+- Risk and mitigation: Repo was already dirty. Stage only the new initializer files and record pre-existing dirty state.
+
+## 2026-05-25 19:33 +07 - Worktree and subagent constraints
+- Decision: Work in the current `agent-run` checkout for the initializer and do not create a new git worktree.
+- Reason: The user explicitly instructed this repository to be the source of truth and requested commits here. Superpowers worktree guidance requires consent before creating a new worktree when none exists.
+- Skipped option: Spawn subagents for parallel reconnaissance.
+- Reason skipped: Subagent tooling is available, but this environment only permits spawning when the user explicitly asks for sub-agents, delegation, or parallel agent work.
+- Risk and mitigation: Keep tasks narrow, commit frequently, and update `COMPACT_SNAPSHOT.md` before larger work.
+
+## 2026-05-25 19:33 +07 - Initial task ordering
+- Decision: Use `reports/full_code_review_research_potential_report.md` as guidance only, then verify each claim against current files before product changes.
+- Reason: The user named the report as a reference and also said repository files are source of truth.
+- Next: Complete `INIT-001`, then start `P0-001` cleanup audit.
+
+## 2026-05-25 19:48 +07 - P0-001 cleanup audit mini plan
+- Decision: Perform a read-only repository cleanup audit before any safe cleanup.
+- Expected files to touch: `docs/agent/CLEANUP_AUDIT.md`, `docs/agent/TASK_QUEUE.json`, `docs/agent/DECISION_LOG.md`, `docs/agent/SESSION_REPORT.md`, `docs/agent/COMPACT_SNAPSHOT.md`, `docs/agent/VALIDATION_LEDGER.md`, and `docs/agent/PROJECT_STATE.md` if findings change known state.
+- Validation commands: `git status --short --branch`, plus JSON parse for `TASK_QUEUE.json`.
+- Skipped option: Moving or deleting files during the audit.
+- Risk and mitigation: The repo is mostly untracked, so classify conservatively and put ambiguous items under `Unsure`.
+
+## 2026-05-25 20:02 +07 - P0-002 safe cleanup mini plan
+- Decision: Limit safe cleanup to small root-level manual debug artifacts: `browser_e2e.py`, `check_overflow.py`, `check_scrape.py`, `insert_scraped.py`, and `scrape_1000.json`.
+- Expected files to touch: `testing/archive/manual-debug/`, `docs/agent/TASK_QUEUE.json`, `docs/agent/SESSION_REPORT.md`, `docs/agent/COMPACT_SNAPSHOT.md`, `docs/agent/VALIDATION_LEDGER.md`, and `docs/agent/FAILURE_LEDGER.md` if validation fails.
+- Validation commands: `.\.venv\Scripts\python.exe -m pytest -q`, `npm run lint` in `frontend/`, `npm run build` in `frontend/`, `docker compose config --quiet`, `python -m json.tool docs/agent/TASK_QUEUE.json`, and `git status --short --branch`.
+- Skipped option: Moving `SCPAv2/`, notebooks, reports, screenshots, PDFs, service scripts, migrations, or source directories in the first cleanup pass.
+- Risk and mitigation: Frontend lint is already known to fail on a hook-order issue. If it fails, record the failure and treat the hook fix as the validation blocker.
+
+## 2026-05-25 20:12 +07 - Promote P0-FE-001 to unblock cleanup validation
+- Decision: Pause `P0-002` as blocked and promote `P0-FE-001` to active.
+- Reason: `npm run lint` failed during P0-002 validation on the known hook-order issue in `frontend/src/app/recommendations/page.tsx`.
+- Root cause: `markImpressed = useCallback(...)` is declared after the auth early return, so React hook order changes across renders.
+- Test-first evidence: `npm run lint` failed with `react-hooks/rules-of-hooks` at `recommendations/page.tsx:329`.
+- Mitigation: Make the minimal hook-order move, run `npm run lint` and `npm run build`, commit the frontend fix, then return to P0-002 validation.
+
+## 2026-05-25 20:28 +07 - Frontend nested repository commit
+- Decision: Commit `P0-FE-001` inside the nested `frontend/` Git repository.
+- Reason: `frontend/` contains its own `.git`, so the root repo cannot stage `frontend/src/app/recommendations/page.tsx` as a normal tracked file.
+- Trade-off: Root durable state needs a separate docs checkpoint to preserve the frontend commit hash.
+- Result: Nested frontend commit `6e76e92` with message `fix: resolve frontend hook order violation`.
+
+## 2026-05-25 20:02 +07 - P1-SEC-001 Docker exposure mini plan
+- Decision: Restrict Compose host publishing to the public gateway path and add an internal token boundary between gateway and pipeline.
+- Expected files to touch: `docker-compose.yml`, `.env.example`, `services/gateway/main.py`, `services/pipeline/main.py`, focused tests if the current test structure supports them, and durable `docs/agent/` state files.
+- Validation commands: `docker compose config` with required secret environment variables, focused pytest for the internal auth behavior, and broader pytest if the focused change touches shared behavior.
+- Skipped option: Adding token middleware to every model and scraper service in this task.
+- Reason skipped: Removing host port publishing already moves scraper/SBERT/NCF/DQN/PostgreSQL behind the Docker network; a gateway-to-pipeline token directly protects the public-to-internal orchestration boundary without expanding this task across many service files.
+- Risk and mitigation: Compose may fail if the token is required but missing. Document `INTERNAL_SERVICE_TOKEN` in `.env.example` and set a test value explicitly during validation instead of committing a real secret.
+
+## 2026-05-25 20:10 +07 - P1-SEC-002 SSRF guard mini plan
+- Decision: Add an explicit SSRF validation layer for scraper URL fetches before any outbound request.
+- Expected files to touch: `services/scraper/main.py`, `tests/test_ssrf_guard.py`, and durable `docs/agent/` state files.
+- Validation commands: failing focused SSRF tests first, then `.\.venv\Scripts\python.exe -m pytest tests\test_ssrf_guard.py -q`, and full `.\.venv\Scripts\python.exe -m pytest -q` after implementation.
+- Guard requirements: allow only approved job-board hosts; reject localhost, loopback, private IP ranges, link-local addresses, metadata IPs, non-HTTP(S) schemes, unsafe redirects, and DNS rebinding attempts.
+- Skipped option: Relying only on Pydantic `HttpUrl`.
+- Reason skipped: `HttpUrl` validates shape, not network safety or resolved addresses.
+- Risk and mitigation: DNS lookups can be flaky in tests; isolate address resolution behind a small helper and monkeypatch it in SSRF tests.
+
+## 2026-05-25 20:18 +07 - P1-SEC-003 pipeline execution auth mini plan
+- Decision: Protect the gateway's direct `/pipeline/run` proxy instead of leaving it public.
+- Expected files to touch: `services/gateway/main.py`, focused auth/security tests, and durable `docs/agent/` state files.
+- Validation commands: write a failing route-auth test first, then run the focused route test and full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Chosen boundary: authenticated admin-only access for the direct pipeline execution route; normal user recommendations continue through `/api/recommendations`, which assembles the profile and applies existing user auth.
+- Skipped option: Removing the route outright in this task.
+- Reason skipped: Some local/admin scripts may still rely on direct execution; admin gating narrows exposure while preserving an intentional operator path.
+- Risk and mitigation: Existing tests may call `/pipeline/run` directly. Update only tests that represent the new security contract.
+
+## 2026-05-25 20:24 +07 - Survival checkpoint and P1-CI-001 mini plan
+- Decision: Create a state-only checkpoint after three security commits, then start CI hardening.
+- Expected files to touch next: `.github/workflows/ci.yml` and durable `docs/agent/` state files.
+- Validation commands: inspect current CI, update workflow to install dependencies and run backend tests, Alembic head/upgrade where feasible, frontend lint, and frontend build; validate workflow YAML shape and run local equivalents already proven for backend/frontend where practical.
+- Skipped option: Combining CI hardening with the previous security commits.
+- Reason skipped: CI changes are infrastructure work with different validation and should remain a separate checkpoint.
+- Risk and mitigation: `.github/workflows/ci.yml` is currently untracked in the root repo; stage only that workflow if it is changed.
+
+## 2026-05-25 20:31 +07 - P1-PERF-001 SBERT cache mini plan
+- Decision: Inspect existing SBERT encode/match paths and tests before changing cache behavior.
+- Expected files to touch: `services/sbert/main.py`, focused cache tests if needed, and durable `docs/agent/` state files.
+- Validation commands: focused SBERT/cache tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: cache job embeddings and invalidate when job text changes.
+- Skipped option: Adding a database-backed cache before inspecting existing service state.
+- Reason skipped: The current SBERT service may already have in-memory or Redis cache hooks; reuse local patterns before adding schema or infrastructure.
+- Risk and mitigation: Embedding cache keys must include text content and model/version dimensions so changed job text cannot return stale vectors.
+
+## 2026-05-25 20:37 +07 - P1-PERF-002 batch scoring mini plan
+- Decision: Inspect existing NCF and DQN service endpoints plus pipeline stage calls before implementing batch scoring.
+- Expected files to touch: `services/pipeline/stages/stage_3_ncf_score.py`, `services/pipeline/stages/stage_4_dqn_rank.py`, service endpoints if batch routes are missing, focused tests, and durable `docs/agent/` state files.
+- Validation commands: focused stage/service batch tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: batch NeuMF/NCF scoring and DQN scoring where applicable.
+- Skipped option: Optimizing model internals before confirming whether the pipeline already calls batch endpoints.
+- Reason skipped: The largest latency win may be eliminating per-job HTTP calls, not changing model math.
+- Risk and mitigation: Preserve response shape expected by downstream aggregation while adding batch summaries/counters.
+
+## 2026-05-25 20:45 +07 - Survival checkpoint and P1-PERF-003 mini plan
+- Decision: Reconcile durable state after the compact and create a state-only survival checkpoint before database index work.
+- Expected files to touch next: `db/models.py`, a new Alembic migration under `db/migrations/` if indexes are missing, targeted migration/index tests if existing patterns support them, and durable `docs/agent/` state files.
+- Validation commands: inspect current indexes first, then run `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads` and `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: add indexes for hot recommendation paths while avoiding duplicate indexes.
+- Skipped option: Adding broad indexes to every foreign key or score column without query evidence.
+- Reason skipped: Duplicate or low-value indexes increase write overhead and migration noise.
+- Risk and mitigation: Compare `db/models.py`, existing migrations, and recommendation query filters/orderings before creating a migration.
+
+## 2026-05-25 20:57 +07 - P1-PERF-003 index selection
+- Decision: Add three partial active-job indexes and one application history index: newest active jobs by `(posted_at DESC, id)`, active source-filtered jobs by `(source, posted_at DESC, id)`, active experience-filtered jobs by `(experience_level, posted_at DESC, id)`, and applications by `(user_id, applied_at DESC)`.
+- Evidence: Pipeline candidate loading uses `WHERE is_active = true ORDER BY posted_at DESC LIMIT`; gateway job listing uses active jobs with optional `source`/`experience_level` filters and the same newest-first ordering; application history uses `WHERE a.user_id = :uid ORDER BY a.applied_at DESC`.
+- Skipped option: JSONB GIN indexes on `jobs.match_data`.
+- Reason skipped: Current hot paths parse `match_data` after primary row retrieval and do not filter JSONB in SQL.
+- Skipped option: A B-tree index for leading-wildcard `location ILIKE`.
+- Reason skipped: The current query uses `%term%`; B-tree would not be effective without changing the search strategy or adding a trigram extension.
+- Risk and mitigation: Added focused ORM metadata assertions and a reversible Alembic migration, then validated upgrade, downgrade, re-upgrade, and full pytest.
+
+## 2026-05-25 20:59 +07 - P1-OBS-001 telemetry mini plan
+- Decision: Add in-process pipeline stage latency telemetry for the existing recommendation stages before introducing external observability infrastructure.
+- Expected files to touch: `services/pipeline/main.py`, possibly `services/pipeline/stages/` if the stage result shape requires it, `tests/test_pipeline_telemetry.py`, and durable `docs/agent/` state files.
+- Validation commands: focused telemetry tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: track p50 and p95 per stage for scrape, SBERT, NCF, DQN, calibrator, and aggregation.
+- Skipped option: Adding Prometheus/OpenTelemetry dependencies in this task.
+- Reason skipped: The code already has timing hooks around stage execution; p50/p95 summaries can be added without new infrastructure or Docker changes.
+- Risk and mitigation: Preserve the existing pipeline response contract and add telemetry as additive metadata.
+
+## 2026-05-25 21:05 +07 - P1-OBS-001 telemetry design
+- Decision: Keep per-stage latency samples in bounded in-process deques and expose p50/p95 snapshots through `/health` and `stages["telemetry"]` in pipeline responses.
+- Stage mapping: `scrape` stays `scrape`; `encode` reports as `sbert`; `ncf_score` reports as `ncf`; `dqn_rank` reports as `dqn`; `aggregate` reports as `aggregation`.
+- Calibrator treatment: record a `calibrator` stage with `0.0 ms` and `mode=static_baseline` until the learned calibration task is implemented.
+- Skipped option: Renaming existing `timings_ms` keys.
+- Reason skipped: Existing clients may depend on `encode`, `ncf_score`, `dqn_rank`, and `aggregate`; telemetry aliases are additive.
+- Risk and mitigation: Added a response-contract test and reran existing pipeline contracts plus full pytest.
+
+## 2026-05-25 21:07 +07 - P2-001 JWT validation mini plan
+- Decision: Validate JWT secret configuration at auth module initialization so weak or missing secrets fail before tokens are issued.
+- Expected files to touch: `services/shared/auth.py`, focused security tests, and durable `docs/agent/` state files.
+- Validation commands: focused JWT/security tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: fail fast if `JWT_SECRET` is missing or shorter than 32 bytes; preserve testability through explicit test overrides.
+- Skipped option: Only warning on weak secrets.
+- Reason skipped: The task explicitly requires fail-fast behavior.
+- Risk and mitigation: Existing tests intentionally use short secrets; update tests to use a valid default where they are not testing rejection and add focused checks for missing/short configuration.
+
+## 2026-05-25 21:05 +07 - P2-001 JWT validation design
+- Decision: Centralize JWT signing-secret validation in `services/shared/auth.py` and reuse it from the gateway's module-level configuration.
+- Access and refresh secrets: Both must be configured and at least 32 bytes because both sign bearer credentials.
+- Fail-fast point: Shared auth validates environment-derived defaults at import time, while `TokenManager` validates explicit constructor overrides immediately.
+- Skipped option: Deferring validation until token creation or verification.
+- Reason skipped: Runtime issuance-time failures do not catch a weak deployment configuration early enough.
+- Risk and mitigation: Test modules now force deterministic 32-byte-or-longer JWT secrets in `tests/conftest.py`; focused and full pytest validation passed after the change.
+
+## 2026-05-25 21:06 +07 - Survival checkpoint and P2-002 CORS hardening mini plan
+- Decision: Create a state-only checkpoint after the third post-checkpoint commit, then start `P2-002`.
+- Expected files to touch next: `services/gateway/main.py`, `.env.example`, `docker-compose.yml` if environment wiring changes, focused CORS tests, and durable `docs/agent/` state files.
+- Validation commands: focused CORS tests first, then `.\.venv\Scripts\python.exe -m pytest -q` and `docker compose config` with required environment variables.
+- Requirement: Restrict CORS by environment and prevent wildcard CORS in production.
+- Skipped option: Hard-coding one production origin immediately.
+- Reason skipped: The repo already has `CORS_ALLOW_ORIGINS` and `CORS_ALLOWED_ORIGINS` environment surfaces; inspect current parsing and Compose wiring before choosing the smallest compatible contract.
+- Risk and mitigation: Preserve local development ergonomics for `localhost` while adding a production fail-fast or safe default for wildcard origins.
+
+## 2026-05-25 21:14 +07 - P2-002 CORS hardening design
+- Decision: Resolve CORS origins through a small gateway helper that defaults development to localhost origins and rejects missing or wildcard origins when `APP_ENV` is `production` or `prod`.
+- Compose wiring: Pass `APP_ENV` into the gateway and set `CORS_ALLOW_ORIGINS` from `CORS_ALLOWED_ORIGINS`, defaulting to localhost instead of `*`.
+- `.env.example`: Document `CORS_ALLOW_ORIGINS` and the production wildcard rejection rule.
+- Skipped option: Rejecting wildcard origins in every environment.
+- Reason skipped: The task requirement is production hardening; local development may still intentionally use permissive values outside production, though the default is now restricted.
+- Risk and mitigation: Added focused CORS config tests, gateway auth regressions, Compose rendering validation, and full backend pytest.
+
+## 2026-05-25 21:16 +07 - P2-003 durable feedback outbox mini plan
+- Decision: Start `P2-003` with a schema-and-contract read pass before implementation because this task crosses database models, migrations, gateway feedback persistence, and pipeline retry semantics.
+- Expected files to touch next: `db/models.py`, a new Alembic migration under `db/migrations/`, `services/gateway/main.py`, `services/pipeline/main.py` or a focused worker module if the existing shape supports it, focused tests, and durable `docs/agent/` state files.
+- Validation commands: focused outbox tests first, Alembic heads/upgrade/downgrade checks after migration work, then `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: Persist model feedback delivery attempts durably and retry failed forwarding rather than reporting an ephemeral queued state only.
+- Skipped option: Adding a separate external queue service.
+- Reason skipped: The requested artifact is a database-backed outbox table and retry worker; adding Redis/Celery would expand infrastructure beyond the current task.
+- Risk and mitigation: Keep the first implementation narrow: store failed feedback payloads transactionally, expose/test a retry path, and preserve existing frontend feedback response shape.
+
+## 2026-05-25 21:27 +07 - P2-003 outbox design
+- Decision: Store every recommendation feedback payload in `model_feedback_outbox` in the same transaction as local `feedback_events`, `user_interactions`, and `user_job_interactions` persistence.
+- Delivery semantics: Attempt immediate forwarding to the pipeline after commit; mark the outbox row `sent` on success, or leave it `pending` with attempt count, error text, and backoff timestamp on failure.
+- Retry worker: Add `retry_model_feedback_outbox_once()` plus a gateway lifespan loop controlled by `FEEDBACK_OUTBOX_RETRY_ENABLED`, batch size, and retry interval environment variables.
+- Skipped option: Only creating an outbox row when immediate forwarding fails.
+- Reason skipped: A transactional outbox should record the intended external delivery before attempting it, so a crash after local commit does not lose feedback.
+- Risk and mitigation: This is at-least-once delivery; model services should tolerate duplicate feedback. The outbox stores attempt count and delivered timestamp for audit and replay control.
+
+## 2026-05-25 21:34 +07 - P2-004 DQN skill-path reframing mini plan
+- Decision: Start `P2-004` by inspecting the current DQN service, DQN training files, pipeline DQN stage, and existing DQN tests before changing model semantics.
+- Expected files to touch: `services/dqn/main.py`, `services/dqn/training/`, `services/pipeline/stages/stage_4_dqn_rank.py`, `tests/test_dqn_learning_path.py`, `tests/test_dqn_policy_contracts.py`, `docs/ml/`, and durable `docs/agent/` state files.
+- Validation commands: focused DQN learning-path/policy tests first, pipeline contract tests after preserving response shape, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: DQN actions should represent next skill, course, certificate, or career milestone decisions with rewards based on skill-gap reduction and job-match lift, not direct job-posting recommendations.
+- Skipped option: Replacing the existing DQN job-rerank API in one large breaking change.
+- Reason skipped: The pipeline and frontend currently consume a DQN job-score/rerank signal; the first implementation should add skill-path semantics while preserving compatibility until the calibrator and product surfaces can consume the new signal directly.
+- Risk and mitigation: Keep the public route contract backward-compatible where possible, document the MDP in `docs/ml/`, and add tests that prove skill milestone actions are generated from user skills, missing skills, and market demand.
+
+## 2026-05-25 21:52 +07 - P2-004 DQN skill-path design
+- Decision: Keep `/rank` as a compatibility scoring endpoint, but make the selected DQN action and metadata a skill-path policy action rather than a job-posting action.
+- MDP: state is `user_profile + missing_skills + market_demand`; action is `next_skill_course_certificate_or_career_milestone`; reward is `skill_gap_reduction + job_match_lift`.
+- Pipeline compatibility: stage 4 still emits `dqn_score`, but it now preserves `dqn_policy_objective`, `dqn_action_type`, reward components, skill gap, and market demand metadata.
+- Training compatibility: the lightweight training smoke now trains on mastered-skill flags, missing-skill flags, market-demand features, and target-role features, while still writing the existing `dqn_model.pt` checkpoint.
+- Skipped option: Removing DQN contribution from job ranking immediately.
+- Reason skipped: Hybrid aggregation and reports already expect a numeric DQN signal; removing it belongs with the learned calibration layer or product UI changes, not this reframing task.
+- Risk and mitigation: Documented the compatibility interpretation in `docs/ml/DQN_SKILL_PATH_RECOMMENDER.md` and validated existing DQN edge cases, pipeline contracts, training smoke, and full backend tests.
+
+## 2026-05-25 21:56 +07 - P2-005 calibration layer mini plan
+- Decision: Start `P2-005` by inspecting current aggregation, recommendation metrics, sample reports, and evaluation helpers before adding a learned ranker.
+- Expected files to touch: `services/pipeline/stages/stage_5_aggregate.py`, a small calibration module under `services/pipeline/` or `services/evaluation/`, focused tests, `reports/ml/` if metrics are generated, and durable `docs/agent/` state files.
+- Validation commands: focused calibration/metrics tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Requirement: Add a learned logistic or LightGBM-style calibration layer over SBERT score, NCF score, DQN signal, skill gap, recency, salary, and location while keeping the static baseline.
+- Skipped option: Replacing the existing static aggregate score outright.
+- Reason skipped: The task explicitly requires keeping the static baseline, and existing tests/reports depend on the current hybrid score contract.
+- Risk and mitigation: Begin with deterministic train/evaluate smoke data and compare learned NDCG against the static baseline before claiming improvement.
+
+## 2026-05-25 21:56 +07 - P2-005 calibration design
+- Decision: Add a deterministic learned logistic calibrator in `services/pipeline/calibration.py` and keep the previous weighted aggregate as `static_baseline_score`.
+- Features: static baseline, SBERT score, NCF score, DQN signal, skill gap, skill alignment, recency, salary, location, and interaction depth.
+- Serving behavior: `final_score` is the learned calibrated score with a small static-baseline blend to preserve the existing match-percent scale; `ablation_scores` exposes both `static_baseline` and `learned_calibrator`.
+- Evaluation: Add a synthetic smoke fixture report at `reports/ml/calibration_layer_smoke.json` comparing NDCG@3 against the static baseline. The report is explicitly not production performance evidence.
+- Skipped option: Adding LightGBM or a heavier training dependency.
+- Reason skipped: The repo has no production labels yet for calibrator training; a pure-Python logistic smoke model is reviewable, deterministic, and sufficient to create the serving contract without adding dependency risk.
+- Risk and mitigation: Strategy label changes broke two stale tests; updated them to assert calibrator metadata and static baseline preservation, then reran focused and full backend validation.
+
+## 2026-05-25 21:56 +07 - P3-FEAT-001 split and backend mini plan
+- Decision: Split skill taxonomy autocomplete into `P3-FEAT-001-BE` and `P3-FEAT-001-FE` before implementation.
+- Expected backend files to touch: `services/gateway/main.py`, a focused backend test under `tests/`, and durable `docs/agent/` state files.
+- Backend validation commands: focused skill-taxonomy API test first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Expected frontend files to touch later: profile or skills UI under `frontend/`, with `npm run lint` and `npm run build` validation inside the nested frontend repo.
+- Skipped option: Building backend and frontend autocomplete in one commit.
+- Reason skipped: The user required backend and frontend feature tasks with separate validation and commits.
+- Risk and mitigation: Inspect existing gateway profile/skills routes and frontend skill-entry UI before choosing the API shape.
+
+## 2026-05-25 21:56 +07 - P3-FEAT-001-BE autocomplete contract
+- Decision: Keep the existing public `GET /api/skills/search` endpoint and add an `exclude` query parameter for selected-skill filtering.
+- Contract: `exclude` accepts repeated query values or comma-separated values and compares against canonical skill names plus aliases.
+- Skipped option: Adding a new route name such as `/api/skills/autocomplete`.
+- Reason skipped: The existing endpoint already exposes taxonomy suggestions and is used by profile validation semantics; extending it is a smaller backend contract.
+- Risk and mitigation: Added focused tests for canonical-name and alias exclusion, then reran existing taxonomy/profile regressions and full backend pytest.
+
+## 2026-05-25 21:56 +07 - P3-FEAT-001-FE frontend mini plan
+- Decision: Wire skill entry on the existing profile page to the backend taxonomy search endpoint.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/profile/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in `frontend/`.
+- Requirement: Suggest canonical skills while editing, exclude selected skills, and preserve existing save semantics.
+- Skipped option: Reworking onboarding skill entry in the same task.
+- Reason skipped: This child task should be a narrow frontend integration after the backend contract; onboarding can reuse the API in a later task if needed.
+- Risk and mitigation: The nested frontend repo is already dirty; stage only the touched frontend files and do not revert unrelated frontend changes.
+
+## 2026-05-25 21:56 +07 - P3-FEAT-002 profile completeness split mini plan
+- Decision: Start `P3-FEAT-002` as a planning/split task before product implementation.
+- Expected files to touch before implementation: durable `docs/agent/` state files only.
+- Validation command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`.
+- Requirement: Create separate backend and frontend child tasks for the profile completeness meter with their own validation and commits.
+- Skipped option: Implementing the meter directly inside the parent task.
+- Reason skipped: The product-feature phase requires separate backend and frontend tasks.
+
+## 2026-05-25 22:25 +07 - P3-FEAT-002-BE backend mini plan
+- Decision: Add a gateway profile completeness summary endpoint before building the frontend meter.
+- Expected files to touch: `services/gateway/main.py`, `tests/test_profile_completeness.py`, and durable `docs/agent/` state files.
+- Validation commands: focused profile completeness tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract: return a percentage, completed item IDs, missing item IDs, and display labels based on existing user fields and `user_skills`.
+- Skipped option: Computing missing fields entirely in the frontend.
+- Reason skipped: The backend owns profile and skill persistence, so the completeness contract should come from the same source of truth.
+
+## 2026-05-25 22:34 +07 - P3-FEAT-002-FE frontend mini plan
+- Decision: Render the backend completeness summary in the existing profile page rather than duplicating completeness logic in the browser.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/profile/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository.
+- UI contract: fetch `/api/profile/completeness` for authenticated profile users, show percent, completed/missing counts, and labeled item states near the existing editable profile sections.
+- Skipped option: Reusing only `user.completion_percent`.
+- Reason skipped: The new backend contract exposes actionable missing item IDs and labels for the meter, while `completion_percent` is the older onboarding progress field.
+
+## 2026-05-25 22:38 +07 - P3-FEAT-003-BE backend mini plan
+- Decision: Split saved jobs and skip buttons into backend and frontend child tasks before implementation.
+- Expected backend files to touch: `services/gateway/main.py`, `tests/test_saved_jobs_skip.py`, and durable `docs/agent/` state files.
+- Validation commands: focused saved/skip API tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract target: authenticated endpoints should let users save jobs, list saved jobs, unsave jobs, and mark jobs as skipped without exposing another user's state.
+- Skipped option: Implementing save/skip as frontend-only local state.
+- Reason skipped: Save and skip are user actions that must persist and feed recommendation feedback/history.
+
+## 2026-05-25 22:45 +07 - P3-FEAT-003-FE frontend mini plan
+- Decision: Add save and skip controls to the recommendation surface first, with saved jobs visible from the existing profile page.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/recommendations/page.tsx`, `frontend/src/app/profile/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository.
+- UI contract: controls should call the backend save/skip endpoints, keep already-rendered recommendation cards stable, and avoid showing skipped jobs in the current client-side slate after a successful skip.
+- Skipped option: Building a new standalone saved-jobs page in this task.
+- Reason skipped: The existing product surface has recommendations and profile history; adding a new route would expand frontend scope beyond the small child task.
+
+## 2026-05-25 22:52 +07 - P3-FEAT-003-FE frontend implementation decision
+- Decision: Keep saved/skip UI state local to the recommendation slate and use the profile page as the saved-job list surface.
+- Trade-off: This avoids a new route and keeps the child task small, but saved-job management is read-only from profile for now; unsave is available in the API helper for a later UI pass.
+- Skipped option: Blocking recommendation loading when the saved-list request fails.
+- Reason skipped: Recommendations are the primary page purpose; saved-state decoration should not hide recommendations if the saved-list call is temporarily unavailable.
+- Risk and mitigation: User actions still surface errors through an inline alert, and lint/build plus local `/recommendations` and `/profile` smoke checks passed after the change.
+
+## 2026-05-25 22:56 +07 - P3-FEAT-004 job alerts split and backend mini plan
+- Decision: Split job alerts into `P3-FEAT-004-BE` and `P3-FEAT-004-FE`, with the backend contract first.
+- Expected backend files to touch: `db/models.py`, a new Alembic migration under `db/migrations/`, `services/gateway/main.py`, `tests/test_job_alerts.py`, and durable `docs/agent/` state files.
+- Backend validation commands: focused job-alert API tests first, Alembic head/upgrade checks after migration work, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract target: authenticated users can create, list, update, and disable job alerts based on search/profile criteria without exposing another user's alerts.
+- Skipped option: Implementing browser-only alert preferences.
+- Reason skipped: Alerts need durable user state and will likely drive future notification or scheduled matching work.
+
+## 2026-05-25 23:05 +07 - P3-FEAT-004-FE frontend mini plan
+- Decision: Add job-alert API helpers and expose alert creation/listing in the existing profile page after the backend contract is validated.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/profile/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository, plus local HTTP smoke if the dev server is available.
+- UI contract: users should be able to create a simple alert from profile preferences, see their active alerts, and disable an alert without leaving the profile page.
+- Skipped option: Adding email/push delivery settings in this frontend task.
+- Reason skipped: The backend task created alert preferences only; notification delivery belongs to a later scheduling/notification task.
+
+## 2026-05-25 23:18 +07 - P3-FEAT-004-FE frontend implementation decision
+- Decision: Keep job-alert creation and active-alert management on the existing profile page.
+- Trade-off: This keeps the feature discoverable next to profile preferences and saved jobs, but does not add a standalone alert-management page yet.
+- Skipped option: Implementing notification channel settings or delivery previews.
+- Reason skipped: The current backend contract persists alert preferences only; scheduled delivery belongs to a later notification task.
+- Risk and mitigation: Added typed API helpers, kept the profile UI scoped to create/list/disable, added accessible names for form controls, and validated with frontend lint, build, and `/profile` smoke.
+
+## 2026-05-25 23:23 +07 - P3-FEAT-005 split and backend mini plan
+- Decision: Split skill-gap detail into `P3-FEAT-005-BE` and `P3-FEAT-005-FE`, with backend contract hardening first.
+- Expected backend files to touch: `services/gateway/main.py`, `tests/test_skill_gap_detail.py`, and durable `docs/agent/` state files.
+- Backend validation commands: focused skill-gap detail tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract target: the existing authenticated `GET /api/jobs/{job_id}/skill-gap` route should become page-ready, tested, and explicit about missing jobs and matched/missing skills.
+- Expected frontend files to touch later: `frontend/src/lib/api.ts` and `frontend/src/app/jobs/[id]/page.tsx`, with `npm run lint` and `npm run build` validation.
+- Skipped option: Building the frontend page directly against the current untested route.
+- Reason skipped: The route exists but lacks focused backend coverage, so frontend work should not lock in an under-specified contract.
+
+## 2026-05-25 23:34 +07 - P3-FEAT-005-BE backend implementation decision
+- Decision: Harden the existing `GET /api/jobs/{job_id}/skill-gap` route instead of adding a parallel endpoint.
+- Contract: return job title/company, required skills, matched skills, missing skills, match percent, and explanation metadata; return `404` when the job does not exist.
+- Persistence: write each viewed skill-gap detail to `skill_gap_snapshots` because the table already exists for historical skill-gap outputs shown to a user.
+- Skipped option: Computing skill gaps from free-text descriptions in this task.
+- Reason skipped: Existing job records already carry structured `match_data.skills`; NLP extraction would expand scope and risk beyond the detail-page contract.
+- Risk and mitigation: Added focused route tests, included `skill_gap_snapshots` in test cleanup, ran adjacent profile/saved-job regressions, and ran full backend pytest.
+
+## 2026-05-25 23:38 +07 - P3-FEAT-005-FE frontend mini plan
+- Decision: Expose skill-gap detail on the existing job detail page instead of creating a separate route.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/jobs/[id]/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository, plus local `/jobs/{id}` smoke if a stable seeded job URL is available.
+- UI contract: show required, matched, and missing skills plus the backend explanation and match percentage near the existing job description.
+- Skipped option: Adding a new standalone skill-gap route.
+- Reason skipped: Job-specific skill gaps are most useful in context of a job detail, and a new route would expand navigation and state scope for this child task.
+
+## 2026-05-25 23:48 +07 - P3-FEAT-005-FE frontend implementation decision
+- Decision: Add the skill-gap detail section to `frontend/src/app/jobs/[id]/page.tsx` and add a typed `getJobSkillGap` API helper.
+- Trade-off: The nested frontend repo had the job-detail route untracked, so the task commit adds the full route file; staging was limited to that file and `src/lib/api.ts`.
+- Skipped option: Failing the whole job page when skill-gap loading fails.
+- Reason skipped: Job details are still useful if the skill-gap endpoint is temporarily unavailable; the page renders an inline skill-gap error instead.
+- Risk and mitigation: Validated with frontend lint, build, dynamic route HTTP smoke, staged diff check, and a nested frontend commit.
+
+## 2026-05-25 23:54 +07 - P3-FEAT-006 split and backend mini plan
+- Decision: Split admin model-health dashboard into `P3-FEAT-006-BE` and `P3-FEAT-006-FE`, with an admin-only gateway contract first.
+- Expected backend files to touch: `services/gateway/main.py`, `tests/test_admin_model_health.py`, and durable `docs/agent/` state files.
+- Backend validation commands: focused admin model-health tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract target: authenticated admin users can fetch a model-health summary with pipeline telemetry and SBERT/NCF/DQN/calibrator status; normal users are rejected.
+- Expected frontend files to touch later: `frontend/src/lib/api.ts` and `frontend/src/app/analytics/page.tsx`, with `npm run lint` and `npm run build` validation.
+- Skipped option: Calling internal model services directly from the browser.
+- Reason skipped: Internal services are intentionally hidden behind the gateway and Docker network; the dashboard should consume a gateway-admin contract.
+
+## 2026-05-25 23:40 +07 - P3-FEAT-006-BE backend implementation decision
+- Decision: Add `GET /api/admin/model-health` to the gateway and derive its payload from the pipeline `/health` contract.
+- Contract: require an admin bearer token, call pipeline health with `HEALTH_TIMEOUT_SECONDS`, and return pipeline status, downstream scraper/SBERT/NCF/DQN configuration, calibrator/aggregation stage status, telemetry, and continual-training state.
+- Trade-off: The gateway summarizes model health instead of storing a separate health table, keeping the dashboard live and avoiding another persistence path.
+- Skipped option: Letting the frontend call pipeline or model services directly.
+- Reason skipped: Those services are internal by design; exposing them would weaken the service boundary fixed earlier.
+- Risk and mitigation: Added focused admin/auth tests, used the existing `_require_admin_role` guard, and ran adjacent pipeline auth/telemetry plus full backend pytest.
+
+## 2026-05-25 23:42 +07 - P3-FEAT-006-FE frontend mini plan
+- Decision: Add the admin model-health view to the existing analytics surface instead of introducing a new route.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/analytics/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository, plus a local analytics route smoke if the dev server is available.
+- UI contract: admins should see pipeline status, model service configuration, p50/p95 stage telemetry, and continual-training status from `GET /api/admin/model-health`.
+- Skipped option: Creating a separate `/admin/model-health` route.
+- Reason skipped: The existing analytics/dashboard surface is already the operational view; a new route would expand navigation scope for a small child task.
+
+## 2026-05-25 23:47 +07 - P3-FEAT-006-FE frontend implementation decision
+- Decision: Render the model-health panel only for users whose role is `admin`, while preserving the existing analytics job search/listing flow for all users.
+- Contract: add a typed `api.getAdminModelHealth()` helper, call it from the analytics page for admins, and display pipeline status, model services, stage latency, and continual-training state.
+- Trade-off: The nested frontend repo still had `src/app/analytics/page.tsx` untracked, so the frontend commit adds the full route file.
+- Skipped option: Fetching the admin endpoint for every user and handling `403` in the UI.
+- Reason skipped: Non-admin users should not spend a request on an admin-only operational panel.
+- Risk and mitigation: Validated with frontend lint, production build, local `/analytics` HTTP smoke, and nested staged diff check. Browser visual inspection was not available because tool discovery exposed no Browser tool and Node REPL had no Playwright module.
+
+## 2026-05-25 23:50 +07 - P3-FEAT-007 split and backend mini plan
+- Decision: Split recommendation reason filters into `P3-FEAT-007-BE` and `P3-FEAT-007-FE`, with a small backend response contract first.
+- Expected backend files to touch: `services/gateway/main.py`, `tests/test_recommendation_reason_filters.py`, and durable `docs/agent/` state files.
+- Backend validation commands: focused recommendation reason-filter tests first, then full `.\.venv\Scripts\python.exe -m pytest -q`.
+- Contract target: each recommendation should include explicit reason-filter scores for semantic fit, interaction fit, career-signal fit, recency, and location so frontend controls do not infer score meaning from raw model fields.
+- Expected frontend files to touch later: `frontend/src/lib/api.ts` and `frontend/src/app/recommendations/page.tsx`, with `npm run lint` and `npm run build` validation.
+- Skipped option: Implementing filters only as client-side aliases over existing score fields.
+- Reason skipped: Naming the backend reason-filter contract makes the UI durable if internal score names change later.
+
+## 2026-05-25 23:57 +07 - P3-FEAT-007-BE backend implementation decision
+- Decision: Add `reason_filter_scores` and `reason_filter_labels` to each gateway recommendation item instead of adding a separate filtering endpoint.
+- Contract: scores include `semantic_fit`, `interaction_fit`, `career_signal`, `location_fit`, and `recency`; labels explain how each frontend control should be named.
+- Trade-off: Recency is computed as a bounded 30-day score rather than as a raw timestamp, which keeps all filter values on a comparable 0-1 scale.
+- Skipped option: Mutating pipeline aggregate output for this UI concern.
+- Reason skipped: The gateway already adapts the pipeline response for frontend contracts, so this keeps pipeline stage outputs stable.
+- Risk and mitigation: Added focused route coverage through `/api/recommendations`, then ran adjacent recommendation feedback/saved-job regressions and full backend pytest.
+
+## 2026-05-25 23:59 +07 - P3-FEAT-007-FE frontend mini plan
+- Decision: Add reason-filter controls to the existing recommendations page next to the current sort control.
+- Expected files to touch: `frontend/src/lib/api.ts`, `frontend/src/app/recommendations/page.tsx`, and durable `docs/agent/` state files.
+- Validation commands: `npm run lint` and `npm run build` in the nested `frontend/` repository, plus local `/recommendations` smoke if the dev server is available.
+- UI contract: users should be able to prioritize match, SBERT semantic fit, NCF interaction fit, DQN career signal, closest location, or newest jobs using the backend `reason_filter_scores`.
+- Skipped option: Adding backend query parameters for server-side filtering in this task.
+- Reason skipped: Recommendation slates are already loaded client-side; this task is about user control over the current slate, not changing candidate generation.
+
+## 2026-05-26 00:30 +07 - P4-ADV-001 CV/resume ingestion mini plan
+- Decision: Add an authenticated gateway endpoint for CV/resume upload with immediate skill extraction.
+- Expected files to touch: docs/ml/CV_RESUME_INGESTION.md, services/gateway/main.py, services/gateway/requirements.txt, tests/test_cv_upload.py, and durable docs/agent/ state files.
+- Validation commands: focused pytest for CV upload, full backend pytest, frontend lint/build.
+- Chosen approach: reuse the existing skill taxonomy and _canonicalize_profile_skills logic by adding a new _extract_skills_from_cv_text helper that never raises on unknown text.
+- Skipped option: Full DOCX/image-OCR/LLM extraction in this task.
+- Risk and mitigation: PyPDF2 is deprecated but sufficient for smoke; migration to pypdf is documented as future work.
+
+
+## 2026-05-26 01:15 +07 - P4-ADV-002 certificate OCR mini plan
+- Decision: Add an authenticated gateway endpoint for certificate upload with heuristic text extraction and skill mapping.
+- Expected files to touch: docs/ml/CERTIFICATE_OCR.md, services/gateway/main.py, tests/test_certificate_upload.py, and durable docs/agent/ state files.
+- Validation commands: focused pytest for certificate upload, full backend pytest, frontend lint.
+- Chosen approach: reuse PyPDF2 for PDFs; add runtime-gated pytesseract for images with graceful fallback.
+- Skipped option: Full DOCX support, LLM-based parsing, certificate verification against issuers.
+- Risk and mitigation: pytesseract requires external Tesseract binary; the endpoint returns pending status with a clear message when it is unavailable.
+
+
+## 2026-05-26 01:50 +07 - P4-ADV-003 market-aware skill path mini plan
+- Decision: Compute market demand from job_required_skills counts and pass it to the DQN learning-path endpoint.
+- Expected files to touch: docs/ml/MARKET_AWARE_SKILL_PATH.md, services/gateway/main.py, tests/test_market_aware_skill_path.py, and durable docs/agent/ state files.
+- Validation commands: focused pytest for market demand, full backend pytest, frontend lint.
+- Chosen approach: leverage the existing DQN market_demand contract that was already designed but never wired.
+- Discovered and fixed: gateway learning path was looking for DQN response key "steps" instead of "learning_path", causing it to always fall back to hardcoded skills.
+- Discovered and fixed: _resolve_target_role raised on missing user_profiles table instead of falling back gracefully.
+
+## 2026-05-27 22:42 +07 - P5-ML-007 fine-tuned SBERT integration mini plan
+- Decision: Promote the fine-tuned SentenceTransformer checkpoint from `models/sbert-indonesian-hybrid-manual-research/best` into the active SBERT service path.
+- Expected files to touch: `services/sbert/main.py`, `services/sbert/README.md`, `docker-compose.yml`, `.env.example`, `docs/MODELS.md`, `docs/ml/ML_INVENTORY.md`, tests, and durable `docs/agent/` state files.
+- Validation commands: artifact validation/reload smoke, focused SBERT tests, Docker Compose config, and JSON validation for `TASK_QUEUE.json`.
+- Chosen approach: keep the pipeline contract unchanged because it already calls SBERT `/encode`; update the SBERT service default path, Docker mount, health metadata, docs, and regression tests.
+- Skipped option: Reading or wiring anything from `SCPAv2`.
+- Reason skipped: The user explicitly said `SCPAv2` failed and should be ignored; the usable checkpoint is already under the current SCPA repo.
+
+## 2026-05-31 09:12 +07 - DEBUG-ULT-001 bootstrap decision
+- Decision: Initialize a dedicated `docs/debug/` evidence ledger and mark `DEBUG-ULT-001` as the active durable task before touching product code.
+- Expected files to touch first: required `docs/debug/*.md` files plus `docs/agent/TASK_QUEUE.json`, `COMPACT_SNAPSHOT.md`, `PROJECT_STATE.md`, `SESSION_REPORT.md`, `DECISION_LOG.md`, and `VALIDATION_LEDGER.md`.
+- Validation commands: JSON parse of `TASK_QUEUE.json`, git status, and staged diff inspection before the initialization commit.
+- Chosen approach: repository files and runtime evidence are authoritative; memory only seeds recovery context.
+- `morph-mcp`: requested by the prompt, but current tool discovery exposed no callable morph tool, so standard local edit tooling is used.
+- Risk and mitigation: the repo started dirty with many untracked project files, so all commits must stage explicit task-owned paths only.
+
+## 2026-05-31 09:55 +07 - DEBUG-ULT-001 baseline decision
+- Decision: Treat the current Docker rebuild failure as the first confirmed root-cause target, but finish browser/API/model evidence collection before product-code edits unless the Docker failure blocks that evidence.
+- Evidence: backend pytest/import/compile passed, frontend lint/build passed, Docker config passed, and Docker rebuild failed at the gateway dependency layer.
+- Root-cause direction: compose builds gateway with root context `.` and `services/gateway/Dockerfile`; `COPY requirements.txt .` copies root `requirements.txt`, whose referenced files are not copied before pip install. Root `.dockerignore` is also missing, causing a multi-GB context transfer.
+- Risk and mitigation: existing containers are healthy but stale relative to current source, so browser/runtime results must label whether they use existing containers or current rebuilt services.
+- Next action: commit the inventory/baseline/hypotheses docs, then create and run the Selenium browser audit harness.
+
+## 2026-05-31 10:08 +07 - DEBUG-ULT-001 browser audit decision
+- Decision: Use `localhost:3000` and `localhost:9000` as the canonical browser audit origins because they match `frontend/.env.local` and compose CORS; `127.0.0.1` runs are retained only as diagnostic false-start evidence.
+- Evidence: production cross-check on port 3001 had no rendering failures but could not authenticate due origin mismatch; authenticated audit on `localhost:3000` succeeded.
+- Confirmed bug: longer authenticated settle reproduced `POST /api/recommendations/feedback` returning 500 from `/recommendations`; gateway logs show `feedback_events_slate_id_fkey` because the recommendation slate ID is not present in `served_slates`.
+- Next action: commit the Selenium harness and evidence, then add a focused regression test for feedback after recommendations before fixing served-slate persistence.
+
+## 2026-05-31 10:20 +07 - DEBUG-ULT-001 served-slate persistence decision
+- Decision: Fix the gateway contract by persisting served slates before recommendation responses return, rather than weakening the feedback FK or ignoring failed impression events.
+- Evidence: Selenium reproduced the 500, gateway logs identified the FK violation, and a focused pre-fix test proved `/api/recommendations` did not create `served_slates`.
+- Expected files to touch: `services/gateway/main.py`, `tests/conftest.py`, `tests/test_recommendation_feedback_slate.py`, plus debug and agent state ledgers.
+- Validation commands: focused pre-fix regression, `py_compile`, focused post-fix regression, adjacent recommendation/pipeline tests, then full backend pytest before commit.
+- Browser caveat: the live port-9000 gateway is a stale container; browser re-verification of the fix waits for the Docker rebuild/current-runtime issue.
+
+## 2026-05-31 10:47 +07 - DEBUG-ULT-001 Docker runtime repair decision
+- Decision: Keep gateway and pipeline images aligned with the repo package layout instead of relying on service-local top-level imports.
+- Evidence: gateway failed at the root requirements layer and sent a multi-GB context; after gateway repair, pipeline failed with `ModuleNotFoundError: No module named 'services'`.
+- Expected files to touch: `.dockerignore`, `docker-compose.yml`, `services/gateway/Dockerfile`, `services/pipeline/Dockerfile`, browser artifacts, and debug/agent ledgers.
+- Chosen approach: use root context for services that import `services.*`, copy minimal runtime paths, and start package module ASGI apps.
+- Validation commands: gateway build, gateway image import smoke, compose up, compose ps, health/ready probes, Alembic current/upgrade/current, final Selenium audit, and artifact secret scan.
+
+## 2026-06-01 05:15 +07 - DATA-QUALITY-PRODUCT-UI-001 real-data decision
+- Decision: Remove sample/fallback jobs from runtime catalog paths and treat real-source empty/failure states as controlled empty/degraded results, not as permission to fabricate jobs.
+- Evidence: user screenshots and live probes showed shallow job details, sparse skill autocomplete, and weak skill-gap context; static code showed scraper/pipeline fallback sample paths.
+- Chosen approach: purge existing runtime jobs, reload a bounded real-source set, preserve rich job text/sections/skills in schema/API/UI, and use taxonomy-backed skill search.
+- Skipped option: LinkedIn scraping or committed LinkedIn-like sample seed data.
+- Reason skipped: the user required real data, and LinkedIn scraping must not be added without legal/robots/ToS clearance. The CBI description was used as evidence/test shape, not production data.
+- Validation commands: focused backend/data tests, Python compile, Docker config, frontend lint/build, live DB/API probes, product-quality Selenium audit, and product artifact secret scan.
+

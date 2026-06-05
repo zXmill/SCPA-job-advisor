@@ -1,0 +1,1119 @@
+{
+  "generated_at": "2026-05-31T14:37:33.176810+00:00",
+  "api_base": "http://localhost:9000",
+  "modes_requested": [
+    "dev",
+    "prod"
+  ],
+  "scenario_count": 14,
+  "failed_check_count": 0,
+  "canceled_request_count": 75,
+  "console_severe_count": 0,
+  "modes": [
+    {
+      "mode": "dev",
+      "base_url": "http://localhost:3000",
+      "auth": {
+        "attempted": true,
+        "success": true,
+        "has_token": true,
+        "login_request_count": 2
+      },
+      "scenarios": [
+        {
+          "mode": "dev",
+          "name": "jobs",
+          "route": "/analytics",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-JOBS-TIMEOUT",
+              "name": "no false timeout after jobs response",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_jobs_response": true,
+                "timeout_texts": []
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-JOBS-TIMEOUT",
+              "name": "job cards render when jobs response succeeds",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_jobs_response": true,
+                "job_link_count": 25
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "canceled jobs requests do not leave final timeout UI",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "canceled_request_count": 0,
+                "timeout_texts": []
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-JOBS-TIMEOUT",
+              "name": "filter action does not show stale timeout",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "timeout_texts": [],
+                "retry_texts": []
+              }
+            }
+          ],
+          "notes": [
+            "captured 5 post-load network events"
+          ],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/dev_jobs_initial.png",
+            "reports/debug/runtime_contract/screenshots/dev_jobs_filter.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/dev_jobs_initial.html",
+            "reports/debug/runtime_contract/dom_snapshots/dev_jobs_filter.html"
+          ],
+          "network_event_count": 66,
+          "canceled_request_count": 0,
+          "auth_me_count": 0,
+          "final_ui_state": {
+            "url": "http://localhost:3000/analytics",
+            "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+            "body_text_length": 5264,
+            "timeout_texts": [],
+            "retry_texts": [],
+            "alert_texts": [],
+            "job_link_count": 25,
+            "recommendation_like_card_count": 0,
+            "loading_text_present": false,
+            "spinner_like_count": 0,
+            "theme": {
+              "colorScheme": "light",
+              "dataTheme": "light",
+              "storedTheme": null
+            }
+          }
+        },
+        {
+          "mode": "dev",
+          "name": "recommendations",
+          "route": "/recommendations",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-RECOMMENDATIONS-TIMEOUT",
+              "name": "no false timeout after recommendations response",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_recs_response": true,
+                "timeout_texts": []
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-RECOMMENDATIONS-TIMEOUT",
+              "name": "recommendation cards render when response succeeds",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_recs_response": true,
+                "recommendation_like_card_count": 127
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "canceled recommendation requests do not leave final timeout UI",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "canceled_request_count": 0,
+                "timeout_texts": []
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-RECOMMENDATIONS-TIMEOUT",
+              "name": "sort dropdown does not create refetch storm",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "before_sort_reqs": 7,
+                "after_sort_reqs": 8
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-SAVED-REQUEST-CANCEL",
+              "name": "save action does not trigger final timeout UI",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "timeout_texts": [],
+                "retry_texts": []
+              }
+            }
+          ],
+          "notes": [],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/dev_recommendations_initial.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/dev_recommendations_initial.html"
+          ],
+          "network_event_count": 72,
+          "canceled_request_count": 0,
+          "auth_me_count": 1,
+          "final_ui_state": {
+            "url": "http://localhost:3000/recommendations",
+            "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+            "body_text_length": 8159,
+            "timeout_texts": [],
+            "retry_texts": [],
+            "alert_texts": [],
+            "job_link_count": 20,
+            "recommendation_like_card_count": 127,
+            "loading_text_present": false,
+            "spinner_like_count": 0,
+            "theme": {
+              "colorScheme": "light",
+              "dataTheme": "light",
+              "storedTheme": null
+            }
+          }
+        },
+        {
+          "mode": "dev",
+          "name": "jobs_cancellation",
+          "route": "/analytics",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "targeted jobs filter scenario captures cancellation signal",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "canceled_request_count": 2,
+                "canceled_urls": [
+                  "http://localhost:9000/api/jobs?experience=entry&page=1&limit=25",
+                  "http://localhost:9000/api/jobs?experience=mid&page=1&limit=25"
+                ],
+                "throttle_enabled": true
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-JOBS-TIMEOUT",
+              "name": "targeted jobs cancellation does not leave false timeout after current success",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_jobs_response": true,
+                "timeout_texts": [],
+                "retry_texts": []
+              }
+            }
+          ],
+          "notes": [
+            "network throttle enabled=True"
+          ],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/dev_jobs_cancellation_final.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/dev_jobs_cancellation_final.html"
+          ],
+          "network_event_count": 74,
+          "canceled_request_count": 2,
+          "auth_me_count": 0,
+          "final_ui_state": {
+            "url": "http://localhost:3000/analytics",
+            "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+            "body_text_length": 273,
+            "timeout_texts": [],
+            "retry_texts": [],
+            "alert_texts": [],
+            "job_link_count": 0,
+            "recommendation_like_card_count": 0,
+            "loading_text_present": false,
+            "spinner_like_count": 0,
+            "theme": {
+              "colorScheme": "light",
+              "dataTheme": "light",
+              "storedTheme": null
+            }
+          }
+        },
+        {
+          "mode": "dev",
+          "name": "recommendations_cancellation",
+          "route": "/recommendations",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "targeted recommendations navigation scenario stays stable during rapid navigation",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "canceled_request_count": 0,
+                "canceled_urls": [],
+                "throttle_enabled": true,
+                "timeout_texts": []
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-RECOMMENDATIONS-TIMEOUT",
+              "name": "targeted recommendations cancellation does not leave false timeout after current success",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_recs_response": true,
+                "timeout_texts": [],
+                "retry_texts": []
+              }
+            }
+          ],
+          "notes": [
+            "network throttle enabled=True"
+          ],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/dev_recommendations_cancellation_final.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/dev_recommendations_cancellation_final.html"
+          ],
+          "network_event_count": 241,
+          "canceled_request_count": 0,
+          "auth_me_count": 0,
+          "final_ui_state": {
+            "url": "http://localhost:3000/recommendations?refresh=runtime-audit-3",
+            "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+            "body_text_length": 8159,
+            "timeout_texts": [],
+            "retry_texts": [],
+            "alert_texts": [],
+            "job_link_count": 20,
+            "recommendation_like_card_count": 127,
+            "loading_text_present": false,
+            "spinner_like_count": 0,
+            "theme": {
+              "colorScheme": "light",
+              "dataTheme": "light",
+              "storedTheme": null
+            }
+          }
+        },
+        {
+          "mode": "dev",
+          "name": "auth_session",
+          "route": "/dashboard,/profile,/recommendations,/analytics",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-AUTH-ME-REPEAT",
+              "name": "auth/me request count stays bounded during fast navigation",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "auth_me_count": 5,
+                "route_count": 4
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "fast navigation does not leave persistent timeout UI",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "timeout_texts": []
+              }
+            }
+          ],
+          "notes": [],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/dev_auth_session_after_navigation.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/dev_auth_session_after_navigation.html"
+          ],
+          "network_event_count": 252,
+          "canceled_request_count": 0,
+          "auth_me_count": 5,
+          "final_ui_state": {
+            "url": "http://localhost:3000/analytics",
+            "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+            "body_text_length": 5264,
+            "timeout_texts": [],
+            "retry_texts": [],
+            "alert_texts": [],
+            "job_link_count": 25,
+            "recommendation_like_card_count": 0,
+            "loading_text_present": false,
+            "spinner_like_count": 0,
+            "theme": {
+              "colorScheme": "light",
+              "dataTheme": "light",
+              "storedTheme": null
+            }
+          }
+        },
+        {
+          "mode": "dev",
+          "name": "theme_toggle",
+          "route": "/dashboard",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-FE-THEME-TOGGLE-STUCK",
+              "name": "theme toggle has no stuck loading indicator after repeated clicks",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "spinner_like_count": 0,
+                "loading_text_present": false
+              }
+            },
+            {
+              "bug_id": "BUG-FE-THEME-TOGGLE-STUCK",
+              "name": "theme persists after reload",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "after_theme": {
+                  "colorScheme": "dark",
+                  "dataTheme": "dark",
+                  "storedTheme": "dark"
+                },
+                "after_reload_theme": {
+                  "colorScheme": "dark",
+                  "dataTheme": "dark",
+                  "storedTheme": "dark"
+                }
+              }
+            },
+            {
+              "bug_id": "BUG-FE-THEME-TOGGLE-STUCK",
+              "name": "no hydration warning during theme toggle scenario",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "hydration_warning_count": 0
+              }
+            }
+          ],
+          "notes": [],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/dev_theme_toggle_before.png",
+            "reports/debug/runtime_contract/screenshots/dev_theme_toggle_after_clicks.png",
+            "reports/debug/runtime_contract/screenshots/dev_theme_toggle_after_reload.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/dev_theme_toggle_before.html",
+            "reports/debug/runtime_contract/dom_snapshots/dev_theme_toggle_after_clicks.html",
+            "reports/debug/runtime_contract/dom_snapshots/dev_theme_toggle_after_reload.html"
+          ],
+          "network_event_count": 0,
+          "canceled_request_count": 0,
+          "auth_me_count": 0,
+          "final_ui_state": {
+            "before": {
+              "url": "http://localhost:3000/dashboard",
+              "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+              "body_text_length": 541,
+              "timeout_texts": [],
+              "retry_texts": [],
+              "alert_texts": [],
+              "job_link_count": 0,
+              "recommendation_like_card_count": 0,
+              "loading_text_present": false,
+              "spinner_like_count": 0,
+              "theme": {
+                "colorScheme": "light",
+                "dataTheme": "light",
+                "storedTheme": null
+              }
+            },
+            "after": {
+              "url": "http://localhost:3000/dashboard",
+              "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+              "body_text_length": 1051,
+              "timeout_texts": [],
+              "retry_texts": [],
+              "alert_texts": [],
+              "job_link_count": 4,
+              "recommendation_like_card_count": 0,
+              "loading_text_present": false,
+              "spinner_like_count": 0,
+              "theme": {
+                "colorScheme": "dark",
+                "dataTheme": "dark",
+                "storedTheme": "dark"
+              }
+            },
+            "after_reload": {
+              "url": "http://localhost:3000/dashboard",
+              "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+              "body_text_length": 541,
+              "timeout_texts": [],
+              "retry_texts": [],
+              "alert_texts": [],
+              "job_link_count": 0,
+              "recommendation_like_card_count": 0,
+              "loading_text_present": false,
+              "spinner_like_count": 0,
+              "theme": {
+                "colorScheme": "dark",
+                "dataTheme": "dark",
+                "storedTheme": "dark"
+              }
+            },
+            "hydration_warning_count": 0
+          }
+        },
+        {
+          "mode": "dev",
+          "name": "gateway_restart",
+          "route": "/analytics",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "gateway becomes healthy after restart",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "gateway_healthy": true,
+                "restart_returncode": 0
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-JOBS-TIMEOUT",
+              "name": "gateway restart does not leave permanent jobs timeout UI",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "timeout_texts": [],
+                "retry_texts": []
+              }
+            }
+          ],
+          "notes": [],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/dev_gateway_restart_before.png",
+            "reports/debug/runtime_contract/screenshots/dev_gateway_restart_after.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/dev_gateway_restart_before.html",
+            "reports/debug/runtime_contract/dom_snapshots/dev_gateway_restart_after.html"
+          ],
+          "network_event_count": 126,
+          "canceled_request_count": 0,
+          "auth_me_count": 0,
+          "final_ui_state": {
+            "before": {
+              "url": "http://localhost:3000/analytics",
+              "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+              "body_text_length": 5264,
+              "timeout_texts": [],
+              "retry_texts": [],
+              "alert_texts": [],
+              "job_link_count": 25,
+              "recommendation_like_card_count": 0,
+              "loading_text_present": false,
+              "spinner_like_count": 0,
+              "theme": {
+                "colorScheme": "dark",
+                "dataTheme": "dark",
+                "storedTheme": "dark"
+              }
+            },
+            "after": {
+              "url": "http://localhost:3000/analytics",
+              "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+              "body_text_length": 5264,
+              "timeout_texts": [],
+              "retry_texts": [],
+              "alert_texts": [],
+              "job_link_count": 25,
+              "recommendation_like_card_count": 0,
+              "loading_text_present": false,
+              "spinner_like_count": 0,
+              "theme": {
+                "colorScheme": "dark",
+                "dataTheme": "dark",
+                "storedTheme": "dark"
+              }
+            },
+            "restart": {
+              "returncode": 0,
+              "elapsed_ms": 1199.06,
+              "stdout": "",
+              "stderr": " Container scpa-gateway-1  Restarting\n Container scpa-gateway-1  Started\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "prod",
+      "base_url": "http://localhost:3001",
+      "auth": {
+        "attempted": true,
+        "success": true,
+        "has_token": true,
+        "login_request_count": 2
+      },
+      "scenarios": [
+        {
+          "mode": "prod",
+          "name": "jobs",
+          "route": "/analytics",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-JOBS-TIMEOUT",
+              "name": "no false timeout after jobs response",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_jobs_response": true,
+                "timeout_texts": []
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-JOBS-TIMEOUT",
+              "name": "job cards render when jobs response succeeds",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_jobs_response": true,
+                "job_link_count": 25
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "canceled jobs requests do not leave final timeout UI",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "canceled_request_count": 12,
+                "timeout_texts": []
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-JOBS-TIMEOUT",
+              "name": "filter action does not show stale timeout",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "timeout_texts": [],
+                "retry_texts": []
+              }
+            }
+          ],
+          "notes": [
+            "captured 78 post-load network events"
+          ],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/prod_jobs_initial.png",
+            "reports/debug/runtime_contract/screenshots/prod_jobs_filter.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/prod_jobs_initial.html",
+            "reports/debug/runtime_contract/dom_snapshots/prod_jobs_filter.html"
+          ],
+          "network_event_count": 128,
+          "canceled_request_count": 12,
+          "auth_me_count": 0,
+          "final_ui_state": {
+            "url": "http://localhost:3001/analytics",
+            "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+            "body_text_length": 5264,
+            "timeout_texts": [],
+            "retry_texts": [],
+            "alert_texts": [],
+            "job_link_count": 25,
+            "recommendation_like_card_count": 0,
+            "loading_text_present": false,
+            "spinner_like_count": 0,
+            "theme": {
+              "colorScheme": "light",
+              "dataTheme": "light",
+              "storedTheme": null
+            }
+          }
+        },
+        {
+          "mode": "prod",
+          "name": "recommendations",
+          "route": "/recommendations",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-RECOMMENDATIONS-TIMEOUT",
+              "name": "no false timeout after recommendations response",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_recs_response": true,
+                "timeout_texts": []
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-RECOMMENDATIONS-TIMEOUT",
+              "name": "recommendation cards render when response succeeds",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_recs_response": true,
+                "recommendation_like_card_count": 127
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "canceled recommendation requests do not leave final timeout UI",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "canceled_request_count": 1,
+                "timeout_texts": []
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-RECOMMENDATIONS-TIMEOUT",
+              "name": "sort dropdown does not create refetch storm",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "before_sort_reqs": 6,
+                "after_sort_reqs": 7
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-SAVED-REQUEST-CANCEL",
+              "name": "save action does not trigger final timeout UI",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "timeout_texts": [],
+                "retry_texts": []
+              }
+            }
+          ],
+          "notes": [],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/prod_recommendations_initial.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/prod_recommendations_initial.html"
+          ],
+          "network_event_count": 97,
+          "canceled_request_count": 1,
+          "auth_me_count": 1,
+          "final_ui_state": {
+            "url": "http://localhost:3001/recommendations",
+            "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+            "body_text_length": 8159,
+            "timeout_texts": [],
+            "retry_texts": [],
+            "alert_texts": [],
+            "job_link_count": 20,
+            "recommendation_like_card_count": 127,
+            "loading_text_present": false,
+            "spinner_like_count": 0,
+            "theme": {
+              "colorScheme": "light",
+              "dataTheme": "light",
+              "storedTheme": null
+            }
+          }
+        },
+        {
+          "mode": "prod",
+          "name": "jobs_cancellation",
+          "route": "/analytics",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "targeted jobs filter scenario captures cancellation signal",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "canceled_request_count": 13,
+                "canceled_urls": [
+                  "http://localhost:3001/jobs/b2fa84ba-a476-55dc-b337-f5edd97a784e?_rsc=ix5_aAief6TvBg04",
+                  "http://localhost:3001/jobs/a9c4b127-8307-511d-bd85-c7b90afccc1c?_rsc=ix5_aAief6TvBg04",
+                  "http://localhost:3001/jobs/7bc358da-fbc7-5650-b379-dcb2262835b7?_rsc=ix5_aAief6TvBg04",
+                  "http://localhost:3001/jobs/5d5f7986-58ba-5086-9433-f8dc6f811997?_rsc=ix5_aAief6TvBg04",
+                  "http://localhost:3001/jobs/2b92f851-132b-51b5-8570-aa3f727e3410?_rsc=ix5_aAief6TvBg04",
+                  "http://localhost:3001/jobs/09442211-b541-5235-a102-ca4b619faa81?_rsc=ix5_aAief6TvBg04",
+                  "http://localhost:3001/jobs/b2fa84ba-a476-55dc-b337-f5edd97a784e?_rsc=Dt318okBLJyNDlfE",
+                  "http://localhost:3001/jobs/a9c4b127-8307-511d-bd85-c7b90afccc1c?_rsc=Dt318okBLJyNDlfE"
+                ],
+                "throttle_enabled": true
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-JOBS-TIMEOUT",
+              "name": "targeted jobs cancellation does not leave false timeout after current success",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_jobs_response": true,
+                "timeout_texts": [],
+                "retry_texts": []
+              }
+            }
+          ],
+          "notes": [
+            "network throttle enabled=True"
+          ],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/prod_jobs_cancellation_final.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/prod_jobs_cancellation_final.html"
+          ],
+          "network_event_count": 125,
+          "canceled_request_count": 13,
+          "auth_me_count": 0,
+          "final_ui_state": {
+            "url": "http://localhost:3001/analytics",
+            "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+            "body_text_length": 273,
+            "timeout_texts": [],
+            "retry_texts": [],
+            "alert_texts": [],
+            "job_link_count": 0,
+            "recommendation_like_card_count": 0,
+            "loading_text_present": false,
+            "spinner_like_count": 0,
+            "theme": {
+              "colorScheme": "light",
+              "dataTheme": "light",
+              "storedTheme": null
+            }
+          }
+        },
+        {
+          "mode": "prod",
+          "name": "recommendations_cancellation",
+          "route": "/recommendations",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "targeted recommendations navigation scenario stays stable during rapid navigation",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "canceled_request_count": 4,
+                "canceled_urls": [
+                  "http://localhost:3001/jobs/e2c5bd74-1965-581c-9888-ca251cde7fb6?_rsc=D9VJ8Yo_rlt6ZeZ4",
+                  "http://localhost:3001/jobs/5d5f7986-58ba-5086-9433-f8dc6f811997?_rsc=D9VJ8Yo_rlt6ZeZ4",
+                  "http://localhost:3001/jobs/e2c5bd74-1965-581c-9888-ca251cde7fb6?_rsc=R7u61iZZHxclUmSA",
+                  "http://localhost:3001/jobs/5d5f7986-58ba-5086-9433-f8dc6f811997?_rsc=R7u61iZZHxclUmSA"
+                ],
+                "throttle_enabled": true,
+                "timeout_texts": []
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-RECOMMENDATIONS-TIMEOUT",
+              "name": "targeted recommendations cancellation does not leave false timeout after current success",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "successful_recs_response": true,
+                "timeout_texts": [],
+                "retry_texts": []
+              }
+            }
+          ],
+          "notes": [
+            "network throttle enabled=True"
+          ],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/prod_recommendations_cancellation_final.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/prod_recommendations_cancellation_final.html"
+          ],
+          "network_event_count": 227,
+          "canceled_request_count": 4,
+          "auth_me_count": 0,
+          "final_ui_state": {
+            "url": "http://localhost:3001/recommendations?refresh=runtime-audit-3",
+            "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+            "body_text_length": 8159,
+            "timeout_texts": [],
+            "retry_texts": [],
+            "alert_texts": [],
+            "job_link_count": 20,
+            "recommendation_like_card_count": 127,
+            "loading_text_present": false,
+            "spinner_like_count": 0,
+            "theme": {
+              "colorScheme": "light",
+              "dataTheme": "light",
+              "storedTheme": null
+            }
+          }
+        },
+        {
+          "mode": "prod",
+          "name": "auth_session",
+          "route": "/dashboard,/profile,/recommendations,/analytics",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-AUTH-ME-REPEAT",
+              "name": "auth/me request count stays bounded during fast navigation",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "auth_me_count": 5,
+                "route_count": 4
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "fast navigation does not leave persistent timeout UI",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "timeout_texts": []
+              }
+            }
+          ],
+          "notes": [],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/prod_auth_session_after_navigation.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/prod_auth_session_after_navigation.html"
+          ],
+          "network_event_count": 372,
+          "canceled_request_count": 13,
+          "auth_me_count": 5,
+          "final_ui_state": {
+            "url": "http://localhost:3001/analytics",
+            "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+            "body_text_length": 5264,
+            "timeout_texts": [],
+            "retry_texts": [],
+            "alert_texts": [],
+            "job_link_count": 25,
+            "recommendation_like_card_count": 0,
+            "loading_text_present": false,
+            "spinner_like_count": 0,
+            "theme": {
+              "colorScheme": "light",
+              "dataTheme": "light",
+              "storedTheme": null
+            }
+          }
+        },
+        {
+          "mode": "prod",
+          "name": "theme_toggle",
+          "route": "/dashboard",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-FE-THEME-TOGGLE-STUCK",
+              "name": "theme toggle has no stuck loading indicator after repeated clicks",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "spinner_like_count": 0,
+                "loading_text_present": false
+              }
+            },
+            {
+              "bug_id": "BUG-FE-THEME-TOGGLE-STUCK",
+              "name": "theme persists after reload",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "after_theme": {
+                  "colorScheme": "dark",
+                  "dataTheme": "dark",
+                  "storedTheme": "dark"
+                },
+                "after_reload_theme": {
+                  "colorScheme": "dark",
+                  "dataTheme": "dark",
+                  "storedTheme": "dark"
+                }
+              }
+            },
+            {
+              "bug_id": "BUG-FE-THEME-TOGGLE-STUCK",
+              "name": "no hydration warning during theme toggle scenario",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "hydration_warning_count": 0
+              }
+            }
+          ],
+          "notes": [],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/prod_theme_toggle_before.png",
+            "reports/debug/runtime_contract/screenshots/prod_theme_toggle_after_clicks.png",
+            "reports/debug/runtime_contract/screenshots/prod_theme_toggle_after_reload.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/prod_theme_toggle_before.html",
+            "reports/debug/runtime_contract/dom_snapshots/prod_theme_toggle_after_clicks.html",
+            "reports/debug/runtime_contract/dom_snapshots/prod_theme_toggle_after_reload.html"
+          ],
+          "network_event_count": 0,
+          "canceled_request_count": 0,
+          "auth_me_count": 0,
+          "final_ui_state": {
+            "before": {
+              "url": "http://localhost:3001/dashboard",
+              "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+              "body_text_length": 541,
+              "timeout_texts": [],
+              "retry_texts": [],
+              "alert_texts": [],
+              "job_link_count": 0,
+              "recommendation_like_card_count": 0,
+              "loading_text_present": false,
+              "spinner_like_count": 0,
+              "theme": {
+                "colorScheme": "light",
+                "dataTheme": "light",
+                "storedTheme": null
+              }
+            },
+            "after": {
+              "url": "http://localhost:3001/dashboard",
+              "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+              "body_text_length": 1051,
+              "timeout_texts": [],
+              "retry_texts": [],
+              "alert_texts": [],
+              "job_link_count": 4,
+              "recommendation_like_card_count": 0,
+              "loading_text_present": false,
+              "spinner_like_count": 0,
+              "theme": {
+                "colorScheme": "dark",
+                "dataTheme": "dark",
+                "storedTheme": "dark"
+              }
+            },
+            "after_reload": {
+              "url": "http://localhost:3001/dashboard",
+              "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+              "body_text_length": 541,
+              "timeout_texts": [],
+              "retry_texts": [],
+              "alert_texts": [],
+              "job_link_count": 0,
+              "recommendation_like_card_count": 0,
+              "loading_text_present": false,
+              "spinner_like_count": 0,
+              "theme": {
+                "colorScheme": "dark",
+                "dataTheme": "dark",
+                "storedTheme": "dark"
+              }
+            },
+            "hydration_warning_count": 0
+          }
+        },
+        {
+          "mode": "prod",
+          "name": "gateway_restart",
+          "route": "/analytics",
+          "status": "passed",
+          "checks": [
+            {
+              "bug_id": "BUG-RUNTIME-CANCELED-FETCH-SYSTEMIC",
+              "name": "gateway becomes healthy after restart",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "gateway_healthy": true,
+                "restart_returncode": 0
+              }
+            },
+            {
+              "bug_id": "BUG-RUNTIME-JOBS-TIMEOUT",
+              "name": "gateway restart does not leave permanent jobs timeout UI",
+              "passed": true,
+              "severity": "p1",
+              "evidence": {
+                "timeout_texts": [],
+                "retry_texts": []
+              }
+            }
+          ],
+          "notes": [],
+          "screenshots": [
+            "reports/debug/runtime_contract/screenshots/prod_gateway_restart_before.png",
+            "reports/debug/runtime_contract/screenshots/prod_gateway_restart_after.png"
+          ],
+          "dom_snapshots": [
+            "reports/debug/runtime_contract/dom_snapshots/prod_gateway_restart_before.html",
+            "reports/debug/runtime_contract/dom_snapshots/prod_gateway_restart_after.html"
+          ],
+          "network_event_count": 227,
+          "canceled_request_count": 21,
+          "auth_me_count": 0,
+          "final_ui_state": {
+            "before": {
+              "url": "http://localhost:3001/analytics",
+              "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+              "body_text_length": 5264,
+              "timeout_texts": [],
+              "retry_texts": [],
+              "alert_texts": [],
+              "job_link_count": 25,
+              "recommendation_like_card_count": 0,
+              "loading_text_present": false,
+              "spinner_like_count": 0,
+              "theme": {
+                "colorScheme": "dark",
+                "dataTheme": "dark",
+                "storedTheme": "dark"
+              }
+            },
+            "after": {
+              "url": "http://localhost:3001/analytics",
+              "title": "SCPA — Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+              "body_text_length": 5264,
+              "timeout_texts": [],
+              "retry_texts": [],
+              "alert_texts": [],
+              "job_link_count": 25,
+              "recommendation_like_card_count": 0,
+              "loading_text_present": false,
+              "spinner_like_count": 0,
+              "theme": {
+                "colorScheme": "dark",
+                "dataTheme": "dark",
+                "storedTheme": "dark"
+              }
+            },
+            "restart": {
+              "returncode": 0,
+              "elapsed_ms": 1301.81,
+              "stdout": "",
+              "stderr": " Container scpa-gateway-1  Restarting\n Container scpa-gateway-1  Started\n"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "started_at": "2026-05-31T03:20:06.842611+00:00",
+  "base_url": "http://localhost:3000",
+  "api_base": "http://localhost:9000",
+  "auth": {
+    "attempted": true,
+    "email": "budi@example.com",
+    "success": true,
+    "has_token": true,
+    "current_url": "http://localhost:3000/dashboard",
+    "error": ""
+  },
+  "job_id": "09442211-b541-5235-a102-ca4b619faa81",
+  "routes": [
+    "/",
+    "/analytics",
+    "/apply",
+    "/auth",
+    "/dashboard",
+    "/onboarding",
+    "/profile",
+    "/recommendations",
+    "/jobs/09442211-b541-5235-a102-ca4b619faa81"
+  ],
+  "pages": [
+    {
+      "route": "/",
+      "url": "http://localhost:3000/",
+      "title": "SCPA \u2014 Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+      "status": "loaded",
+      "load_ms": 7858.18,
+      "screenshot": "reports\\debug\\browser\\screenshots\\home.png",
+      "body_text_length": 3435,
+      "visible_error_text": [],
+      "console_error_count": 0,
+      "console_warning_count": 1,
+      "network_failure_count": 0,
+      "button_count": 1,
+      "form_count": 0,
+      "input_count": 0,
+      "link_count": 30,
+      "blank_page": false,
+      "hydration_error": false,
+      "notes": [
+        "credentials supplied; authenticated route audit"
+      ]
+    },
+    {
+      "route": "/analytics",
+      "url": "http://localhost:3000/analytics",
+      "title": "SCPA \u2014 Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+      "status": "loaded",
+      "load_ms": 7535.7,
+      "screenshot": "reports\\debug\\browser\\screenshots\\analytics.png",
+      "body_text_length": 5221,
+      "visible_error_text": [],
+      "console_error_count": 0,
+      "console_warning_count": 0,
+      "network_failure_count": 0,
+      "button_count": 33,
+      "form_count": 0,
+      "input_count": 2,
+      "link_count": 30,
+      "blank_page": false,
+      "hydration_error": false,
+      "notes": [
+        "credentials supplied; authenticated route audit"
+      ]
+    },
+    {
+      "route": "/apply",
+      "url": "http://localhost:3000/apply",
+      "title": "SCPA \u2014 Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+      "status": "loaded",
+      "load_ms": 7328.69,
+      "screenshot": "reports\\debug\\browser\\screenshots\\apply.png",
+      "body_text_length": 582,
+      "visible_error_text": [],
+      "console_error_count": 0,
+      "console_warning_count": 0,
+      "network_failure_count": 0,
+      "button_count": 4,
+      "form_count": 0,
+      "input_count": 0,
+      "link_count": 12,
+      "blank_page": false,
+      "hydration_error": false,
+      "notes": [
+        "credentials supplied; authenticated route audit"
+      ]
+    },
+    {
+      "route": "/auth",
+      "url": "http://localhost:3000/auth",
+      "title": "SCPA \u2014 Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+      "status": "loaded",
+      "load_ms": 7437.58,
+      "screenshot": "reports\\debug\\browser\\screenshots\\auth.png",
+      "body_text_length": 479,
+      "visible_error_text": [],
+      "console_error_count": 0,
+      "console_warning_count": 0,
+      "network_failure_count": 0,
+      "button_count": 6,
+      "form_count": 1,
+      "input_count": 2,
+      "link_count": 0,
+      "blank_page": false,
+      "hydration_error": false,
+      "notes": [
+        "credentials supplied; authenticated route audit"
+      ]
+    },
+    {
+      "route": "/dashboard",
+      "url": "http://localhost:3000/dashboard",
+      "title": "SCPA \u2014 Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+      "status": "loaded",
+      "load_ms": 7366.42,
+      "screenshot": "reports\\debug\\browser\\screenshots\\dashboard.png",
+      "body_text_length": 541,
+      "visible_error_text": [],
+      "console_error_count": 0,
+      "console_warning_count": 0,
+      "network_failure_count": 0,
+      "button_count": 4,
+      "form_count": 0,
+      "input_count": 0,
+      "link_count": 7,
+      "blank_page": false,
+      "hydration_error": false,
+      "notes": [
+        "credentials supplied; authenticated route audit"
+      ]
+    },
+    {
+      "route": "/onboarding",
+      "url": "http://localhost:3000/onboarding",
+      "title": "SCPA \u2014 Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+      "status": "loaded",
+      "load_ms": 7569.31,
+      "screenshot": "reports\\debug\\browser\\screenshots\\onboarding.png",
+      "body_text_length": 503,
+      "visible_error_text": [],
+      "console_error_count": 0,
+      "console_warning_count": 0,
+      "network_failure_count": 0,
+      "button_count": 3,
+      "form_count": 0,
+      "input_count": 3,
+      "link_count": 1,
+      "blank_page": false,
+      "hydration_error": false,
+      "notes": [
+        "credentials supplied; authenticated route audit"
+      ]
+    },
+    {
+      "route": "/profile",
+      "url": "http://localhost:3000/profile",
+      "title": "SCPA \u2014 Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+      "status": "loaded",
+      "load_ms": 7868.14,
+      "screenshot": "reports\\debug\\browser\\screenshots\\profile.png",
+      "body_text_length": 527,
+      "visible_error_text": [],
+      "console_error_count": 0,
+      "console_warning_count": 0,
+      "network_failure_count": 0,
+      "button_count": 6,
+      "form_count": 1,
+      "input_count": 4,
+      "link_count": 5,
+      "blank_page": false,
+      "hydration_error": false,
+      "notes": [
+        "credentials supplied; authenticated route audit"
+      ]
+    },
+    {
+      "route": "/recommendations",
+      "url": "http://localhost:3000/recommendations",
+      "title": "SCPA \u2014 Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+      "status": "loaded",
+      "load_ms": 7171.08,
+      "screenshot": "reports\\debug\\browser\\screenshots\\recommendations.png",
+      "body_text_length": 8405,
+      "visible_error_text": [],
+      "console_error_count": 0,
+      "console_warning_count": 0,
+      "network_failure_count": 0,
+      "button_count": 43,
+      "form_count": 0,
+      "input_count": 0,
+      "link_count": 39,
+      "blank_page": false,
+      "hydration_error": false,
+      "notes": [
+        "credentials supplied; authenticated route audit"
+      ]
+    },
+    {
+      "route": "/jobs/09442211-b541-5235-a102-ca4b619faa81",
+      "url": "http://localhost:3000/jobs/09442211-b541-5235-a102-ca4b619faa81",
+      "title": "SCPA \u2014 Smart Career Pathway Assistant | AI Career Intelligence for Indonesia",
+      "status": "loaded",
+      "load_ms": 7218.84,
+      "screenshot": "reports\\debug\\browser\\screenshots\\jobs_09442211-b541-5235-a102-ca4b619faa81.png",
+      "body_text_length": 534,
+      "visible_error_text": [],
+      "console_error_count": 0,
+      "console_warning_count": 0,
+      "network_failure_count": 0,
+      "button_count": 5,
+      "form_count": 0,
+      "input_count": 0,
+      "link_count": 8,
+      "blank_page": false,
+      "hydration_error": false,
+      "notes": [
+        "credentials supplied; authenticated route audit"
+      ]
+    }
+  ],
+  "totals": {
+    "pages": 9,
+    "console_errors": 0,
+    "console_warnings": 1,
+    "network_failures": 0,
+    "blank_pages": 0,
+    "hydration_errors": 0
+  }
+}

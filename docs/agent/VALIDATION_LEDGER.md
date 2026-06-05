@@ -1,0 +1,1985 @@
+# Validation Ledger
+
+## 2026-05-25 19:40 +07
+- Task ID: `INIT-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: JSON parsed successfully with exit code 0.
+- Related commit hash: `703c516`.
+
+## 2026-05-25 19:40 +07
+- Task ID: `INIT-001`
+- Command: `git status --short --branch`
+- Result: pass
+- Summary: Command completed and confirmed pre-existing dirty state plus new initializer files.
+- Related commit hash: `703c516`.
+
+## 2026-05-25 19:40 +07
+- Task ID: `INIT-001`
+- Command: `git diff -- AGENTS.md docs\agent`
+- Result: pass
+- Summary: Command completed. It showed no output because the initializer files were still untracked; staged diff must be reviewed before commit.
+- Related commit hash: `703c516`.
+
+## 2026-05-25 19:47 +07
+- Task ID: `INIT-001`
+- Command: `git diff --cached --name-only`
+- Result: pass
+- Summary: Staged files were exactly `AGENTS.md` and the durable `docs/agent/` files.
+- Related commit hash: `703c516`.
+
+## 2026-05-25 19:47 +07
+- Task ID: `INIT-001`
+- Command: `git diff --cached --check`
+- Result: pass
+- Summary: No whitespace errors reported in staged initializer files.
+- Related commit hash: `703c516`.
+
+## 2026-05-25 19:47 +07
+- Task ID: `INIT-001`
+- Command: `git commit -m "docs: initialize codex long-running project state"`
+- Result: pass
+- Summary: Created commit `703c516` with 9 initializer files.
+- Related commit hash: `703c516`.
+
+## 2026-05-25 19:57 +07
+- Task ID: `P0-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: JSON parsed successfully after starting the cleanup audit task.
+- Related commit hash: `b2b4f55`.
+
+## 2026-05-25 19:57 +07
+- Task ID: `P0-001`
+- Command: `git status --short --branch`
+- Result: pass
+- Summary: Command completed and showed only docs/agent task changes plus pre-existing dirty files.
+- Related commit hash: `b2b4f55`.
+
+## 2026-05-25 19:57 +07
+- Task ID: `P0-001`
+- Command: `git diff -- docs/agent`
+- Result: pass
+- Summary: Command completed and showed modified tracked state files; untracked `CLEANUP_AUDIT.md` requires staged diff review before commit.
+- Related commit hash: `b2b4f55`.
+
+## 2026-05-25 20:08 +07
+- Task ID: `P0-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `291 passed, 11 warnings in 96.24s`.
+- Related commit hash: `7b6ce82`.
+
+## 2026-05-25 20:10 +07
+- Task ID: `P0-002`
+- Command: `npm run lint` in `frontend/`
+- Result: fail
+- Summary: 1 error and 18 warnings. The error is `react-hooks/rules-of-hooks` for conditional `useCallback` at `frontend/src/app/recommendations/page.tsx:329`.
+- Related commit hash: `frontend:6e76e92`.
+
+## 2026-05-25 20:18 +07
+- Task ID: `P0-FE-001`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 18 warnings and no errors.
+- Related commit hash: `frontend:6e76e92`.
+
+## 2026-05-25 20:21 +07
+- Task ID: `P0-FE-001`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully, TypeScript completed, and 12 static pages generated.
+- Related commit hash: `frontend:6e76e92`.
+
+## 2026-05-25 20:28 +07
+- Task ID: `P0-FE-001`
+- Command: `git -C frontend commit -m "fix: resolve frontend hook order violation"`
+- Result: pass
+- Summary: Created nested frontend commit `6e76e92` adding `src/app/recommendations/page.tsx`.
+- Related commit hash: `frontend:6e76e92`.
+
+## 2026-05-25 20:38 +07
+- Task ID: `P0-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `291 passed, 11 warnings in 97.94s`.
+- Related commit hash: `7b6ce82`.
+
+## 2026-05-25 20:38 +07
+- Task ID: `P0-002`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 18 warnings and no errors.
+- Related commit hash: `7b6ce82`.
+
+## 2026-05-25 20:38 +07
+- Task ID: `P0-002`
+- Command: `docker compose config --quiet`
+- Result: pass
+- Summary: Compose configuration validated with no output.
+- Related commit hash: `7b6ce82`.
+
+## 2026-05-25 20:38 +07
+- Task ID: `P0-002`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: JSON parsed successfully.
+- Related commit hash: `7b6ce82`.
+
+## 2026-05-25 20:45 +07
+- Task ID: `P0-002`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully, TypeScript completed, and 12 static pages generated.
+- Related commit hash: `7b6ce82`.
+
+## 2026-05-25 20:06 +07
+- Task ID: `P1-SEC-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_internal_service_auth.py -q`
+- Result: pass
+- Summary: `3 passed in 0.14s`.
+- Related commit hash: `1392e58`.
+
+## 2026-05-25 20:06 +07
+- Task ID: `P1-SEC-001`
+- Command: `$env:INTERNAL_SERVICE_TOKEN='test-internal-token-32-bytes-long'; docker compose config --quiet`
+- Result: pass
+- Summary: Compose configuration validated with no output using a throwaway process-local internal token.
+- Related commit hash: `1392e58`.
+
+## 2026-05-25 20:07 +07
+- Task ID: `P1-SEC-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `294 passed, 11 warnings in 98.51s`.
+- Related commit hash: `1392e58`.
+
+## 2026-05-25 20:08 +07
+- Task ID: `P1-SEC-001`
+- Command: `$env:INTERNAL_SERVICE_TOKEN='test-internal-token-32-bytes-long'; docker compose config --format json`
+- Result: pass
+- Summary: Rendered Compose config shows only `gateway: 8000->8000`; `postgres`, `scraper`, `sbert`, `ncf`, `dqn`, and `pipeline` have no host ports.
+- Related commit hash: `1392e58`.
+
+## 2026-05-25 20:08 +07
+- Task ID: `P1-SEC-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-SEC-001 done.
+- Related commit hash: `1392e58`.
+
+## 2026-05-25 20:12 +07
+- Task ID: `P1-SEC-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_ssrf_guard.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. The scraper had no `_resolve_host_addresses`, `_validate_scrape_url`, or `_fetch_safe_url` helpers yet.
+- Related commit hash: `be52d4f`.
+
+## 2026-05-25 20:14 +07
+- Task ID: `P1-SEC-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_ssrf_guard.py -q`
+- Result: fail
+- Summary: Initial implementation blocked `id.jobstreet.com`; allowlist needed to include the existing `jobstreet.com` seed host suffix.
+- Related commit hash: `be52d4f`.
+
+## 2026-05-25 20:14 +07
+- Task ID: `P1-SEC-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_ssrf_guard.py -q`
+- Result: pass
+- Summary: `9 passed in 0.24s`.
+- Related commit hash: `be52d4f`.
+
+## 2026-05-25 20:15 +07
+- Task ID: `P1-SEC-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_red_team_failure_modes.py::test_scraper_handles_zero_partial_duplicate_and_blocked_sources -q`
+- Result: fail
+- Summary: Existing red-team test still expected a `502 fetch failed`; new guard correctly returns `400` before outbound fetch.
+- Related commit hash: `be52d4f`.
+
+## 2026-05-25 20:15 +07
+- Task ID: `P1-SEC-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_red_team_failure_modes.py::test_scraper_handles_zero_partial_duplicate_and_blocked_sources -q`
+- Result: pass
+- Summary: `1 passed in 4.76s` after updating the expected localhost-block contract to `400`.
+- Related commit hash: `be52d4f`.
+
+## 2026-05-25 20:17 +07
+- Task ID: `P1-SEC-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `303 passed, 11 warnings in 92.78s`.
+- Related commit hash: `be52d4f`.
+
+## 2026-05-25 20:17 +07
+- Task ID: `P1-SEC-002`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-SEC-002 done.
+- Related commit hash: `be52d4f`.
+
+## 2026-05-25 20:19 +07
+- Task ID: `P1-SEC-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_execution_auth.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. Direct `/pipeline/run` returned 200 without credentials because the route had no auth dependency.
+- Related commit hash: `8c4f9b1`.
+
+## 2026-05-25 20:20 +07
+- Task ID: `P1-SEC-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_execution_auth.py -q`
+- Result: pass
+- Summary: `1 passed in 0.03s`.
+- Related commit hash: `8c4f9b1`.
+
+## 2026-05-25 20:23 +07
+- Task ID: `P1-SEC-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `304 passed, 11 warnings in 93.32s`.
+- Related commit hash: `8c4f9b1`.
+
+## 2026-05-25 20:23 +07
+- Task ID: `P1-SEC-003`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-SEC-003 done.
+- Related commit hash: `8c4f9b1`.
+
+## 2026-05-25 20:24 +07
+- Task ID: `P1-CI-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-CI-001 in progress for the survival checkpoint.
+- Related commit hash: pending checkpoint commit.
+
+## 2026-05-25 20:25 +07
+- Task ID: `P1-CI-001`
+- Command: `.\.venv\Scripts\python.exe -c "import pathlib, yaml; yaml.safe_load(pathlib.Path('.github/workflows/ci.yml').read_text(encoding='utf-8')); print('workflow yaml ok')"`
+- Result: pass
+- Summary: Workflow YAML parsed successfully.
+- Related commit hash: `7ee1e4d`.
+
+## 2026-05-25 20:26 +07
+- Task ID: `P1-CI-001`
+- Command: `.\.venv\Scripts\python.exe -m pip check`
+- Result: pass
+- Summary: No broken requirements found.
+- Related commit hash: `7ee1e4d`.
+
+## 2026-05-25 20:26 +07
+- Task ID: `P1-CI-001`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads`
+- Result: pass
+- Summary: Alembic reports `008_feature_extension_foundation (head)`.
+- Related commit hash: `7ee1e4d`.
+
+## 2026-05-25 20:26 +07
+- Task ID: `P1-CI-001`
+- Command: `.\.venv\Scripts\python.exe scripts\verify_project.py --only import compile`
+- Result: pass
+- Summary: Import checks and compileall passed for services, scripts, and tests.
+- Related commit hash: `7ee1e4d`.
+
+## 2026-05-25 20:28 +07
+- Task ID: `P1-CI-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `304 passed, 11 warnings in 93.76s`.
+- Related commit hash: `7ee1e4d`.
+
+## 2026-05-25 20:29 +07
+- Task ID: `P1-CI-001`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 18 warnings and no errors.
+- Related commit hash: `7ee1e4d`.
+
+## 2026-05-25 20:30 +07
+- Task ID: `P1-CI-001`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully, TypeScript completed, and 12 static pages generated.
+- Related commit hash: `7ee1e4d`.
+
+## 2026-05-25 20:30 +07
+- Task ID: `P1-CI-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-CI-001 done.
+- Related commit hash: `7ee1e4d`.
+
+## 2026-05-25 20:32 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_sbert_job_embedding_cache.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. The encode stage had no `_job_text_hash` helper and reused stale job embeddings when only the job text changed.
+- Related commit hash: `f167a99`.
+
+## 2026-05-25 20:33 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_sbert_job_embedding_cache.py -q`
+- Result: pass
+- Summary: `2 passed in 0.04s`.
+- Related commit hash: `f167a99`.
+
+## 2026-05-25 20:33 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_caching.py -q`
+- Result: pass
+- Summary: `15 passed in 0.24s`.
+- Related commit hash: `f167a99`.
+
+## 2026-05-25 20:33 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_contracts.py -q`
+- Result: pass
+- Summary: `2 passed in 0.05s`.
+- Related commit hash: `f167a99`.
+
+## 2026-05-25 20:36 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `306 passed, 11 warnings in 91.17s`.
+- Related commit hash: `f167a99`.
+
+## 2026-05-25 20:36 +07
+- Task ID: `P1-PERF-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-PERF-001 done.
+- Related commit hash: `f167a99`.
+
+## 2026-05-25 20:38 +07
+- Task ID: `P1-PERF-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_policy_contracts.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. DQN rank made six policy-network forward calls for three jobs instead of one batched call.
+- Related commit hash: `7ce8e79`.
+
+## 2026-05-25 20:39 +07
+- Task ID: `P1-PERF-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_policy_contracts.py -q`
+- Result: pass
+- Summary: `3 passed in 3.84s`.
+- Related commit hash: `7ce8e79`.
+
+## 2026-05-25 20:40 +07
+- Task ID: `P1-PERF-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_ncf_neumf_contracts.py -q`
+- Result: pass
+- Summary: `4 passed in 3.98s`.
+- Related commit hash: `7ce8e79`.
+
+## 2026-05-25 20:42 +07
+- Task ID: `P1-PERF-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `307 passed, 11 warnings in 91.10s`.
+- Related commit hash: `7ce8e79`.
+
+## 2026-05-25 20:42 +07
+- Task ID: `P1-PERF-002`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P1-PERF-002 done.
+- Related commit hash: `7ce8e79`.
+
+## 2026-05-25 20:45 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after reconciling `P1-PERF-002` and marking `P1-PERF-003` in progress.
+- Related commit hash: pending survival checkpoint commit.
+
+## 2026-05-25 20:50 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest db\tests\test_models.py::TestIndexes -q`
+- Result: fail
+- Summary: Expected TDD red failure: missing `idx_jobs_active_posted_id`, `idx_jobs_active_source_posted`, `idx_jobs_active_experience_posted`, and `idx_applications_user_applied`.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:51 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest db\tests\test_models.py::TestIndexes -q`
+- Result: pass
+- Summary: `8 passed in 0.74s`.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:51 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads`
+- Result: pass
+- Summary: Alembic reported `009_recommendation_hot_path_indexes (head)` before the revision id was shortened.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:52 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: fail
+- Summary: Migration DDL ran but updating `alembic_version.version_num` failed because `009_recommendation_hot_path_indexes` exceeded `varchar(32)`.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:53 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads`
+- Result: pass
+- Summary: Alembic reported shortened head `009_reco_hot_indexes`.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:53 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current`
+- Result: pass
+- Summary: Local database remained at `006_reco_db_contracts`; the failed long-revision upgrade was rolled back.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:54 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Upgraded through `007`, `008`, and shortened `009_reco_hot_indexes`.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:54 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current`
+- Result: pass
+- Summary: Local database current revision is `009_reco_hot_indexes (head)`.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:55 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini downgrade 008_feature_extension_foundation`
+- Result: pass
+- Summary: One-step downgrade dropped the new hot-path indexes successfully.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:55 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Re-applied `009_reco_hot_indexes` successfully after the downgrade check.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:57 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `308 passed, 11 warnings in 91.40s`.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:58 +07
+- Task ID: `P1-PERF-003`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking `P1-PERF-003` done.
+- Related commit hash: `742992a`.
+
+## 2026-05-25 20:59 +07
+- Task ID: `P1-OBS-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after reconciling `P1-PERF-003` and marking `P1-OBS-001` in progress.
+- Related commit hash: `0b2e3e5`.
+
+## 2026-05-25 21:00 +07
+- Task ID: `P1-OBS-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_telemetry.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. Pipeline responses did not include `stages["telemetry"]`.
+- Related commit hash: `0b2e3e5`.
+
+## 2026-05-25 21:02 +07
+- Task ID: `P1-OBS-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_telemetry.py -q`
+- Result: pass
+- Summary: `1 passed in 0.07s`.
+- Related commit hash: `0b2e3e5`.
+
+## 2026-05-25 21:03 +07
+- Task ID: `P1-OBS-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_contracts.py tests\test_full_pipeline_entrypoint.py -q`
+- Result: pass
+- Summary: `4 passed in 5.22s`.
+- Related commit hash: `0b2e3e5`.
+
+## 2026-05-25 21:03 +07
+- Task ID: `P1-OBS-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_internal_service_auth.py -q`
+- Result: pass
+- Summary: `3 passed in 0.07s`.
+- Related commit hash: `0b2e3e5`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P1-OBS-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `309 passed, 11 warnings in 91.07s`.
+- Related commit hash: `0b2e3e5`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P1-OBS-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking `P1-OBS-001` done.
+- Related commit hash: `0b2e3e5`.
+
+## 2026-05-25 21:07 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after reconciling `P1-OBS-001` and marking `P2-001` in progress.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_security.py -q`
+- Result: fail
+- Summary: Expected TDD red failure: 4 failures because `validate_jwt_secret` was missing and `TokenManager` did not reject short access/refresh secrets during initialization.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_security.py -q`
+- Result: pass
+- Summary: `20 passed in 0.08s`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_auth_endpoints.py -q`
+- Result: pass
+- Summary: `39 passed, 1 warning` for the intentional forged-token short secret.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_execution_auth.py tests\test_internal_service_auth.py -q`
+- Result: pass
+- Summary: `4 passed in 0.09s`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_jobs_upsert.py -q`
+- Result: fail
+- Summary: Parallel run hit a shared PostgreSQL test database bootstrap race while creating enum type `userrole`; recorded in `FAILURE_LEDGER.md`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_jobs_upsert.py -q`
+- Result: pass
+- Summary: Sequential retry passed with `5 passed in 1.69s`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_security.py tests\test_auth_endpoints.py tests\test_pipeline_execution_auth.py tests\test_internal_service_auth.py tests\test_jobs_upsert.py -q`
+- Result: pass
+- Summary: `68 passed, 1 warning in 59.90s`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `313 passed, 1 warning in 90.63s`.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:05 +07
+- Task ID: `P2-001`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking `P2-001` done.
+- Related commit hash: pending `security: validate jwt secret configuration`.
+
+## 2026-05-25 21:06 +07
+- Task ID: `P2-001`
+- Command: `git commit -m "security: validate jwt secret configuration"`
+- Result: pass
+- Summary: Created commit `dc5cc2c` with JWT secret validation code, focused tests, and durable state updates.
+- Related commit hash: `dc5cc2c`.
+
+## 2026-05-25 21:06 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording `P2-001` commit `dc5cc2c` and marking `P2-002` in progress.
+- Related commit hash: pending survival checkpoint commit.
+
+## 2026-05-25 21:06 +07
+- Task ID: `P2-002`
+- Command: `git commit -m "docs: update long-running agent checkpoint"`
+- Result: pass
+- Summary: Created state-only survival checkpoint `f9711cd`.
+- Related commit hash: `f9711cd`.
+
+## 2026-05-25 21:11 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_cors_config.py -q`
+- Result: fail
+- Summary: Expected TDD red failure: 4 failures because `_resolve_cors_origins` did not exist.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:12 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_cors_config.py -q`
+- Result: pass
+- Summary: `4 passed in 0.04s`.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:13 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_cors_config.py tests\test_auth_endpoints.py tests\test_pipeline_execution_auth.py -q`
+- Result: pass
+- Summary: `44 passed, 1 warning in 62.32s`.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:13 +07
+- Task ID: `P2-002`
+- Command: `docker compose config --quiet`
+- Result: pass
+- Summary: Compose configuration validated with explicit production CORS origin and required throwaway JWT/internal/database environment variables.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:13 +07
+- Task ID: `P2-002`
+- Command: `docker compose config --format json`
+- Result: pass
+- Summary: Rendered gateway environment included `APP_ENV=production` and `CORS_ALLOW_ORIGINS=https://scpa.example.com`.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:14 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `317 passed, 1 warning in 93.00s`.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:14 +07
+- Task ID: `P2-002`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking `P2-002` done.
+- Related commit hash: pending `security: restrict cors origins`.
+
+## 2026-05-25 21:15 +07
+- Task ID: `P2-002`
+- Command: `git commit -m "security: restrict cors origins"`
+- Result: pass
+- Summary: Created commit `04b0b91` with environment-aware CORS origin restrictions, Compose/.env wiring, tests, and durable state updates.
+- Related commit hash: `04b0b91`.
+
+## 2026-05-25 21:16 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording `P2-002` commit `04b0b91` and marking `P2-003` in progress.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:18 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest db\tests\test_models.py::TestTableNames::test_table_name db\tests\test_models.py::TestTableNames::test_all_tables_in_metadata db\tests\test_models.py::TestIndexes::test_model_feedback_outbox_indexes tests\test_feedback_outbox.py -q`
+- Result: fail
+- Summary: Expected TDD red failure: `ModelFeedbackOutbox` could not be imported from `db.models`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:21 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest db\tests\test_models.py::TestTableNames::test_table_name db\tests\test_models.py::TestTableNames::test_all_tables_in_metadata db\tests\test_models.py::TestIndexes::test_model_feedback_outbox_indexes tests\test_feedback_outbox.py -q`
+- Result: pass
+- Summary: `19 passed in 1.94s`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:22 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads`
+- Result: pass
+- Summary: Alembic reported `010_feedback_outbox (head)`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:22 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Upgraded from `009_reco_hot_indexes` to `010_feedback_outbox`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:22 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current`
+- Result: pass
+- Summary: Local database current revision is `010_feedback_outbox (head)`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:23 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini downgrade 009_reco_hot_indexes`
+- Result: pass
+- Summary: One-step downgrade dropped `model_feedback_outbox` and its indexes.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:23 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Re-applied `010_feedback_outbox` successfully after the downgrade check.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:27 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `321 passed, 1 warning in 93.07s`.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:32 +07
+- Task ID: `P2-003`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after the post-compact recovery note.
+- Related commit hash: pending `feat: add durable feedback outbox`.
+
+## 2026-05-25 21:33 +07
+- Task ID: `P2-003`
+- Command: `git commit -m "feat: add durable feedback outbox"`
+- Result: pass
+- Summary: Created commit `8ba2004` with the durable feedback outbox migration, gateway delivery/retry code, tests, and durable state updates.
+- Related commit hash: `8ba2004`.
+
+## 2026-05-25 21:34 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording `P2-003` commit `8ba2004` and marking `P2-004` in progress.
+- Related commit hash: pending state checkpoint.
+
+## 2026-05-25 21:35 +07
+- Task ID: `P2-004`
+- Command: `git commit -m "docs: update long-running agent checkpoint"`
+- Result: pass
+- Summary: Created state-only checkpoint `313f823` before DQN skill-path implementation.
+- Related commit hash: `313f823`.
+
+## 2026-05-25 21:39 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_learning_path.py tests\test_dqn_policy_contracts.py -q`
+- Result: fail
+- Summary: Expected TDD red failure: 2 failures because DQN learning-path and rank metadata did not expose `policy_objective`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:43 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_policy_contracts.py::test_pipeline_dqn_stage_preserves_skill_path_metadata -q`
+- Result: fail
+- Summary: Expected TDD red failure: pipeline DQN stage did not forward `target_role` into DQN `session_ctx`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:45 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_dqn_learning_path.py tests\test_dqn_policy_contracts.py -q`
+- Result: pass
+- Summary: `8 passed in 3.73s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:46 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_training_entrypoints.py::test_dqn_training_cli_writes_checkpoint -q`
+- Result: fail
+- Summary: Expected TDD red failure: DQN training smoke metrics did not include `policy_objective`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:48 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_training_entrypoints.py::test_dqn_training_cli_writes_checkpoint -q`
+- Result: pass
+- Summary: `1 passed in 6.86s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:49 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_pipeline_contracts.py tests\test_full_pipeline_entrypoint.py -q`
+- Result: pass
+- Summary: `4 passed in 5.75s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:49 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_edge_cases.py::TestDQNEdgeCases -q`
+- Result: pass
+- Summary: `4 passed in 3.83s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:54 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: `324 passed, 1 warning in 96.63s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:53 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking `P2-004` done.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:55 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_training_entrypoints.py::test_dqn_training_cli_writes_checkpoint -q`
+- Result: pass
+- Summary: Re-run after training type-hint cleanup: `1 passed in 7.33s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:52 +07
+- Task ID: `P2-004`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Final full backend re-run after all P2-004 edits: `324 passed, 1 warning in 94.67s`.
+- Related commit hash: pending `refactor: reframe dqn as skill path recommender`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-004`
+- Command: `git commit -m "refactor: reframe dqn as skill path recommender"`
+- Result: pass
+- Summary: Created commit `34757e9` with DQN skill-path MDP serving/training changes, pipeline metadata preservation, tests, docs, and durable state updates.
+- Related commit hash: `34757e9`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording `P2-004` commit `34757e9` and marking `P2-005` in progress.
+- Related commit hash: pending state checkpoint.
+
+## 2026-05-25 21:57 +07
+- Task ID: `P2-005`
+- Command: `git commit -m "docs: update long-running agent checkpoint"`
+- Result: pass
+- Summary: Created state-only checkpoint `a80547b` before calibration layer implementation.
+- Related commit hash: `a80547b`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_calibration_layer.py tests\test_pipeline_telemetry.py -q`
+- Result: fail
+- Summary: Expected TDD red failure: aggregate summary lacked `calibrator`, `services.evaluation.calibration` did not exist, and pipeline telemetry still reported `static_baseline`.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_calibration_layer.py tests\test_pipeline_telemetry.py -q`
+- Result: pass
+- Summary: Focused calibration and telemetry contracts passed after adding the learned logistic calibrator.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_calibration_layer.py tests\test_pipeline_telemetry.py tests\test_recommendation_metrics.py tests\test_pipeline_contracts.py -q`
+- Result: pass
+- Summary: Focused calibration, telemetry, ranking-metrics, and pipeline-contract tests passed with `13 passed`.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -c "from services.evaluation.calibration import write_calibration_smoke_report; print(write_calibration_smoke_report())"`
+- Result: pass
+- Summary: Generated `reports/ml/calibration_layer_smoke.json`.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: fail
+- Summary: Full backend suite failed with 2 stale strategy assertions expecting pre-calibrator aggregate labels; 324 tests passed and 1 warning remained.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_e2e_pipeline.py::test_scrape_to_ranked_recommendations_e2e tests\test_online_recommender_learning.py::test_aggregate_uses_learned_scores_without_static_domain_cap -q`
+- Result: fail
+- Summary: Focused stale-strategy regression failed once because the raw logistic probability compressed a user-facing score below the old minimum threshold.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_e2e_pipeline.py::test_scrape_to_ranked_recommendations_e2e tests\test_online_recommender_learning.py::test_aggregate_uses_learned_scores_without_static_domain_cap -q`
+- Result: pass
+- Summary: Focused stale-strategy regressions passed with `2 passed` after blending a small static-baseline component into the served calibrated score.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -c "from services.evaluation.calibration import write_calibration_smoke_report; print(write_calibration_smoke_report())"`
+- Result: pass
+- Summary: Regenerated `reports/ml/calibration_layer_smoke.json` after the served-score blend change.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_calibration_layer.py tests\test_pipeline_telemetry.py tests\test_recommendation_metrics.py tests\test_pipeline_contracts.py tests\test_e2e_pipeline.py::test_scrape_to_ranked_recommendations_e2e tests\test_online_recommender_learning.py::test_aggregate_uses_learned_scores_without_static_domain_cap -q`
+- Result: pass
+- Summary: Expanded focused P2-005 suite passed with `15 passed`.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `326 passed, 1 warning in 94.17s`.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P2-005 validation passed.
+- Related commit hash: pending `feat: add learned recommendation calibration layer`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `git diff --cached --check`
+- Result: pass
+- Summary: Staged P2-005 diff reported no whitespace errors.
+- Related commit hash: `ba45824`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P2-005`
+- Command: `git commit -m "feat: add learned recommendation calibration layer"`
+- Result: pass
+- Summary: Created commit `ba45824` with calibration code, tests, smoke report, and durable state updates.
+- Related commit hash: `ba45824`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording P2-005 commit and splitting the skill taxonomy autocomplete feature into backend/frontend child tasks.
+- Related commit hash: pending state checkpoint.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_skill_taxonomy_autocomplete.py -q`
+- Result: fail
+- Summary: Expected TDD red failure: `/api/skills/search` ignored `exclude`, so `Python` appeared in selected-skill suggestions.
+- Related commit hash: pending `feat: add skill taxonomy autocomplete backend`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_skill_taxonomy_autocomplete.py -q`
+- Result: pass
+- Summary: Focused skill autocomplete exclusion tests passed with `2 passed`.
+- Related commit hash: pending `feat: add skill taxonomy autocomplete backend`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_skill_taxonomy_autocomplete.py tests\test_auth_endpoints.py::TestSkillTaxonomySearch tests\test_auth_endpoints.py::TestProfileUpdate::test_profile_rejects_skill_outside_taxonomy tests\test_auth_endpoints.py::TestProfileUpdate::test_profile_skills_replace_semantics -q`
+- Result: pass
+- Summary: Focused autocomplete plus existing taxonomy/profile regressions passed with `5 passed`.
+- Related commit hash: pending `feat: add skill taxonomy autocomplete backend`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `328 passed, 1 warning in 95.91s`.
+- Related commit hash: pending `feat: add skill taxonomy autocomplete backend`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-001-BE validation passed.
+- Related commit hash: pending `feat: add skill taxonomy autocomplete backend`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-BE`
+- Command: `git diff --cached --check`
+- Result: pass
+- Summary: Staged P3-FEAT-001-BE diff reported no whitespace errors.
+- Related commit hash: `bf72c99`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-BE`
+- Command: `git commit -m "feat: add skill taxonomy autocomplete backend"`
+- Result: pass
+- Summary: Created commit `bf72c99` with gateway autocomplete exclusion support, focused tests, and durable state updates.
+- Related commit hash: `bf72c99`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording P3-FEAT-001-BE commit and marking P3-FEAT-001-FE in progress.
+- Related commit hash: pending state checkpoint.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-FE`
+- Command: `npm run lint` in `frontend/`
+- Result: fail
+- Summary: Lint failed on a new `react-hooks/set-state-in-effect` profile effect error and an ARIA option warning; existing unrelated warnings remained.
+- Related commit hash: `frontend:6915df6`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-FE`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 16 existing warnings and no errors after profile autocomplete fixes.
+- Related commit hash: `frontend:6915df6`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-FE`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully and generated 12 static pages.
+- Related commit hash: `frontend:6915df6`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-FE`
+- Command: `git -C frontend diff --cached --check`
+- Result: pass
+- Summary: Staged frontend autocomplete diff reported no whitespace errors.
+- Related commit hash: `frontend:6915df6`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-001-FE`
+- Command: `git -C frontend commit -m "feat: add skill taxonomy autocomplete frontend"`
+- Result: pass
+- Summary: Created nested frontend commit `6915df6` with profile autocomplete UI and API helper.
+- Related commit hash: `frontend:6915df6`.
+
+## 2026-05-25 21:56 +07
+- Task ID: `P3-FEAT-002`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after completing P3-FEAT-001 and marking P3-FEAT-002 split planning in progress.
+- Related commit hash: pending state checkpoint.
+
+## 2026-05-25 22:25 +07
+- Task ID: `P3-FEAT-002-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after splitting P3-FEAT-002 into backend/frontend child tasks and marking backend child in progress.
+- Related commit hash: pending state checkpoint.
+
+## 2026-05-25 22:27 +07
+- Task ID: `P3-FEAT-002-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_profile_completeness.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. All three tests returned `404 Not Found` because `/api/profile/completeness` did not exist yet.
+- Related commit hash: pending `feat: add profile completeness meter backend`.
+
+## 2026-05-25 22:29 +07
+- Task ID: `P3-FEAT-002-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_profile_completeness.py -q`
+- Result: pass
+- Summary: Focused profile completeness contract tests passed with `3 passed`.
+- Related commit hash: pending `feat: add profile completeness meter backend`.
+
+## 2026-05-25 22:30 +07
+- Task ID: `P3-FEAT-002-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_profile_completeness.py tests\test_auth_endpoints.py::TestProfileUpdate tests\test_auth_endpoints.py::TestOnboardingFillout tests\test_auth_endpoints.py::TestMe::test_me_returns_profile_with_skills -q`
+- Result: pass
+- Summary: Profile completeness, profile update, onboarding, and `/api/auth/me` skill regression tests passed with `17 passed`.
+- Related commit hash: pending `feat: add profile completeness meter backend`.
+
+## 2026-05-25 22:32 +07
+- Task ID: `P3-FEAT-002-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `331 passed, 1 warning`.
+- Related commit hash: pending `feat: add profile completeness meter backend`.
+
+## 2026-05-25 22:32 +07
+- Task ID: `P3-FEAT-002-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-002-BE done and pointing the next task at P3-FEAT-002-FE.
+- Related commit hash: pending `feat: add profile completeness meter backend`.
+
+## 2026-05-25 22:33 +07
+- Task ID: `P3-FEAT-002-BE`
+- Command: `git commit -m "feat: add profile completeness meter backend"`
+- Result: pass
+- Summary: Created commit `c0dd8e6` with the profile completeness endpoint, focused backend tests, and durable state updates.
+- Related commit hash: `c0dd8e6`.
+
+## 2026-05-25 22:34 +07
+- Task ID: `P3-FEAT-002-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording P3-FEAT-002-BE commit `c0dd8e6` and marking P3-FEAT-002-FE in progress.
+- Related commit hash: pending state checkpoint.
+
+## 2026-05-25 22:35 +07
+- Task ID: `P3-FEAT-002-FE`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 16 existing warnings and no errors.
+- Related commit hash: `frontend:68deb7e`.
+
+## 2026-05-25 22:36 +07
+- Task ID: `P3-FEAT-002-FE`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully and generated 12 static pages.
+- Related commit hash: `frontend:68deb7e`.
+
+## 2026-05-25 22:36 +07
+- Task ID: `P3-FEAT-002-FE`
+- Command: `Invoke-WebRequest -UseBasicParsing http://127.0.0.1:3000/profile -TimeoutSec 5`
+- Result: pass
+- Summary: Local frontend dev server responded with HTTP `200` for `/profile`.
+- Related commit hash: `frontend:68deb7e`.
+
+## 2026-05-25 22:36 +07
+- Task ID: `P3-FEAT-002-FE`
+- Command: `git -C frontend commit -m "feat: add profile completeness meter frontend"`
+- Result: pass
+- Summary: Created nested frontend commit `68deb7e` with profile completeness API helper and profile-page meter UI.
+- Related commit hash: `frontend:68deb7e`.
+
+## 2026-05-25 22:37 +07
+- Task ID: `P3-FEAT-002`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-002 parent and frontend child done, then pointing the next task at P3-FEAT-003.
+- Related commit hash: pending state checkpoint.
+
+## 2026-05-25 22:38 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after splitting P3-FEAT-003 into backend/frontend child tasks and marking backend child in progress.
+- Related commit hash: pending state checkpoint.
+
+## 2026-05-25 22:40 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_saved_jobs_skip.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. All saved/skip tests returned `404 Not Found` because the routes did not exist yet.
+- Related commit hash: pending `feat: add saved jobs and skip backend`.
+
+## 2026-05-25 22:42 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_saved_jobs_skip.py -q`
+- Result: pass
+- Summary: Focused saved/skip backend tests passed with `4 passed`.
+- Related commit hash: pending `feat: add saved jobs and skip backend`.
+
+## 2026-05-25 22:42 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_saved_jobs_skip.py tests\test_jobs_upsert.py tests\test_feedback_outbox.py -q`
+- Result: pass
+- Summary: Saved/skip, job upsert/application, and feedback outbox regression tests passed with `11 passed`.
+- Related commit hash: pending `feat: add saved jobs and skip backend`.
+
+## 2026-05-25 22:44 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `335 passed, 1 warning`.
+- Related commit hash: pending `feat: add saved jobs and skip backend`.
+
+## 2026-05-25 22:44 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-003-BE done and pointing the next task at P3-FEAT-003-FE.
+- Related commit hash: pending `feat: add saved jobs and skip backend`.
+
+## 2026-05-25 22:45 +07
+- Task ID: `P3-FEAT-003-BE`
+- Command: `git commit -m "feat: add saved jobs and skip backend"`
+- Result: pass
+- Summary: Created commit `297d0ad` with saved/skip backend routes, focused tests, and durable state updates.
+- Related commit hash: `297d0ad`.
+
+## 2026-05-25 22:45 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording P3-FEAT-003-BE commit `297d0ad` and marking P3-FEAT-003-FE in progress.
+- Related commit hash: pending state checkpoint.
+
+## 2026-05-25 22:50 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 16 existing warnings and no errors after adding saved/skip frontend controls.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:51 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully and generated 12 static pages.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:51 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `Invoke-WebRequest -UseBasicParsing http://127.0.0.1:3000/recommendations -TimeoutSec 5`
+- Result: pass
+- Summary: Local frontend dev server responded with HTTP `200` for `/recommendations`.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:51 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `Invoke-WebRequest -UseBasicParsing http://127.0.0.1:3000/profile -TimeoutSec 5`
+- Result: pass
+- Summary: Local frontend dev server responded with HTTP `200` for `/profile`.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:52 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `git -C frontend diff --cached --check`
+- Result: pass
+- Summary: Staged saved/skip frontend diff reported no whitespace errors.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:52 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `git -C frontend commit -m "feat: add saved jobs and skip frontend"`
+- Result: pass
+- Summary: Created nested frontend commit `ffa45b4` with saved/skip API helpers, recommendation controls, and profile saved-job display.
+- Related commit hash: `frontend:ffa45b4`.
+
+## 2026-05-25 22:53 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-003 and P3-FEAT-003-FE done and pointing the next task at P3-FEAT-004.
+- Related commit hash: pending root checkpoint.
+
+## 2026-05-25 22:54 +07
+- Task ID: `P3-FEAT-003-FE`
+- Command: `git commit -m "docs: update long-running agent checkpoint"`
+- Result: pass
+- Summary: Created root checkpoint `ce62692` recording nested frontend commit `ffa45b4` and completing P3-FEAT-003.
+- Related commit hash: `ce62692`.
+
+## 2026-05-25 22:56 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after splitting P3-FEAT-004 into backend/frontend child tasks and marking backend child in progress.
+- Related commit hash: pending state checkpoint.
+
+## 2026-05-25 22:58 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_job_alerts.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. Job-alert API requests returned `404 Not Found` because `/api/job-alerts` routes did not exist yet.
+- Related commit hash: pending `feat: add job alerts backend`.
+
+## 2026-05-25 23:00 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_job_alerts.py -q`
+- Result: pass
+- Summary: Focused job-alert backend tests passed with `5 passed`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:00 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest db\tests\test_models.py::TestTableNames::test_table_name db\tests\test_models.py::TestTableNames::test_all_tables_in_metadata db\tests\test_models.py::TestIndexes::test_job_alert_indexes -q`
+- Result: pass
+- Summary: Job-alert model table and index metadata checks passed with `18 passed`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:00 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini heads`
+- Result: pass
+- Summary: Alembic reported `011_job_alerts (head)`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:01 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Applied migration `010_feedback_outbox -> 011_job_alerts`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:01 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini current`
+- Result: pass
+- Summary: Local database current revision is `011_job_alerts (head)`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:02 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini downgrade 010_feedback_outbox`
+- Result: pass
+- Summary: One-step downgrade dropped `job_alerts` successfully.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:02 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head`
+- Result: pass
+- Summary: Re-applied `011_job_alerts` successfully after the downgrade check.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:02 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_job_alerts.py tests\test_saved_jobs_skip.py db\tests\test_models.py::TestTableNames db\tests\test_models.py::TestIndexes -q`
+- Result: pass
+- Summary: Focused job-alert, saved-job, and model regression tests passed with `36 passed`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:04 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `342 passed, 1 warning`.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:05 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `git diff --cached --check`
+- Result: pass
+- Summary: Staged job-alert backend diff reported no whitespace errors.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:05 +07
+- Task ID: `P3-FEAT-004-BE`
+- Command: `git commit -m "feat: add job alerts backend"`
+- Result: pass
+- Summary: Created commit `25b50ac` with job-alert schema, migration, gateway routes, tests, and test schema cleanup.
+- Related commit hash: `25b50ac`.
+
+## 2026-05-25 23:06 +07
+- Task ID: `P3-FEAT-004-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording P3-FEAT-004-BE commit `25b50ac` and marking P3-FEAT-004-FE in progress.
+- Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:15 +07
+- Task ID: `P3-FEAT-004-FE`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 16 existing warnings and no errors after adding job-alert frontend controls.
+- Related commit hash: `frontend:9196506`.
+
+## 2026-05-25 23:15 +07
+- Task ID: `P3-FEAT-004-FE`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully and generated 12 static pages.
+- Related commit hash: `frontend:9196506`.
+
+## 2026-05-25 23:16 +07
+- Task ID: `P3-FEAT-004-FE`
+- Command: `Invoke-WebRequest -UseBasicParsing http://127.0.0.1:3000/profile -TimeoutSec 5`
+- Result: pass
+- Summary: Local frontend dev server responded with HTTP `200` for `/profile`.
+- Related commit hash: `frontend:9196506`.
+
+## 2026-05-25 23:17 +07
+- Task ID: `P3-FEAT-004-FE`
+- Command: `git -C frontend diff --cached --check`
+- Result: pass
+- Summary: Staged job-alert frontend diff reported no whitespace errors.
+- Related commit hash: `frontend:9196506`.
+
+## 2026-05-25 23:17 +07
+- Task ID: `P3-FEAT-004-FE`
+- Command: `git -C frontend commit -m "feat: add job alerts frontend"`
+- Result: pass
+- Summary: Created nested frontend commit `9196506` with job-alert API helpers and profile-page alert controls.
+- Related commit hash: `frontend:9196506`.
+
+## 2026-05-25 23:19 +07
+- Task ID: `P3-FEAT-004-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-004-FE and parent P3-FEAT-004 done and pointing the next task at P3-FEAT-005.
+- Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:24 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after splitting P3-FEAT-005 into backend/frontend child tasks and marking P3-FEAT-005-BE in progress.
+- Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:27 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_skill_gap_detail.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. The existing route returned lowercase-only minimal data, did not persist a snapshot, and returned `200` for a missing job.
+- Related commit hash: pending `feat: add skill-gap detail backend`.
+
+## 2026-05-25 23:30 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_skill_gap_detail.py -q`
+- Result: pass
+- Summary: Focused skill-gap detail tests passed with `3 passed`.
+- Related commit hash: pending `feat: add skill-gap detail backend`.
+
+## 2026-05-25 23:31 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_skill_gap_detail.py tests\test_saved_jobs_skip.py tests\test_profile_completeness.py -q`
+- Result: pass
+- Summary: Adjacent skill-gap, saved-job, and profile completeness regression tests passed with `10 passed`.
+- Related commit hash: pending `feat: add skill-gap detail backend`.
+
+## 2026-05-25 23:33 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `345 passed, 1 warning`.
+- Related commit hash: pending `feat: add skill-gap detail backend`.
+
+## 2026-05-25 23:35 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-005-BE validation passed and ready to commit.
+- Related commit hash: pending `feat: add skill-gap detail backend`.
+
+## 2026-05-25 23:37 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `git diff --cached --check`
+- Result: pass
+- Summary: Staged skill-gap backend diff reported no whitespace errors.
+- Related commit hash: `f03c853`.
+
+## 2026-05-25 23:37 +07
+- Task ID: `P3-FEAT-005-BE`
+- Command: `git commit -m "feat: add skill-gap detail backend"`
+- Result: pass
+- Summary: Created commit `f03c853` with the skill-gap backend contract, focused tests, test cleanup, and durable state updates.
+- Related commit hash: `f03c853`.
+
+## 2026-05-25 23:39 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording P3-FEAT-005-BE commit `f03c853` and marking P3-FEAT-005-FE in progress.
+- Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:43 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 16 existing warnings and no errors after adding skill-gap detail frontend types and UI.
+- Related commit hash: `frontend:13fca88`.
+
+## 2026-05-25 23:44 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully and generated 12 static pages.
+- Related commit hash: `frontend:13fca88`.
+
+## 2026-05-25 23:45 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `Invoke-WebRequest -UseBasicParsing http://127.0.0.1:3000/jobs/00000000-0000-0000-0000-000000000000 -TimeoutSec 5`
+- Result: pass
+- Summary: Local frontend dev server responded with HTTP `200` for the dynamic job detail route.
+- Related commit hash: `frontend:13fca88`.
+
+## 2026-05-25 23:46 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `git -C frontend diff --cached --check`
+- Result: pass
+- Summary: Staged skill-gap frontend diff reported no whitespace errors.
+- Related commit hash: `frontend:13fca88`.
+
+## 2026-05-25 23:47 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `git -C frontend commit -m "feat: add skill-gap detail frontend"`
+- Result: pass
+- Summary: Created nested frontend commit `13fca88` with the skill-gap API helper and job detail UI.
+- Related commit hash: `frontend:13fca88`.
+
+## 2026-05-25 23:49 +07
+- Task ID: `P3-FEAT-005-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-005-FE and parent P3-FEAT-005 done and pointing the next task at P3-FEAT-006.
+- Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:55 +07
+- Task ID: `P3-FEAT-006-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after splitting P3-FEAT-006 into backend/frontend child tasks and marking P3-FEAT-006-BE in progress.
+- Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:37 +07
+- Task ID: `P3-FEAT-006-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_admin_model_health.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. Both admin model-health tests returned `404 Not Found` because `/api/admin/model-health` did not exist.
+- Related commit hash: pending `feat: add admin model-health backend`.
+
+## 2026-05-25 23:38 +07
+- Task ID: `P3-FEAT-006-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_admin_model_health.py -q`
+- Result: pass
+- Summary: Focused admin model-health backend tests passed with `2 passed`.
+- Related commit hash: pending `feat: add admin model-health backend`.
+
+## 2026-05-25 23:38 +07
+- Task ID: `P3-FEAT-006-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_admin_model_health.py tests\test_pipeline_execution_auth.py tests\test_pipeline_telemetry.py -q`
+- Result: pass
+- Summary: Adjacent admin auth, pipeline execution auth, and telemetry regression tests passed with `4 passed`.
+- Related commit hash: pending `feat: add admin model-health backend`.
+
+## 2026-05-25 23:40 +07
+- Task ID: `P3-FEAT-006-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `347 passed, 1 warning`.
+- Related commit hash: pending `feat: add admin model-health backend`.
+
+## 2026-05-25 23:40 +07
+- Task ID: `P3-FEAT-006-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-006-BE done with validation passed and commit pending.
+- Related commit hash: pending `feat: add admin model-health backend`.
+
+## 2026-05-25 23:41 +07
+- Task ID: `P3-FEAT-006-BE`
+- Command: `git diff --cached --check`
+- Result: pass
+- Summary: Staged admin model-health backend diff reported no whitespace errors.
+- Related commit hash: pending `feat: add admin model-health backend`.
+
+## 2026-05-25 23:42 +07
+- Task ID: `P3-FEAT-006-BE`
+- Command: `git commit -m "feat: add admin model-health backend"`
+- Result: pass
+- Summary: Created commit `fcd28b7` with the admin model-health gateway route, focused backend tests, and durable state updates.
+- Related commit hash: `fcd28b7`.
+
+## 2026-05-25 23:42 +07
+- Task ID: `P3-FEAT-006-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after recording P3-FEAT-006-BE commit `fcd28b7` and marking P3-FEAT-006-FE in progress.
+- Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:44 +07
+- Task ID: `P3-FEAT-006-FE`
+- Command: `npm run lint` in `frontend/`
+- Result: pass
+- Summary: Lint exited 0 with 16 existing warnings and no errors after adding the admin model-health frontend.
+- Related commit hash: `frontend:9090cd0`.
+
+## 2026-05-25 23:45 +07
+- Task ID: `P3-FEAT-006-FE`
+- Command: `npm run build` in `frontend/`
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully and generated 12 static pages.
+- Related commit hash: `frontend:9090cd0`.
+
+## 2026-05-25 23:45 +07
+- Task ID: `P3-FEAT-006-FE`
+- Command: `Invoke-WebRequest -UseBasicParsing http://127.0.0.1:3000/analytics -TimeoutSec 5`
+- Result: pass
+- Summary: Local frontend dev server responded with HTTP `200` for `/analytics`.
+- Related commit hash: `frontend:9090cd0`.
+
+## 2026-05-25 23:46 +07
+- Task ID: `P3-FEAT-006-FE`
+- Command: `git -C frontend diff --cached --check`
+- Result: pass
+- Summary: Staged admin model-health frontend diff reported no whitespace errors.
+- Related commit hash: `frontend:9090cd0`.
+
+## 2026-05-25 23:46 +07
+- Task ID: `P3-FEAT-006-FE`
+- Command: `git -C frontend commit -m "feat: add admin model-health frontend"`
+- Result: pass
+- Summary: Created nested frontend commit `9090cd0` with the typed model-health API helper and analytics-page admin panel.
+- Related commit hash: `frontend:9090cd0`.
+
+## 2026-05-25 23:47 +07
+- Task ID: `P3-FEAT-006-FE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-006-FE and parent P3-FEAT-006 done and pointing the next task at P3-FEAT-007.
+- Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:50 +07
+- Task ID: `P3-FEAT-007-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after splitting P3-FEAT-007 into backend/frontend child tasks and marking P3-FEAT-007-BE in progress.
+- Related commit hash: pending root checkpoint.
+
+## 2026-05-25 23:53 +07
+- Task ID: `P3-FEAT-007-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_recommendation_reason_filters.py -q`
+- Result: fail
+- Summary: Expected TDD red failure. The recommendation response did not include `reason_filter_scores`.
+- Related commit hash: pending `feat: add recommendation reason filter backend`.
+
+## 2026-05-25 23:54 +07
+- Task ID: `P3-FEAT-007-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_recommendation_reason_filters.py -q`
+- Result: pass
+- Summary: Focused recommendation reason-filter backend test passed with `1 passed`.
+- Related commit hash: pending `feat: add recommendation reason filter backend`.
+
+## 2026-05-25 23:54 +07
+- Task ID: `P3-FEAT-007-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_recommendation_reason_filters.py tests\test_feedback_outbox.py tests\test_saved_jobs_skip.py -q`
+- Result: pass
+- Summary: Adjacent recommendation feedback and saved/skip regression tests passed with `7 passed`.
+- Related commit hash: pending `feat: add recommendation reason filter backend`.
+
+## 2026-05-25 23:56 +07
+- Task ID: `P3-FEAT-007-BE`
+- Command: `.\.venv\Scripts\python.exe -m pytest -q`
+- Result: pass
+- Summary: Full backend suite passed with `348 passed, 1 warning`.
+- Related commit hash: pending `feat: add recommendation reason filter backend`.
+
+## 2026-05-25 23:57 +07
+- Task ID: `P3-FEAT-007-BE`
+- Command: `.\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json`
+- Result: pass
+- Summary: Durable task queue parsed successfully after marking P3-FEAT-007-BE done with validation passed and commit pending.
+- Related commit hash: pending `feat: add recommendation reason filter backend`.
+
+## 2026-05-26 00:12 +07
+- Task ID: P3-FEAT-007-FE
+- Command: npm run lint in frontend/
+- Result: pass
+- Summary: Lint exited 0 with 16 warnings and 0 errors.
+- Related commit hash: f226e7e.
+
+## 2026-05-26 00:14 +07
+- Task ID: P3-FEAT-007-FE
+- Command: npm run build in frontend/
+- Result: pass
+- Summary: Next.js 16.2.6 build compiled successfully, TypeScript completed, and 12 static pages generated.
+- Related commit hash: f226e7e.
+
+## 2026-05-26 00:42 +07
+- Task ID: P4-ADV-001
+- Command: .\.venv\Scripts\python.exe -m pytest tests	est_cv_upload.py -q
+- Result: pass
+- Summary: 4 passed. CV upload txt extraction, unsupported type, empty file, and no-auth tests all passed.
+- Related commit hash: pending.
+
+## 2026-05-26 00:55 +07
+- Task ID: P4-ADV-001
+- Command: .\.venv\Scripts\python.exe -m pytest -q
+- Result: pass
+- Summary: Full backend suite passed with 352 passed, 2 warnings.
+- Related commit hash: pending.
+
+
+## 2026-05-26 01:28 +07
+- Task ID: P4-ADV-002
+- Command: .\.venv\Scripts\python.exe -m pytest tests	est_certificate_upload.py -q
+- Result: pass
+- Summary: 5 passed. Certificate upload PDF extraction, image pending OCR, unsupported type, empty file, and no-auth tests all passed.
+- Related commit hash: pending.
+
+## 2026-05-26 01:32 +07
+- Task ID: P4-ADV-002
+- Command: .\.venv\Scripts\python.exe -m pytest -q
+- Result: pass
+- Summary: Full backend suite passed with 357 passed, 2 warnings.
+- Related commit hash: pending.
+
+
+## 2026-05-26 01:58 +07
+- Task ID: P4-ADV-003
+- Command: .\.venv\Scripts\python.exe -m pytest tests	est_market_aware_skill_path.py -q
+- Result: pass
+- Summary: 4 passed. Market demand computation, learning path inclusion, empty demand, and auth tests all passed.
+- Related commit hash: pending.
+
+## 2026-05-26 02:05 +07
+- Task ID: P4-ADV-003
+- Command: .\.venv\Scripts\python.exe -m pytest -q
+- Result: pass
+- Summary: Full backend suite passed with 361 passed, 2 warnings.
+- Related commit hash: pending.
+
+## 2026-05-27 22:54 +07
+- Task ID: P5-ML-007
+- Command: .\.venv\Scripts\python.exe -m py_compile services\sbert\main.py services\sbert\weights\validation.py services\pipeline\stages\stage_2_encode.py
+- Result: pass
+- Summary: SBERT service, artifact validator, and pipeline encode stage compiled successfully.
+- Related commit hash: 0313e8a.
+
+## 2026-05-27 22:55 +07
+- Task ID: P5-ML-007
+- Command: .\.venv\Scripts\python.exe test_sbert_load.py
+- Result: pass
+- Summary: Fine-tuned checkpoint loaded from `models\sbert-indonesian-hybrid-manual-research\best` with embedding dim 384 and fallback mode false.
+- Related commit hash: 0313e8a.
+
+## 2026-05-27 22:55 +07
+- Task ID: P5-ML-007
+- Command: validate_sbert_artifact(..., require_reload=True)
+- Result: pass
+- Summary: Artifact metadata valid, reloadable through transformers, `artifact_name=sbert-indonesian-hybrid-manual-research-best`, `embedding_dim=384`, fallback false.
+- Related commit hash: 0313e8a.
+
+## 2026-05-27 22:56 +07
+- Task ID: P5-ML-007
+- Command: .\.venv\Scripts\python.exe -m pytest tests\test_sbert_finetuned_runtime.py -q
+- Result: pass
+- Summary: 2 passed. Artifact metadata and runtime loading without fallback are covered.
+- Related commit hash: 0313e8a.
+
+## 2026-05-27 22:56 +07
+- Task ID: P5-ML-007
+- Command: .\.venv\Scripts\python.exe -m pytest tests\test_caching.py tests\test_sbert_job_embedding_cache.py -q
+- Result: pass
+- Summary: 17 passed. Existing SBERT cache/fallback behavior and pipeline job embedding cache remained intact.
+- Related commit hash: 0313e8a.
+
+## 2026-05-27 22:57 +07
+- Task ID: P5-ML-007
+- Command: docker compose config
+- Result: pass
+- Summary: Compose config parsed with dummy required secrets after the first run correctly failed due missing required env vars in the shell.
+- Related commit hash: 0313e8a.
+
+## 2026-05-27 23:00 +07
+- Task ID: P5-ML-007
+- Command: .\.venv\Scripts\python.exe -m pytest -q
+- Result: pass
+- Summary: Full backend suite passed with 389 passed and 3 warnings.
+- Related commit hash: 0313e8a.
+
+## 2026-05-31 09:12 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m json.tool docs\agent\TASK_QUEUE.json
+- Result: pass
+- Summary: Durable task queue parsed after adding the active ultimate debugging task and bootstrap docs.
+- Related commit hash: pending.
+
+## 2026-05-31 09:22 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m pytest --collect-only -q
+- Result: pass
+- Summary: 389 tests collected.
+- Related commit hash: pending.
+
+## 2026-05-31 09:22 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m alembic -c alembic.ini heads
+- Result: pass
+- Summary: Alembic reported 012_ab_testing_and_monitoring as the current head.
+- Related commit hash: pending.
+
+## 2026-05-31 09:30 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m pytest -q
+- Result: pass
+- Summary: Full backend suite passed with 389 passed and 3 warnings.
+- Related commit hash: pending.
+
+## 2026-05-31 09:34 +07
+- Task ID: DEBUG-ULT-001
+- Command: npm run lint (frontend)
+- Result: pass
+- Summary: ESLint completed with 0 errors and 16 warnings.
+- Related commit hash: pending.
+
+## 2026-05-31 09:36 +07
+- Task ID: DEBUG-ULT-001
+- Command: npm run build (frontend)
+- Result: pass
+- Summary: Next.js 16.2.6 production build completed.
+- Related commit hash: pending.
+
+## 2026-05-31 09:37 +07
+- Task ID: DEBUG-ULT-001
+- Command: docker compose config --quiet
+- Result: pass
+- Summary: Compose configuration validated with dummy required env vars.
+- Related commit hash: pending.
+
+## 2026-05-31 09:47 +07
+- Task ID: DEBUG-ULT-001
+- Command: docker compose up -d --build
+- Result: fail
+- Summary: Gateway image build failed because pip could not open requirements-db.txt. The gateway build context transfer reached about 5.06GB.
+- Related commit hash: pending.
+
+## 2026-05-31 09:49 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe scripts\verify_project.py --only import compile
+- Result: pass
+- Summary: Selected imports and compileall passed.
+- Related commit hash: pending.
+
+## 2026-05-31 09:58 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m py_compile scripts\debug\selenium_full_audit.py
+- Result: pass
+- Summary: Selenium browser audit harness compiled.
+- Related commit hash: pending.
+
+## 2026-05-31 10:05 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe scripts\debug\selenium_full_audit.py --output reports\debug\browser --headless --email <demo-email> --password <redacted> --settle-seconds 7
+- Result: fail
+- Summary: Authenticated audit loaded all 9 routes with no blank pages or hydration errors, but `/recommendations` triggered `POST /api/recommendations/feedback` HTTP 500.
+- Related commit hash: pending.
+
+## 2026-05-31 10:12 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m pytest tests\test_recommendation_feedback_slate.py -q
+- Result: fail
+- Summary: Focused pre-fix regression reproduced the missing served-slate persistence; `served_slates` count was 0 after `/api/recommendations`.
+- Related commit hash: 342edb0.
+
+## 2026-05-31 10:16 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m py_compile services\gateway\main.py tests\conftest.py tests\test_recommendation_feedback_slate.py
+- Result: pass
+- Summary: Changed gateway and test files compile.
+- Related commit hash: 342edb0.
+
+## 2026-05-31 10:17 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m pytest tests\test_recommendation_feedback_slate.py -q
+- Result: pass
+- Summary: Focused regression passed; recommendation response persists a served slate and feedback using that slate returns 200.
+- Related commit hash: 342edb0.
+
+## 2026-05-31 10:19 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m pytest tests\test_recommendation_feedback_slate.py tests\test_recommendation_reason_filters.py tests\test_feedback_outbox.py tests\test_pipeline_contracts.py -q
+- Result: pass
+- Summary: Adjacent recommendation, feedback outbox, and pipeline contract tests passed with 6 passed and 1 warning.
+- Related commit hash: 342edb0.
+
+## 2026-05-31 10:27 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m pytest -q
+- Result: pass
+- Summary: Full backend suite passed with 390 passed and 3 warnings in 223.23s.
+- Related commit hash: 342edb0.
+
+## 2026-05-31 10:33 +07
+- Task ID: DEBUG-ULT-001
+- Command: docker compose build gateway
+- Result: pass
+- Summary: Gateway image built; direct gateway context transfer was 286.56KB after `.dockerignore`.
+- Related commit hash: b747954.
+
+## 2026-05-31 10:34 +07
+- Task ID: DEBUG-ULT-001
+- Command: docker run --rm ... scpa-gateway python -c "import services.gateway.main as gateway; print(gateway.app.title)"
+- Result: pass
+- Summary: Gateway package import smoke passed inside the image.
+- Related commit hash: b747954.
+
+## 2026-05-31 10:36 +07
+- Task ID: DEBUG-ULT-001
+- Command: docker compose up -d --build gateway
+- Result: fail
+- Summary: Gateway built, but pipeline became unhealthy with `ModuleNotFoundError: No module named 'services'`.
+- Related commit hash: b747954.
+
+## 2026-05-31 10:39 +07
+- Task ID: DEBUG-ULT-001
+- Command: docker compose up -d --build gateway
+- Result: pass
+- Summary: Gateway and dependencies built and started after pipeline package-entrypoint repair.
+- Related commit hash: b747954.
+
+## 2026-05-31 10:40 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m alembic -c alembic.ini current
+- Result: fail
+- Summary: Live database was reachable but at `001_initial_schema`, below repo head.
+- Related commit hash: b747954.
+
+## 2026-05-31 10:41 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head
+- Result: pass
+- Summary: Live database migrations applied through `012_ab_testing_and_monitoring`.
+- Related commit hash: b747954.
+
+## 2026-05-31 10:41 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe -m alembic -c alembic.ini current
+- Result: pass
+- Summary: Live database reports `012_ab_testing_and_monitoring (head)`.
+- Related commit hash: b747954.
+
+## 2026-05-31 10:42 +07
+- Task ID: DEBUG-ULT-001
+- Command: docker compose up -d --build
+- Result: pass
+- Summary: Full project-level compose build/up passed.
+- Related commit hash: b747954.
+
+## 2026-05-31 10:43 +07
+- Task ID: DEBUG-ULT-001
+- Command: docker compose ps; Invoke-WebRequest http://127.0.0.1:9000/health; Invoke-WebRequest http://127.0.0.1:9000/ready
+- Result: pass
+- Summary: All services healthy; gateway health and readiness passed on port 9000.
+- Related commit hash: b747954.
+
+## 2026-05-31 10:46 +07
+- Task ID: DEBUG-ULT-001
+- Command: .\.venv\Scripts\python.exe scripts\debug\selenium_full_audit.py --output reports\debug\browser --headless --email <demo-email> --password <redacted> --settle-seconds 7
+- Result: pass
+- Summary: Final authenticated browser audit passed with 9 pages, 0 console errors, 0 network failures, 0 blank pages, and 0 hydration errors.
+- Related commit hash: b747954.
+
+## 2026-05-31 10:47 +07
+- Task ID: DEBUG-ULT-001
+- Command: rg "password123|access_token|Authorization|Bearer |eyJ" reports\debug\browser scripts\debug\selenium_full_audit.py
+- Result: pass
+- Summary: No password, token, authorization header, or JWT-like strings found in browser artifacts/harness.
+- Related commit hash: b747954.
+
+## 2026-06-01 05:15 +07
+- Task ID: DATA-QUALITY-PRODUCT-UI-001
+- Command: product-quality focused backend tests, frontend lint/build, Docker config, live DB/API probes, and Selenium product-quality audit
+- Result: pass
+- Summary: Backend/data regressions passed, changed Python modules compile, `docker compose config --quiet` passed, frontend lint/build passed, runtime DB has 10 real rich jobs and 8888 skills, and product-quality Selenium audit passed 48/48 checks.
+- Related commit hash: 7286d84, fccb8a4, frontend:999e2a8.
+
+## 2026-06-01 09:05 +07
+- Task ID: DATA-QUALITY-PRODUCT-UI-001
+- Command: realtime scraper direct run, focused scraper/parser tests, Docker config, scraper rebuild, pipeline `refresh_jobs=true`, and DB/API quality queries
+- Result: pass
+- Summary: Direct realtime scraper now returns only quality-gated real Kalibrr jobs; pipeline upserted 7; final DB has 0 sample jobs, 0 descriptions under 300 chars, and 0 jobs without skill signal.
+- Related commit hash: f236820.
+
+## 2026-06-01 19:21 +07
+- Task ID: CONTINUOUS-SCRAPE-001
+- Command: `.\.venv\Scripts\python.exe -m pytest tests\test_continuous_scraper.py tests\test_job_upsert_idempotency.py -q`
+- Result: pass
+- Summary: Continuous runner and stable source-URL upsert tests passed: 5 passed, 1 warning.
+- Related commit hash: f26b208.
+
+## 2026-06-01 19:21 +07
+- Task ID: CONTINUOUS-SCRAPE-001
+- Command: `docker compose --profile continuous run --rm ... --test-max-cycles 1`; `docker compose --profile continuous run --rm ... --test-max-cycles 2`
+- Result: pass
+- Summary: Bounded Docker harness passed. One-cycle run grew DB from 7 to 8 with a clean quality guard; two-cycle run kept DB at 8 in both cycles, proving no duplicate explosion.
+- Related commit hash: f26b208.
+
+## 2026-06-01 19:21 +07
+- Task ID: CONTINUOUS-SCRAPE-001
+- Command: `docker compose exec -T pipeline ... POST /pipeline/run refresh_jobs=true`; Docker DB/API guard queries
+- Result: pass
+- Summary: Pipeline refresh stayed compatible with continuous changes; final DB/API guard reported 8 Kalibrr jobs, 8 distinct source URLs, 0 sample/short/no-skill/missing-source rows, and API total matching DB total.
+- Related commit hash: f26b208.
+

@@ -1,0 +1,199 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_DB: ${POSTGRES_DB:-db_scpa}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    ports:
+      - "9000:8000"
+    environment:
+      PIPELINE_URL: http://pipeline:8005
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?INTERNAL_SERVICE_TOKEN required}
+      HTTP_TIMEOUT_SECONDS: "15"
+      GATEWAY_P95_TARGET_MS: "150"
+      DATABASE_URL: ${GATEWAY_DATABASE_URL:?GATEWAY_DATABASE_URL required}
+      PUBLIC_GATEWAY_URL: ${PUBLIC_GATEWAY_URL:-http://localhost:8000}
+      APP_ENV: ${APP_ENV:-development}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET required}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRY_HOURS: "24"
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:8000}
+      LOG_LEVEL: INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).read()"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  scraper:
+    build:
+      context: .
+      dockerfile: services/scraper/Dockerfile
+    environment:
+      SERVICE_PORT: "8001"
+      SCRAPER_SEED_URLS: ${SCRAPER_SEED_URLS:-}
+      SCRAPER_INDONESIA_ONLY: ${SCRAPER_INDONESIA_ONLY:-true}
+      JOBS_TARGET: ${JOBS_TARGET:-2000}
+      SCRAPER_MAX_URLS_PER_RUN: ${SCRAPER_MAX_URLS_PER_RUN:-4}
+      SCRAPER_RUNTIME_URL_CAP: ${SCRAPER_RUNTIME_URL_CAP:-12}
+      SCRAPER_CONCURRENCY: ${SCRAPER_CONCURRENCY:-6}
+      SCRAPER_RUNTIME_CONCURRENCY_CAP: ${SCRAPER_RUNTIME_CONCURRENCY_CAP:-1}
+      SCRAPER_DETAIL_MAX_PER_RUN: ${SCRAPER_DETAIL_MAX_PER_RUN:-30}
+      SCRAPER_DNS_TIMEOUT_SECONDS: ${SCRAPER_DNS_TIMEOUT_SECONDS:-2}
+      SCRAPER_SEED_TASK_TIMEOUT_SECONDS: ${SCRAPER_SEED_TASK_TIMEOUT_SECONDS:-30}
+      SCRAPER_SEED_PARSE_TIMEOUT_SECONDS: ${SCRAPER_SEED_PARSE_TIMEOUT_SECONDS:-8}
+      SCRAPER_MAX_SOURCE_RESPONSE_BYTES: ${SCRAPER_MAX_SOURCE_RESPONSE_BYTES:-1500000}
+      PIPELINE_ENABLE_LINKEDIN: ${PIPELINE_ENABLE_LINKEDIN:-true}
+      PIPELINE_ENABLE_INDEED: ${PIPELINE_ENABLE_INDEED:-true}
+      PIPELINE_ENABLE_JOBSTREET: ${PIPELINE_ENABLE_JOBSTREET:-true}
+      PIPELINE_ENABLE_GLINTS: ${PIPELINE_ENABLE_GLINTS:-true}
+      PIPELINE_ENABLE_KALIBRR: ${PIPELINE_ENABLE_KALIBRR:-true}
+      PIPELINE_ENABLE_KARIR: ${PIPELINE_ENABLE_KARIR:-true}
+      PIPELINE_ENABLE_TECHINASIA: ${PIPELINE_ENABLE_TECHINASIA:-true}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=2).read()"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  scraper-worker:
+    profiles: ["continuous"]
+    build:
+      context: .
+      dockerfile: services/pipeline/Dockerfile
+    command: ["python", "-m", "services.pipeline.continuous_scraper", "--run-forever"]
+    environment:
+      SCRAPER_URL: http://scraper:8001
+      DATABASE_URL: ${GATEWAY_DATABASE_URL:?GATEWAY_DATABASE_URL required}
+      PIPELINE_USE_DB_CANDIDATES: "true"
+      SCRAPER_CONTINUOUS_ENABLED: ${SCRAPER_CONTINUOUS_ENABLED:-true}
+      SCRAPER_CYCLE_LIMIT: ${SCRAPER_CYCLE_LIMIT:-10}
+      SCRAPER_CYCLE_INTERVAL_SECONDS: ${SCRAPER_CYCLE_INTERVAL_SECONDS:-900}
+      SCRAPER_MAX_EMPTY_CYCLES_BEFORE_BACKOFF: ${SCRAPER_MAX_EMPTY_CYCLES_BEFORE_BACKOFF:-3}
+      SCRAPER_BACKOFF_MIN_SECONDS: ${SCRAPER_BACKOFF_MIN_SECONDS:-60}
+      SCRAPER_BACKOFF_MAX_SECONDS: ${SCRAPER_BACKOFF_MAX_SECONDS:-1800}
+      SCRAPER_ALLOWED_SOURCES: ${SCRAPER_ALLOWED_SOURCES:-kalibrr}
+      SCRAPER_RUN_FOREVER: ${SCRAPER_RUN_FOREVER:-true}
+      SCRAPER_TEST_MAX_CYCLES: ${SCRAPER_TEST_MAX_CYCLES:-}
+      SCRAPER_CYCLE_JITTER_SECONDS: ${SCRAPER_CYCLE_JITTER_SECONDS:-5}
+      SCRAPER_REPORT_DIR: /app/reports/debug/continuous_scrape
+      SCRAPER_RUN_TIMEOUT_SECONDS: ${SCRAPER_RUN_TIMEOUT_SECONDS:-180}
+      SCRAPER_QUALITY_MIN_DESC_CHARS: ${SCRAPER_QUALITY_MIN_DESC_CHARS:-300}
+      LOG_LEVEL: INFO
+    volumes:
+      - ./reports/debug/continuous_scrape:/app/reports/debug/continuous_scrape
+    depends_on:
+      postgres:
+        condition: service_healthy
+      scraper:
+        condition: service_healthy
+    restart: unless-stopped
+
+  sbert:
+    build: ./services/sbert
+    environment:
+      SERVICE_PORT: "8002"
+      SBERT_ENABLE_TRANSFORMER: "1"
+      SBERT_MODEL_LOADER: transformers
+      SBERT_MAX_SEQ_LENGTH: "256"
+      MODEL_NAME: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+      MODEL_DIR: /app/weights/sbert
+    volumes:
+      - ./models/sbert-indonesian-hybrid-manual-research/best:/app/weights/sbert:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health', timeout=2).read()"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  ncf:
+    build: ./services/ncf
+    environment:
+      SERVICE_PORT: "8003"
+      MODEL_DIR: /app/weights/ncf
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8003/health', timeout=2).read()"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  dqn:
+    build: ./services/dqn
+    environment:
+      SERVICE_PORT: "8004"
+      MODEL_DIR: /app/weights/dqn
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8004/health', timeout=2).read()"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  pipeline:
+    build:
+      context: .
+      dockerfile: services/pipeline/Dockerfile
+    environment:
+      SCRAPER_URL: http://scraper:8001
+      SBERT_URL: http://sbert:8002
+      NCF_URL: http://ncf:8003
+      DQN_URL: http://dqn:8004
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?INTERNAL_SERVICE_TOKEN required}
+      DATABASE_URL: ${GATEWAY_DATABASE_URL:?GATEWAY_DATABASE_URL required}
+      HTTP_TIMEOUT_SECONDS: "15"
+      SCRAPER_RUN_TIMEOUT_SECONDS: ${SCRAPER_RUN_TIMEOUT_SECONDS:-180}
+      PIPELINE_P95_TARGET_MS: "150"
+      PIPELINE_USE_DB_CANDIDATES: "true"
+      PIPELINE_CANDIDATE_POOL_LIMIT: ${PIPELINE_CANDIDATE_POOL_LIMIT:-250}
+      PIPELINE_SCRAPE_REFRESH_LIMIT: ${PIPELINE_SCRAPE_REFRESH_LIMIT:-10}
+      JOBS_TARGET: ${JOBS_TARGET:-2000}
+      SCRAPING_INTERVAL_HOURS: ${SCRAPING_INTERVAL_HOURS:-1}
+      CONTINUAL_TRAINING_ENABLED: ${CONTINUAL_TRAINING_ENABLED:-false}
+      CONTINUAL_TRAINING_INTERVAL_SECONDS: ${CONTINUAL_TRAINING_INTERVAL_SECONDS:-3600}
+    depends_on:
+      scraper:
+        condition: service_healthy
+      sbert:
+        condition: service_healthy
+      ncf:
+        condition: service_healthy
+      dqn:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8005/health', timeout=2).read()"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:
