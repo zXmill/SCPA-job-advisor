@@ -70,7 +70,7 @@ def test_dqn_learn_persists_replay_transition_and_target_checkpoint(
     assert reloaded.target_net is not None
 
 
-def test_dqn_rank_returns_skill_path_policy_metadata() -> None:
+def test_dqn_rank_returns_session_rerank_policy_metadata() -> None:
     agent = OnlineDQN(load_existing=False, autosave=False)
     agent.epsilon = 0.0
     ranked = agent.rank(
@@ -82,10 +82,11 @@ def test_dqn_rank_returns_skill_path_policy_metadata() -> None:
         {"interaction_count": 5},
     )
 
-    assert ranked[0]["policy_source"] == "skill_path_policy"
-    assert ranked[0]["policy_objective"] == "skill_path"
-    assert isinstance(ranked[0]["action"], int)
-    assert ranked[0]["action_label"]
+    assert ranked[0]["policy_source"] == "qnetwork_session_policy"
+    assert ranked[0]["policy_objective"] == "session_rerank"
+    assert ranked[0]["rank"] == 1
+    assert ranked[0]["dqn_session_score"] > 0.0
+    assert "dqn_session_score" in ranked[0]
 
 
 def test_dqn_rank_batches_policy_forward_for_multiple_jobs(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -117,12 +118,12 @@ def test_dqn_rank_batches_policy_forward_for_multiple_jobs(monkeypatch: pytest.M
     assert forward_calls == 1
 
 
-def test_dqn_rank_metadata_frames_action_as_skill_path_signal() -> None:
+def test_dqn_rank_metadata_frames_session_behavior_signal() -> None:
     agent = OnlineDQN(load_existing=False, autosave=False)
     agent.epsilon = 0.0
 
     ranked = agent.rank(
-        "u-skill-path-rank",
+        "u-session-rank",
         [
             {
                 "id": "backend",
@@ -133,25 +134,20 @@ def test_dqn_rank_metadata_frames_action_as_skill_path_signal() -> None:
             }
         ],
         {
-            "skills": ["Python"],
-            "target_role": "Backend Developer",
-            "market_demand": {"FastAPI": 0.8, "PostgreSQL": 0.9},
+            "interaction_history": [{"event": "save", "job_id": "backend"}],
         },
     )
 
     action = ranked[0]
-    assert action["policy_objective"] == "skill_path"
-    assert action["action_type"] in {"skill", "course", "certificate", "career_milestone"}
-    assert action["action_label"] in {"FastAPI", "PostgreSQL"}
-    assert action["reward_components"]["total_reward"] == pytest.approx(
-        action["reward_components"]["skill_gap_reduction"]
-        + action["reward_components"]["job_match_lift"]
-    )
-    assert action["skill_gap"] > action["estimated_skill_gap_after"]
+    assert action["policy_objective"] == "session_rerank"
+    assert action["rerank_reason"] == "session_save_signal"
+    assert action["job_id"] == "backend"
+    assert action["dqn_session_score"] > 0.0
+    assert "reward_components" not in action
 
 
 @pytest.mark.anyio
-async def test_pipeline_dqn_stage_preserves_skill_path_metadata() -> None:
+async def test_pipeline_dqn_stage_preserves_session_rerank_metadata() -> None:
     class FakeResponse:
         def raise_for_status(self) -> None:
             return None
@@ -159,23 +155,22 @@ async def test_pipeline_dqn_stage_preserves_skill_path_metadata() -> None:
         def json(self):
             return {
                 "model_version": "online-dqn-v2",
-                "ranked": [
+                "policy_objective": "session_rerank",
+                "metadata": {
+                    "model_version": "online-dqn-v2",
+                    "model": "dqn_session_reranker",
+                },
+                "ranked_jobs": [
                     {
                         "job": {"id": "job-backend"},
-                        "q_value": 0.8,
-                        "action": 24,
-                        "action_label": "FastAPI",
-                        "action_type": "career_milestone",
-                        "policy_source": "skill_path_policy",
-                        "policy_objective": "skill_path",
-                        "reward_components": {
-                            "skill_gap_reduction": 0.5,
-                            "job_match_lift": 0.8,
-                            "total_reward": 1.3,
-                        },
-                        "skill_gap": 0.8,
-                        "estimated_skill_gap_after": 0.6,
-                        "market_demand": 0.8,
+                        "job_id": "job-backend",
+                        "base_score": 0.7,
+                        "ncf_score": 0.6,
+                        "dqn_session_score": 0.8,
+                        "rank": 1,
+                        "rerank_reason": "session_click_signal",
+                        "policy_source": "qnetwork_session_policy",
+                        "policy_objective": "session_rerank",
                     }
                 ],
             }
@@ -185,6 +180,7 @@ async def test_pipeline_dqn_stage_preserves_skill_path_metadata() -> None:
             self.payload = None
 
         async def post(self, _url, json):
+            assert _url.endswith("/rerank")
             self.payload = json
             return FakeResponse()
 
@@ -195,9 +191,8 @@ async def test_pipeline_dqn_stage_preserves_skill_path_metadata() -> None:
         "http://dqn",
         {
             "id": "u-pipeline",
-            "skills": ["Python"],
-            "target_role": "Backend Developer",
             "interaction_count": 3,
+            "session_events": [{"event": "click", "job_id": "job-backend"}],
         },
         [
             {
@@ -210,10 +205,10 @@ async def test_pipeline_dqn_stage_preserves_skill_path_metadata() -> None:
         ],
     )
 
-    assert client.payload["session_ctx"]["target_role"] == "Backend Developer"
-    assert result.jobs[0]["dqn_action_type"] == "career_milestone"
-    assert result.jobs[0]["dqn_policy_objective"] == "skill_path"
-    assert result.jobs[0]["dqn_reward_components"]["total_reward"] == pytest.approx(1.3)
-    assert result.jobs[0]["dqn_skill_gap"] == pytest.approx(0.8)
-    assert result.jobs[0]["dqn_estimated_skill_gap_after"] == pytest.approx(0.6)
-    assert result.summary["policy_objective"] == "skill_path"
+    assert client.payload.get("session_events") == [{"event": "click", "job_id": "job-backend"}]
+    assert client.payload["candidates"][0]["base_score"] == pytest.approx(0.7)
+    assert result.jobs[0]["dqn_session_score"] == pytest.approx(0.8)
+    assert result.jobs[0]["dqn_policy_objective"] == "session_rerank"
+    assert result.jobs[0]["dqn_rerank_reason"] == "session_click_signal"
+    assert result.summary["policy_objective"] == "session_rerank"
+    assert result.summary["rerank_reasons"] == ["session_click_signal"]

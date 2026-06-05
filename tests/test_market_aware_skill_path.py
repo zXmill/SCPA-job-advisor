@@ -172,20 +172,16 @@ async def test_market_demand_job_count_does_not_inflate_with_skill_count(
         assert entry["job_count"] <= 5
 
 
-async def test_learning_path_includes_market_demand(client, db_session) -> None:
-    """Learning path response should include market_demand field."""
+async def test_learning_path_endpoint_is_deprecated(client, db_session) -> None:
+    """The old path-planning endpoint is no longer an active feature."""
     await _insert_job_with_skills(db_session)
     reg = await _register(client)
     response = await client.post(
         "/api/learning-path",
         headers=_auth_header(reg["access_token"]),
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert "market_demand" in data
-    assert isinstance(data["market_demand"], dict)
-    assert "steps" in data
-    assert "estimated_months" in data
+    assert response.status_code == 410
+    assert "deprecated" in response.json()["detail"].lower()
 
 
 async def test_market_demand_no_jobs_returns_empty(client) -> None:

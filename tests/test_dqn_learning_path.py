@@ -1,15 +1,27 @@
-"""Regression tests for DQN career-action recommendations."""
+"""Regression tests for the active DQN session reranker contract."""
 
 from __future__ import annotations
 
 import pytest
+from fastapi.testclient import TestClient
 
-from services.dqn.main import LearningPathRequest, agent, learning_path
+from services.dqn.main import RerankRequest, agent, app as dqn_app, rerank, reward_value
+
+
+LEGACY_RESPONSE_FIELDS = {
+    "learning_path",
+    "career_path",
+    "skill_path",
+    "market_demand",
+    "estimated_skill_gap_after",
+    "next_milestone",
+    "recommended_milestones",
+    "skill_gap_reduction",
+}
 
 
 @pytest.fixture(autouse=True)
 def _freeze_epsilon():
-    """Freeze epsilon to 0 so policy tests are deterministic."""
     old = agent.epsilon
     agent.epsilon = 0.0
     yield
@@ -17,79 +29,84 @@ def _freeze_epsilon():
 
 
 @pytest.mark.anyio
-async def test_dqn_learning_path_returns_policy_steps() -> None:
-    response = await learning_path(
-        LearningPathRequest(
-            user_id="u-design-test",
-            current_skills=["Figma", "UI Design", "Prototyping"],
-            target_role="UI/UX Designer",
+async def test_dqn_rerank_returns_ranked_job_candidates() -> None:
+    response = await rerank(
+        RerankRequest(
+            user_id="u-session-test",
+            session_id="session-1",
+            session_events=[{"event": "click", "job_id": "job-api"}],
+            session_history=[{"event": "click", "job_id": "job-api"}],
+            candidates=[
+                {
+                    "id": "job-data",
+                    "title": "Data Analyst",
+                    "base_score": 0.7,
+                    "ncf_score": 0.61,
+                },
+                {
+                    "id": "job-api",
+                    "title": "Backend API Engineer",
+                    "base_score": 0.72,
+                    "ncf_score": 0.63,
+                },
+            ],
         )
     )
 
-    skills = [step["skill"] for step in response["learning_path"]]
+    assert response["policy_objective"] == "session_rerank"
+    assert response["session_id"] == "session-1"
+    assert response["metadata"]["input_candidate_count"] == 2
+    assert response["metadata"]["model"] == "dqn_session_reranker"
 
-    assert response["total_steps"] >= 1
-    assert len(skills) == response["total_steps"]
-    assert all(isinstance(step.get("skill"), str) for step in response["learning_path"])
-    assert all(
-        step.get("policy_source") in {"qnetwork_policy", "epsilon_explore", "fallback", "skill_path_policy"}
-        for step in response["learning_path"]
-    )
+    ranked_jobs = response["ranked_jobs"]
+    assert len(ranked_jobs) == 2
+    assert {job["rank"] for job in ranked_jobs} == {1, 2}
+    job_ids = {job["job_id"] for job in ranked_jobs}
+    assert job_ids == {"job-api", "job-data"}
+    assert all(0.0 <= job["dqn_session_score"] <= 1.0 for job in ranked_jobs)
+    assert ranked_jobs[0]["job_id"] == "job-api"
+    assert ranked_jobs[0]["rerank_reason"] in {"qnetwork_session_policy", "session_click_signal"}
+    required = ("base_score", "ncf_score", "dqn_session_score", "rank", "rerank_reason", "dqn_mode", "policy_objective", "reward_trace")
+    for required_field in required:
+        assert required_field in ranked_jobs[0], required_field
+    assert ranked_jobs[0]["policy_objective"] == "session_rerank"
+    assert ranked_jobs[0]["dqn_mode"] == "session_rerank"
+    assert "final_score" not in ranked_jobs[0]
+    assert "final_score" not in response
+
+    assert not (LEGACY_RESPONSE_FIELDS & response.keys())
+    for item in ranked_jobs:
+        assert not (LEGACY_RESPONSE_FIELDS & item.keys())
 
 
 @pytest.mark.anyio
-async def test_dqn_learning_path_excludes_mastered_skills() -> None:
-    mastered = ["Python", "SQL", "Statistics", "Pandas"]
-    response = await learning_path(
-        LearningPathRequest(
-            user_id="u-data-test",
-            current_skills=mastered,
-            target_role="Data Scientist",
+async def test_dqn_rerank_empty_candidates_returns_http_200_shape() -> None:
+    response = await rerank(
+        RerankRequest(
+            user_id="u-empty",
+            session_id="session-empty",
+            candidates=[],
         )
     )
 
-    skills = [step["skill"] for step in response["learning_path"]]
+    assert response["policy_objective"] == "session_rerank"
+    assert response["ranked_jobs"] == []
+    assert response["metadata"]["input_candidate_count"] == 0
+    assert response["metadata"]["output_candidate_count"] == 0
 
-    assert response["total_steps"] >= 1
-    for skill in skills:
-        assert skill.lower() not in {s.lower() for s in mastered}
+
+def test_dqn_reward_function_uses_session_behavior() -> None:
+    assert 0.0 < reward_value("view") < reward_value("click")
+    assert reward_value("click") < reward_value("save")
+    assert reward_value("save") < reward_value("apply")
+    assert reward_value("valid_dwell") > reward_value("view")
+    assert reward_value("skip") < 0
+    assert reward_value("repeated_irrelevant_exposure") < 0
 
 
-@pytest.mark.anyio
-async def test_dqn_learning_path_exposes_skill_path_mdp_and_reward_components() -> None:
-    response = await learning_path(
-        LearningPathRequest(
-            user_id="u-gap-test",
-            current_skills=["Python", "Pandas"],
-            target_role="Data Scientist",
-            market_demand={
-                "SQL": 0.95,
-                "Machine Learning": 0.65,
-                "Statistics": 0.7,
-                "Dashboard": 0.2,
-            },
-        )
-    )
+def test_dqn_legacy_path_endpoint_is_gone() -> None:
+    client = TestClient(dqn_app)
+    response = client.post("/learning-path", json={"user_id": "u"})
 
-    assert response["policy_objective"] == "skill_path"
-    assert response["mdp"]["action_space"] == "next_skill_course_certificate_or_career_milestone"
-    assert response["mdp"]["reward"] == "skill_gap_reduction + job_match_lift"
-    assert response["mdp"]["state"]["user_profile"]["target_role"] == "Data Scientist"
-    assert response["mdp"]["state"]["missing_skills"] == [
-        "Machine Learning",
-        "Statistics",
-        "SQL",
-        "Dashboard",
-    ]
-    assert response["mdp"]["state"]["market_demand"]["SQL"] == pytest.approx(0.95)
-
-    first_step = response["learning_path"][0]
-    assert first_step["skill"] == "SQL"
-    assert first_step["action_type"] in {"skill", "course", "certificate", "career_milestone"}
-    assert "job" not in first_step
-    assert "job_id" not in first_step
-    assert first_step["reward_components"]["total_reward"] == pytest.approx(
-        first_step["reward_components"]["skill_gap_reduction"]
-        + first_step["reward_components"]["job_match_lift"]
-    )
-    assert first_step["estimated_skill_gap_after"] < response["mdp"]["state"]["skill_gap"]
+    assert response.status_code == 410
+    assert "rank" in response.json()["detail"].lower()

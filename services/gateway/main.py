@@ -155,7 +155,7 @@ INDONESIA_JOB_TERMS = {
 REASON_FILTER_LABELS = {
     "semantic_fit": "Highest SBERT semantic match",
     "interaction_fit": "Highest NCF interaction fit",
-    "career_signal": "Highest DQN career-path signal",
+    "session_rerank_signal": "Highest DQN session rerank signal",
     "location_fit": "Closest profile location",
     "recency": "Newest jobs",
 }
@@ -3061,73 +3061,18 @@ async def market_demand(
 
 
 # ════════════════════════════════════════════════════════════════
-# Learning Path
+# Deprecated Learning Path Compatibility
 # ════════════════════════════════════════════════════════════════
 
 @app.post("/api/learning-path")
-async def learning_path(
+async def deprecated_path_route(
     token_payload: dict[str, Any] = Depends(_get_current_user),
-    db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    user = await _require_user(db, token_payload)
-    uid = str(user["id"])
-    skills = (
-        await db.execute(
-            text("SELECT skill FROM user_skills WHERE user_id = :uid"),
-            {"uid": uid},
-        )
-    ).mappings().all()
-    user_skills = {s["skill"] for s in skills}
-
-    target_role = await _resolve_target_role(db, user)
-    market_demand_raw = await _compute_skill_market_demand(db)
-    market_demand = {skill: score for skill, (score, _raw) in market_demand_raw.items()}
-
-    dqn_url = os.getenv("DQN_URL", os.getenv("DQN_SERVICE_URL", "http://dqn:8004")).rstrip("/")
-    dqn_data: dict[str, Any] = {}
-    try:
-        dqn_resp = await _client().post(
-            f"{dqn_url}/learning-path",
-            json={
-                "user_id": uid,
-                "current_skills": list(user_skills),
-                "target_role": target_role,
-                "market_demand": market_demand,
-            },
-            timeout=HTTP_TIMEOUT_SECONDS,
-        )
-        dqn_resp.raise_for_status()
-        dqn_data = dqn_resp.json()
-    except httpx.HTTPError:
-        pass
-
-    # DQN returns "learning_path"; map it to the frontend-expected "steps" shape.
-    steps = dqn_data.get("learning_path", [])
-    if not steps:
-        fallback = [
-            {"skill": "Python", "priority": 1, "estimated_weeks": 4, "resources": ["Coursera Python for Everybody", "Real Python Tutorials"]},
-            {"skill": "SQL", "priority": 2, "estimated_weeks": 3, "resources": ["Mode SQL Tutorial", "SQLZoo"]},
-            {"skill": "FastAPI", "priority": 3, "estimated_weeks": 3, "resources": ["FastAPI Documentation", "TestDriven.io FastAPI Course"]},
-            {"skill": "Docker", "priority": 4, "estimated_weeks": 3, "resources": ["Docker Getting Started", "Play with Docker"]},
-            {"skill": "Kubernetes", "priority": 5, "estimated_weeks": 6, "resources": ["Kubernetes Basics", "Kodekloud CKA Course"]},
-            {"skill": "Machine Learning", "priority": 6, "estimated_weeks": 8, "resources": ["Andrew Ng ML Course", "Fast.ai Practical Deep Learning"]},
-            {"skill": "TensorFlow", "priority": 7, "estimated_weeks": 5, "resources": ["TensorFlow Tutorials", "DeepLearning.AI TensorFlow Course"]},
-        ]
-        steps = [s for s in fallback if s["skill"] not in user_skills]
-        if not steps:
-            steps = fallback[:3]
-
-    # Attach market_demand scores to each step when available.
-    for step in steps:
-        skill = step.get("skill")
-        if skill and skill in market_demand:
-            step["market_demand"] = market_demand[skill]
-
-    return {
-        "steps": steps,
-        "estimated_months": sum(s.get("estimated_weeks", 0) for s in steps) // 4,
-        "market_demand": market_demand,
-    }
+    _ = token_payload
+    raise HTTPException(
+        status_code=410,
+        detail="Deprecated endpoint. DQN is now used through session reranking in /api/recommendations.",
+    )
 
 
 # ════════════════════════════════════════════════════════════════
@@ -3157,6 +3102,19 @@ async def run_pipeline(
     payload["user_id"] = uid
     payload["profile"] = request.profile or await _pipeline_profile_for_user(db, user)
     profile_for_reasons = payload["profile"] if isinstance(payload["profile"], dict) else {}
+    if isinstance(payload["profile"], dict):
+        if not payload["profile"].get("session_events"):
+            session_history = payload["profile"].get("session_history") or []
+            if isinstance(session_history, list) and session_history:
+                payload["profile"]["session_events"] = [
+                    item for item in session_history if isinstance(item, dict)
+                ]
+            elif not isinstance(session_history, list):
+                payload["profile"]["session_events"] = []
+            if not payload["profile"].get("session_history") and payload["profile"].get("session_events"):
+                payload["profile"]["session_history"] = payload["profile"]["session_events"]
+        if not payload["profile"].get("session_history") and payload["profile"].get("session_events"):
+            payload["profile"]["session_history"] = payload["profile"]["session_events"]
     payload["interaction_count"] = (
         request.interaction_count
         if request.interaction_count > 0
@@ -3192,7 +3150,7 @@ async def run_pipeline(
         else:
             explanation = raw_explanation or (
                 "Matched using SBERT semantic signal, NCF interaction signal, "
-                "and DQN career-action signal."
+                "and DQN session rerank signal."
             )
         weights = item.get("weights", {}) if isinstance(item.get("weights"), dict) else {}
         employer_fit = _employer_fit_score(user, job)
@@ -3212,7 +3170,7 @@ async def run_pipeline(
             "explanation_provenance": {
                 "semantic_match": sbert_score,
                 "behavior_match": ncf_score,
-                "skill_path_signal": dqn_score,
+                "session_rerank_signal": dqn_score,
                 "skill_gap": item.get("skill_gap") or item.get("missing_skills") or [],
             },
             "reason_filter_scores": _recommendation_reason_filter_scores(
