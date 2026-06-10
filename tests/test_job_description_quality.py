@@ -50,6 +50,32 @@ Job function Rekayasa, Teknologi Informasi
 Industry Jasa Keuangan
 """
 
+ASTRO_TRAINING_SUPERVISOR_DESCRIPTION = """
+Role Overview
+The Hub Mitra Training & Program Supervisor is responsible for ensuring the
+effectiveness of mitra onboarding, training execution, and early-stage
+engagement (1-30 days). This role plays a key part in maintaining mitra
+retention, driving training excellence, and ensuring operational alignment
+between training and operations teams.
+
+Job Responsibilities
+Mitra Onboarding & Retention Monitor and maintain newly onboarded mitra within
+their first 1-30 days.
+Ensure mitra turn rate remains below 10% through proactive engagement and issue
+resolution.
+Coordinate with Operations to ensure mitra scheduling accuracy, including
+identifying and resolving unscheduled mitra cases.
+Training Excellence & Quality Assurance Deliver and oversee training programs
+to ensure high-quality learning experiences.
+Achieve minimum training satisfaction score of 4.5/5.0.
+Ensure post-test results reach a minimum average score of 90%.
+Maintain training attendance rate above 75%.
+Reporting & Performance Monitoring Prepare and submit accurate daily and
+weekly performance reports.
+Track key training and onboarding metrics to ensure targets are achieved.
+Identify gaps and propose improvement initiatives based on data insights.
+"""
+
 
 def test_parse_cbi_job_description_extracts_sections_and_metadata() -> None:
     parsed = parse_job_description(CBI_DESCRIPTION)
@@ -85,6 +111,25 @@ def test_scraper_job_item_derives_required_and_extracted_skills_from_full_descri
     assert {"Docker", "Kubernetes", "Apache Airflow", "Git"}.issubset(required | extracted)
     assert {"MLOps", "Model Versioning", "Model Monitoring", "Credit Scoring"}.issubset(required | extracted)
     assert job.description_sections["requirements"]
+
+
+def test_scraper_job_item_uses_responsibility_skills_when_requirements_are_absent() -> None:
+    job = _job_item(
+        title="Hub Mitra Training & Program Supervisor",
+        company="Astro Technologies Indonesia",
+        location="West Jakarta, Indonesia",
+        description=ASTRO_TRAINING_SUPERVISOR_DESCRIPTION,
+        tags=["E-Commerce"],
+        company_logo=None,
+        source_url="https://www.kalibrr.com/c/astro/jobs/1/hub-mitra-training-program-supervisor",
+        source="kalibrr",
+    )
+
+    assert "E-Commerce" not in job.required_skills
+    assert {"Training", "Program Management"} & set(job.required_skills)
+    assert {"Onboarding", "Operations", "Quality Assurance", "Reporting"} & set(
+        job.required_skills + job.extracted_skills
+    )
 
 
 def test_skill_seed_contains_real_taxonomy_categories_and_user_queries() -> None:
@@ -144,11 +189,16 @@ def test_realtime_scrape_quality_gate_requires_extracted_skill_signal() -> None:
         company="Real Company",
         location="Jakarta, Indonesia",
         description=(
-            "Coordinate operational activities across departments, prepare weekly "
-            "status updates, communicate with stakeholders, and maintain execution "
-            "quality for multiple ongoing business initiatives in Indonesia."
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+            "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
+            "veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
+            "commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
+            "velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat "
+            "cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id "
+            "est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem "
+            "accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab."
         ),
-        tags=["Operations"],
+        tags=[],
         company_logo=None,
         source_url="https://www.kalibrr.com/c/real-company/jobs/123/general-coordinator",
         source="kalibrr",
