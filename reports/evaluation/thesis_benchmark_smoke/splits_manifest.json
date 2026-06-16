@@ -1,0 +1,34 @@
+{
+  "temporal": {
+    "leakage_report": {
+      "strategy": "temporal",
+      "guarantee": "test timestamps are all >= max train timestamp",
+      "train_max_timestamp": "2026-01-05T09:02:03+00:00",
+      "test_min_timestamp": "2026-01-06T06:37:35+00:00",
+      "ordering_holds": true,
+      "cold_users_in_test": 0,
+      "cold_items_in_test": 20
+    },
+    "counts": {
+      "train": 876,
+      "validation": 187,
+      "test": 187
+    }
+  },
+  "user_holdout": {
+    "leakage_report": {
+      "strategy": "user_holdout",
+      "guarantee": "no user appears in both train and test",
+      "n_train_users": 18,
+      "n_val_users": 2,
+      "n_test_users": 5,
+      "user_overlap_count": 0,
+      "user_overlap_holds": true
+    },
+    "counts": {
+      "train": 900,
+      "validation": 100,
+      "test": 250
+    }
+  }
+}

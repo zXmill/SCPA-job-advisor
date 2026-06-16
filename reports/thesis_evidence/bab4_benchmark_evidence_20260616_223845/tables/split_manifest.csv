@@ -1,0 +1,4 @@
+split,train,validation,test,test_users_scored,relevant_users,leakage_holds,cold_users_in_test,guarantee
+temporal,10080,2160,2160,135,133,True,0,test timestamps are all >= max train timestamp
+user_holdout,10080,1440,2880,60,60,True,,no user appears in both train and test
+session,630,135,135,,,True,,each session lies wholly in one partition; test sessions are temporally last

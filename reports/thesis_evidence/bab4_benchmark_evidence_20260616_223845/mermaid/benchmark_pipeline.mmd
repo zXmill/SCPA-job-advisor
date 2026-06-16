@@ -1,0 +1,12 @@
+flowchart TD
+  A["Real profile and job corpus"] --> B["Grounded behavioral simulator"]
+  B --> C["Frozen interactions and sessions"]
+  C --> D["Temporal split"]
+  C --> E["User holdout split"]
+  C --> F["Session trajectory split"]
+  D --> G["NCF training and scoring"]
+  E --> G
+  F --> H["DQN session reranking"]
+  G --> I["Ablation: content, ncf, content_ncf, full_scpa"]
+  H --> I
+  I --> J["BAB IV metrics and claim boundaries"]

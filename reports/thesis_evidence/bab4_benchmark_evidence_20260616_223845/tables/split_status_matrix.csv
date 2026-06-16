@@ -1,0 +1,6 @@
+Model,Split yang dibutuhkan,Status,Bukti artifact,Risiko jika tidak ada
+SBERT,Profil-lowongan qrels train/val/test,SILVER TERSEDIA; GOLD BLOCKED,"744 silver, 0 gold, 744 pending",Tidak bisa klaim expert Precision/NDCG
+NCF,Temporal + user holdout interaction split,TERSEDIA,temporal users=135; holdout users=60,Leakage dan overclaim personalization
+DQN,Session trajectory split,TERSEDIA,630/135/135 sessions; CV=0.004274; deltaNDCG=0.003714,Reward metric tidak stabil
+Hybrid,Skenario ablation dengan data sama,TERSEDIA,"popularity, content, ncf, content_ncf, full_scpa",Kontribusi relatif belum lengkap
+Functional,Test cases runner benchmark dan qrels,TERSEDIA,pytest tests/test_thesis_benchmark.py = 13 passed,"Valid untuk artifact, bukan relevance"

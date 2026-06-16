@@ -1,0 +1,53 @@
+{
+  "git_commit": "99e01fe98d2041892527f00fc70c6d3f71eb5448",
+  "seed": 42,
+  "generative_params": {
+    "affinity_weights": {
+      "skill": 0.45,
+      "domain": 0.35,
+      "occupation": 0.2
+    },
+    "engagement_model": "logistic(sigmoid(scale*(affinity-midpoint)+noise))",
+    "engage_scale": 6.0,
+    "engage_midpoint": 0.45,
+    "engage_noise_std": 0.6,
+    "event_relevance_grade": {
+      "apply": 3.0,
+      "save": 2.0,
+      "click": 1.0,
+      "view_10s": 1.0,
+      "view": 0.0,
+      "skip": 0.0,
+      "immediate_skip": 0.0
+    },
+    "positive_events": [
+      "apply",
+      "click",
+      "save",
+      "view_10s"
+    ],
+    "grounding": "real profile/job domain, occupation_group, and skill attributes"
+  },
+  "data_files": {
+    "interactions": "data\\eval\\synthetic\\interactions.jsonl",
+    "sessions": "data\\eval\\synthetic\\sessions.jsonl",
+    "metadata": "data\\eval\\synthetic\\benchmark_metadata.json"
+  },
+  "interactions_sha256": "fd8bb3c1665525175e26b1ae88c0a3e71b2368dffdad87f2057ae171252c935d",
+  "sessions_sha256": "32da823df715eee2b30bbd85da7c06d2a441165a1504e7b34cfe3b5801f783e4",
+  "models": {
+    "ncf": "online-ncf-v2 (NeuMF+MF)",
+    "dqn": "online-dqn-v2 (QNetwork)"
+  },
+  "k_values": [
+    5,
+    10
+  ],
+  "variants": [
+    "popularity",
+    "content",
+    "ncf",
+    "content_ncf",
+    "full_scpa"
+  ]
+}

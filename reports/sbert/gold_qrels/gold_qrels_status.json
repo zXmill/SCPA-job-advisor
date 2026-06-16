@@ -1,0 +1,42 @@
+{
+  "status": "BLOCKED",
+  "annotation_source": "data\\sbert\\annotation\\20260607_sbert_final_validation\\manual_qrels_annotation.csv",
+  "total_annotation_rows": 744,
+  "silver_qrels": {
+    "path": "data\\sbert\\qrels\\silver_qrels.csv",
+    "n_judgements": 744,
+    "grade_distribution": {
+      "0": 152,
+      "1": 152,
+      "3": 440
+    },
+    "label_source": "system_relevance_grade (heuristic, NOT expert)"
+  },
+  "gold_qrels": {
+    "path": "data\\sbert\\qrels\\gold_qrels.csv",
+    "n_judgements": 0,
+    "adjudication_decisions": {
+      "pending_no_grades": 744
+    },
+    "inter_annotator_agreement": {
+      "kappa": null,
+      "n": 0,
+      "note": "no double-annotated pairs"
+    }
+  },
+  "annotation_template": {
+    "path": "data\\sbert\\qrels\\annotation_template.csv",
+    "n_rows_pending_expert_grade": 744
+  },
+  "claim_boundary": {
+    "can_claim_now": [
+      "Silver Precision@K / NDCG@K on the real fine-tuned SBERT (heuristic ground truth).",
+      "A full adjudication pipeline and annotation protocol exist and are reproducible."
+    ],
+    "cannot_claim_until_gold": [
+      "Expert-validated Precision@K / NDCG@K.",
+      "Inter-annotator agreement (kappa) as evidence of label quality."
+    ],
+    "next_step": "Two annotators grade annotation_template.csv (0-3); re-run this script to adjudicate into gold_qrels.csv and report Cohen's kappa."
+  }
+}

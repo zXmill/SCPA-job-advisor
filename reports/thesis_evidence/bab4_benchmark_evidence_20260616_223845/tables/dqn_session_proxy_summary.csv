@@ -1,0 +1,2 @@
+n_test_sessions,n_sessions_scored,n_event_rows,mean_delta_ndcg_at_10,mean_positive_delta_rank,interpretation
+135,135,2160,0.003714,-0.032009,positive means relevant events moved upward after DQN

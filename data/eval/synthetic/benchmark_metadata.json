@@ -1,0 +1,43 @@
+{
+  "provenance": "simulated_grounded",
+  "disclosure": "Interactions are SIMULATED from a documented click model whose ground-truth preference is derived from REAL profile/job domain, occupation_group, and skill attributes. Numbers are offline simulation evidence, NOT real-user evidence, and must be disclosed as such in Bab IV.",
+  "seed": 42,
+  "n_users": 300,
+  "n_jobs": 3818,
+  "n_interactions": 14400,
+  "n_positive_interactions": 6288,
+  "positive_rate": 0.4367,
+  "n_sessions": 900,
+  "candidate_pool_size": 50,
+  "sessions_per_user": 3,
+  "temporal_schedule": "interleaved_user_waves",
+  "temporal_schedule_disclosure": "Sessions are scheduled as cross-user waves; later temporal windows therefore evaluate returning users with earlier train history, not only new users introduced late by generator order.",
+  "generative_params": {
+    "affinity_weights": {
+      "skill": 0.45,
+      "domain": 0.35,
+      "occupation": 0.2
+    },
+    "engagement_model": "logistic(sigmoid(scale*(affinity-midpoint)+noise))",
+    "engage_scale": 6.0,
+    "engage_midpoint": 0.45,
+    "engage_noise_std": 0.6,
+    "event_relevance_grade": {
+      "apply": 3.0,
+      "save": 2.0,
+      "click": 1.0,
+      "view_10s": 1.0,
+      "view": 0.0,
+      "skip": 0.0,
+      "immediate_skip": 0.0
+    },
+    "positive_events": [
+      "apply",
+      "click",
+      "save",
+      "view_10s"
+    ],
+    "grounding": "real profile/job domain, occupation_group, and skill attributes"
+  },
+  "generated_at": "2026-06-16T15:32:54+00:00"
+}

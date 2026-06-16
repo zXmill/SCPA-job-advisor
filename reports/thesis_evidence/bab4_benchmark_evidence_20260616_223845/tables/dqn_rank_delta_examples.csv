@@ -1,0 +1,13 @@
+session_id,event,relevance_grade,rank_before_dqn,rank_after_dqn,delta_rank,dqn_session_score,delta_session_ndcg_at_10
+sbert-v2-profile-00196-s2,save,2.0,4,11,-7,0.637725,-0.107291
+sbert-v2-profile-00269-s2,save,2.0,6,13,-7,0.616814,-0.201827
+sbert-v2-profile-00258-s2,click,1.0,13,6,7,0.463242,0.031508
+sbert-v2-profile-00139-s2,click,1.0,2,9,-7,0.48697,-0.07848
+sbert-v2-profile-00090-s2,click,1.0,14,8,6,0.859741,0.106043
+sbert-v2-profile-00248-s2,click,1.0,2,8,-6,0.050449,-0.050449
+sbert-v2-profile-00054-s2,view_10s,1.0,7,13,-6,0.744161,0.038662
+sbert-v2-profile-00214-s2,save,2.0,10,5,5,0.600847,-0.084586
+sbert-v2-profile-00046-s2,save,2.0,9,14,-5,0.368725,-0.183636
+sbert-v2-profile-00029-s2,save,2.0,13,8,5,0.884967,0.065609
+sbert-v2-profile-00142-s2,save,2.0,8,13,-5,0.290752,-0.231153
+sbert-v2-profile-00263-s2,view_10s,1.0,6,1,5,0.837471,0.335098

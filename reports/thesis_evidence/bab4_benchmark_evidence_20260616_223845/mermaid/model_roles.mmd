@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant U as User Session
+  participant S as SBERT Candidate Generator
+  participant N as NCF Personalization Scorer
+  participant D as DQN Session Reranker
+  participant R as Recommendation API
+  U->>S: profile text and job catalog
+  S-->>N: semantic candidate pool
+  N-->>D: personalized candidate scores
+  D-->>R: session-aware reranked slate
+  R-->>U: ranked recommendation response
+  Note over D: DQN reranks session slate only; not a learning path engine

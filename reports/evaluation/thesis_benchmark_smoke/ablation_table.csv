@@ -1,0 +1,11 @@
+benchmark,split,variant,precision_at_5,recall_at_5,ndcg_at_5,hit_rate_at_5,map_at_5,mrr_at_5,precision_at_10,recall_at_10,ndcg_at_10,hit_rate_at_10,map_at_10,mrr_at_10
+simulated_grounded,temporal,popularity,0.475,0.24696,0.334847,1.0,0.345417,0.61875,0.4875,0.539234,0.435087,1.0,0.365268,0.61875
+simulated_grounded,temporal,content,0.675,0.354912,0.584937,1.0,0.637917,0.816667,0.5625,0.592923,0.622408,1.0,0.550438,0.816667
+simulated_grounded,temporal,ncf,0.375,0.25861,0.321854,0.875,0.301667,0.625,0.3875,0.425785,0.407038,1.0,0.322793,0.6375
+simulated_grounded,temporal,content_ncf,0.55,0.33209,0.498881,0.875,0.486389,0.729167,0.5,0.55154,0.544381,1.0,0.444474,0.75
+simulated_grounded,temporal,full_scpa,0.55,0.264381,0.460408,0.875,0.498194,0.708333,0.5375,0.577913,0.551192,1.0,0.465751,0.729167
+simulated_grounded,user_holdout,popularity,0.44,0.153939,0.353785,0.8,0.332667,0.55,0.36,0.225784,0.306347,1.0,0.23773,0.578571
+simulated_grounded,user_holdout,content,0.6,0.177418,0.539435,1.0,0.534,0.84,0.56,0.290988,0.492021,1.0,0.486206,0.84
+simulated_grounded,user_holdout,ncf,0.32,0.081331,0.232276,0.8,0.232667,0.6,0.32,0.173208,0.246598,0.8,0.193754,0.6
+simulated_grounded,user_holdout,content_ncf,0.6,0.15357,0.51077,0.8,0.574,0.8,0.58,0.285988,0.484901,0.8,0.51373,0.8
+simulated_grounded,user_holdout,full_scpa,0.56,0.14448,0.509019,0.8,0.544,0.8,0.6,0.319321,0.529087,1.0,0.522571,0.833333

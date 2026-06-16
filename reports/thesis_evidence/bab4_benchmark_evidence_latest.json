@@ -1,0 +1,50 @@
+{
+  "status": "ok",
+  "generated_at": "20260616_223845",
+  "benchmark_report": "E:\\TUGAS AKHIR\\SCPA\\reports\\evaluation\\thesis_benchmark\\benchmark_metrics.json",
+  "qrels_status": "E:\\TUGAS AKHIR\\SCPA\\reports\\sbert\\gold_qrels\\gold_qrels_status.json",
+  "notebook": "E:\\TUGAS AKHIR\\SCPA\\notebooks\\thesis\\06_thesis_benchmark_evaluation.ipynb",
+  "run_dir": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845",
+  "tables": {
+    "ablation_ndcg10": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\tables\\ablation_ndcg10.csv",
+    "dqn_rank_delta_examples": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\tables\\dqn_rank_delta_examples.csv",
+    "dqn_session_proxy_summary": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\tables\\dqn_session_proxy_summary.csv",
+    "dqn_stability": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\tables\\dqn_stability.csv",
+    "qrels_status": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\tables\\qrels_status.csv",
+    "split_manifest": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\tables\\split_manifest.csv",
+    "split_status_matrix": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\tables\\split_status_matrix.csv"
+  },
+  "plots": {
+    "ablation_ndcg10": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\plots\\ablation_ndcg10.png",
+    "dqn_rank_before_after_scatter": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\plots\\dqn_rank_before_after_scatter.png",
+    "dqn_rank_delta_examples": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\plots\\dqn_rank_delta_examples.png",
+    "dqn_session_delta_ndcg": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\plots\\dqn_session_delta_ndcg.png",
+    "dqn_session_proxy_summary": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\plots\\dqn_session_proxy_summary.png",
+    "dqn_stability": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\plots\\dqn_stability.png",
+    "qrels_status": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\plots\\qrels_status.png",
+    "split_counts": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\plots\\split_counts.png",
+    "split_manifest_table": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\plots\\split_manifest_table.png",
+    "split_status_matrix": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\plots\\split_status_matrix.png"
+  },
+  "terminal": {
+    "terminal_gold_qrels": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\terminal\\terminal_gold_qrels.png",
+    "terminal_thesis_benchmark": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\terminal\\terminal_thesis_benchmark.png"
+  },
+  "mermaid": {
+    "benchmark_pipeline": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\mermaid\\benchmark_pipeline.mmd",
+    "model_roles": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_benchmark_evidence_20260616_223845\\mermaid\\model_roles.mmd"
+  },
+  "summary": {
+    "n_users": 300,
+    "n_jobs": 3818,
+    "n_interactions": 14400,
+    "temporal_test_users_scored": 135,
+    "temporal_cold_users_in_test": 0,
+    "full_scpa_temporal_ndcg_at_10": 0.6943462275576818,
+    "full_scpa_user_holdout_ndcg_at_10": 0.5970697455065285,
+    "dqn_stability_cv": 0.004274,
+    "dqn_session_proxy_mean_delta_ndcg_at_10": 0.003714,
+    "dqn_session_proxy_mean_positive_delta_rank": -0.032009,
+    "gold_qrels_status": "BLOCKED"
+  }
+}
