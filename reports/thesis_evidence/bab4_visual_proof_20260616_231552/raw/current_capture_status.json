@@ -1,0 +1,17 @@
+{
+  "captured_at": "2026-06-16T23:15:54",
+  "ports": {
+    "3000": "not listening",
+    "9000": "not listening",
+    "8000": "not listening",
+    "8005": "not listening",
+    "5432": "listening",
+    "6379": "not listening"
+  },
+  "docker": {
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine; check if the path is correct and if the daemon is running: open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified."
+  },
+  "latest_frontend_runtime_capture": "tmp/playwright_live_check/2026-06-16T11-53-21-580Z"
+}

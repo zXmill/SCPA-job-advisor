@@ -1,0 +1,10 @@
+flowchart LR
+    A["Frontend recommendation page"] --> B["FastAPI gateway /api/recommendations"]
+    B --> C["Pipeline orchestrator"]
+    C --> D["SBERT candidate generator"]
+    D --> E["pgvector cosine top-k"]
+    E --> F["NCF personalization scorer"]
+    F --> G["DQN session reranker"]
+    G --> H["Hybrid slate + model lineage"]
+    H --> I["Frontend cards + feedback events"]
+    I --> G
