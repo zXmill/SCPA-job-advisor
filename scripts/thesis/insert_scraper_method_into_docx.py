@@ -22,8 +22,45 @@ DEFAULT_OUTPUT = (
     / "docs"
     / "thesis"
     / "bab4"
-    / "BAB_IV_HASIL_DAN_PEMBAHASAN_DENGAN_SCRAPING.docx"
+    / "BAB_IV_HASIL_DAN_PEMBAHASAN_DENGAN_SCRAPING_DATASET_JELAS.docx"
 )
+
+INTERACTION_DATASET_PARAGRAPHS = [
+    (
+        "Dataset utama pada subbab ini adalah simulated_grounded, yaitu paket "
+        "interaksi luring pada direktori data/eval/synthetic/. Paket ini "
+        "terdiri atas interactions.jsonl, sessions.jsonl, dan "
+        "benchmark_metadata.json. Dataset ini digunakan untuk evaluasi NCF, "
+        "DQN session reranker, dan ablation hybrid karena log produksi belum "
+        "cukup besar. Interaksi di dalamnya bukan klik pengguna nyata; "
+        "peristiwa click, view, save, view_10s, skip, dan apply dibangkitkan "
+        "oleh model klik terkontrol dengan seed 42."
+    ),
+    (
+        "Grounding dataset berasal dari atribut nyata profil dan lowongan yang "
+        "sudah ada di sistem: kecocokan domain, occupation_group atau kelompok "
+        "okupasi, dan irisan keterampilan. Metadata menetapkan bobot afinitas "
+        "skill 0,45, domain 0,35, dan occupation 0,20; event positif "
+        "didefinisikan sebagai apply, save, click, dan view_10s. Paket "
+        "simulated_grounded memuat 14.400 peristiwa dari 300 pengguna sintetis "
+        "terhadap 3.818 lowongan, 900 sesi, dan positive_rate 0,4367. Dengan "
+        "demikian, dataset ini adalah simulasi berbasis grounding: fitur "
+        "pembentuk preferensi berasal dari data profil dan lowongan nyata, "
+        "tetapi label interaksinya tetap simulatif."
+    ),
+    (
+        "Sebagai pembanding, dataset real_runtime diekspor dari tabel runtime "
+        "feedback_events dan disimpan pada direktori data/eval/real_runtime/. "
+        "Paket ini terdiri atas interactions.jsonl, sessions.jsonl, "
+        "profiles.jsonl, jobs.jsonl, dan metadata.json. Paket ini berisi 693 "
+        "peristiwa dari 10 pengguna dan 213 lowongan yang "
+        "diekspor; metadata evaluasi mencatat 212 lowongan yang muncul pada "
+        "interaksi. Status bukti masih insufficient_for_generalization karena "
+        "jumlah pengguna 10 masih di bawah ambang minimum 30 pengguna. Oleh "
+        "sebab itu, real_runtime hanya dipakai sebagai bukti pilot/runtime "
+        "awal, bukan dasar klaim generalisasi pengguna nyata."
+    ),
+]
 
 
 def normalize(text: str) -> str:
@@ -108,6 +145,20 @@ def insert_scraper_text(doc: Document) -> None:
     apply_body_style(inserted_evidence)
 
 
+def clarify_interaction_dataset_text(doc: Document) -> None:
+    h443_index = find_paragraph_index(doc, "4.4.3 Dataset Interaksi Pengguna")
+    first_paragraph = doc.paragraphs[h443_index + 1]
+    second_paragraph = doc.paragraphs[h443_index + 2]
+
+    first_paragraph.text = INTERACTION_DATASET_PARAGRAPHS[0]
+    apply_body_style(first_paragraph)
+    second_paragraph.text = INTERACTION_DATASET_PARAGRAPHS[1]
+    apply_body_style(second_paragraph)
+
+    third_paragraph = insert_after(second_paragraph, INTERACTION_DATASET_PARAGRAPHS[2])
+    apply_body_style(third_paragraph)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", default=str(DEFAULT_SOURCE))
@@ -121,6 +172,7 @@ def main() -> None:
 
     doc = Document(str(source))
     insert_scraper_text(doc)
+    clarify_interaction_dataset_text(doc)
     output.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(output))
     print(output)
