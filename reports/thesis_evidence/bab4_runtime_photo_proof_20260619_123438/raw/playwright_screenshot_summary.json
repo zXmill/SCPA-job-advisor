@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-06-19T05:39:50.670Z",
+  "captures": [
+    {
+      "name": "frontend_home_live",
+      "url": "http://127.0.0.1:3000",
+      "file": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\screenshots\\frontend_home_live.png"
+    },
+    {
+      "name": "sbert_health_browser",
+      "url": "http://127.0.0.1:8002/health",
+      "file": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\screenshots\\sbert_health_browser.png"
+    },
+    {
+      "name": "sbert_ready_browser",
+      "url": "http://127.0.0.1:8002/ready",
+      "file": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\screenshots\\sbert_ready_browser.png"
+    },
+    {
+      "name": "ncf_health_browser",
+      "url": "http://127.0.0.1:8003/health",
+      "file": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\screenshots\\ncf_health_browser.png"
+    },
+    {
+      "name": "dqn_health_browser",
+      "url": "http://127.0.0.1:8004/health",
+      "file": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\screenshots\\dqn_health_browser.png"
+    },
+    {
+      "name": "sbert_semantic_match_post",
+      "url": "http://127.0.0.1:8002/match/semantic",
+      "file": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\screenshots\\sbert_semantic_match_post.png"
+    },
+    {
+      "name": "ncf_recommend_post",
+      "url": "http://127.0.0.1:8003/recommend/ncf",
+      "file": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\screenshots\\ncf_recommend_post.png"
+    },
+    {
+      "name": "dqn_rerank_post",
+      "url": "http://127.0.0.1:8004/rerank",
+      "file": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\screenshots\\dqn_rerank_post.png"
+    }
+  ]
+}

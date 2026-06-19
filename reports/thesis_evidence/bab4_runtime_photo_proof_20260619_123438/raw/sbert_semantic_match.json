@@ -1,0 +1,16 @@
+{
+  "scores": [
+    {
+      "job_index": 0,
+      "score": 0.7304,
+      "job_text_preview": "English Customer Service role requiring English communication, live chat support, problem solving, a..."
+    },
+    {
+      "job_index": 1,
+      "score": 0.5197,
+      "job_text_preview": "Backend Python Engineer requiring FastAPI, PostgreSQL, Docker, and API development."
+    }
+  ],
+  "model_version": "fine_tuned_jupyter",
+  "model_name": "E:\\TUGAS AKHIR\\SCPA\\services\\sbert\\weights\\fine_tuned_jupyter"
+}

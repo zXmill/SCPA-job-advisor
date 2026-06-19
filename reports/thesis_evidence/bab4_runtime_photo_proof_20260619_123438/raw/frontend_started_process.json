@@ -1,0 +1,6 @@
+{
+  "command": "npm run dev -- --hostname 127.0.0.1 --port 3000",
+  "generated_at": "2026-06-19T12:36:14.6132677+07:00",
+  "frontend_pid": 20104,
+  "port": 3000
+}

@@ -1,0 +1,18 @@
+{
+  "first_embedding_first_8": [
+    -0.024887047708034515,
+    -0.049435414373874664,
+    0.041261397302150726,
+    -0.07709375768899918,
+    -0.03986332193017006,
+    0.053303927183151245,
+    0.1034286767244339,
+    -0.029072223231196404
+  ],
+  "model_name": "E:\\TUGAS AKHIR\\SCPA\\services\\sbert\\weights\\fine_tuned_jupyter",
+  "checkpoint_hash": "a90605c4b3adbe95",
+  "fallback_mode": false,
+  "embedding_count": 2,
+  "embedding_dim": 384,
+  "model_version": "fine_tuned_jupyter"
+}

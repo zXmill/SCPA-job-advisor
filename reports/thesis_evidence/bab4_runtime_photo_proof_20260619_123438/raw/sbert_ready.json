@@ -1,0 +1,11 @@
+{
+  "ready": true,
+  "service": "sbert",
+  "model_id": "E:\\TUGAS AKHIR\\SCPA\\services\\sbert\\weights\\fine_tuned_jupyter",
+  "model_version": "fine_tuned_jupyter",
+  "checkpoint_hash": "a90605c4b3adbe95",
+  "embedding_dim": 384,
+  "runtime": "transformers",
+  "fallback_mode": false,
+  "loaded_at": 1781847298.633731
+}

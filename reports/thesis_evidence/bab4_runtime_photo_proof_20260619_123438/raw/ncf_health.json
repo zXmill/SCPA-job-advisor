@@ -1,0 +1,10 @@
+{
+  "status": "healthy",
+  "service": "ncf",
+  "model_version": "online-ncf-v2",
+  "model_loaded": true,
+  "model_type": "NeuMF",
+  "users": 7,
+  "items": 31,
+  "feedback_events": 997
+}

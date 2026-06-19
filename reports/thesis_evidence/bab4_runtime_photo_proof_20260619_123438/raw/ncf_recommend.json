@@ -1,0 +1,20 @@
+{
+  "user_id": "bab4-proof-user",
+  "recommendations": [
+    {
+      "job_id": "job-english-cs",
+      "score": 0.734161,
+      "mf_score": 0.734161,
+      "pop_score": 0
+    },
+    {
+      "job_id": "job-backend",
+      "score": 0.410091,
+      "mf_score": 0.410091,
+      "pop_score": 0
+    }
+  ],
+  "model_version": "online-ncf-v2-trained",
+  "model_loaded": true,
+  "fallback_mode": false
+}

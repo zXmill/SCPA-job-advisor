@@ -1,0 +1,32 @@
+{
+  "status": "healthy",
+  "service": "sbert",
+  "model_loaded": true,
+  "fallback_mode": false,
+  "fallback_reason": null,
+  "loader_backend": "transformers",
+  "model_version": "fine_tuned_jupyter",
+  "model_name_or_path": "E:\\TUGAS AKHIR\\SCPA\\services\\sbert\\weights\\fine_tuned_jupyter",
+  "checkpoint_hash": "a90605c4b3adbe95",
+  "loaded_at": 1781847298.633731,
+  "embedding_dim": 384,
+  "transformer_required": true,
+  "test_fallback_enabled": false,
+  "runtime_mode": "sentence-transformer",
+  "model_artifact_config": "E:\\TUGAS AKHIR\\SCPA\\services\\sbert\\weights\\fine_tuned_jupyter\\config_sentence_transformers.json",
+  "artifact": {
+    "path": "E:\\TUGAS AKHIR\\SCPA\\services\\sbert\\weights\\fine_tuned_jupyter",
+    "artifact_name": "fine_tuned_jupyter",
+    "fine_tuned": true,
+    "base_model": null,
+    "has_config_sentence_transformers": true,
+    "config_sentence_transformers": true,
+    "metadata_file": true,
+    "embedding_dimension": 384,
+    "similarity_fn_name": "cosine",
+    "valid": true,
+    "fallback_mode": false,
+    "fallback_reason": null,
+    "errors": []
+  }
+}

@@ -1,0 +1,12 @@
+NAME                      IMAGE                    COMMAND                  SERVICE            CREATED        STATUS                   PORTS
+scpa-dqn-1                scpa-dqn                 "uvicorn main:app --…"   dqn                41 hours ago   Up 8 minutes (healthy)   8004/tcp
+scpa-embedding-worker-1   scpa-embedding-worker    "python -m services.…"   embedding-worker   7 days ago     Up 8 minutes             8005/tcp
+scpa-gateway-1            scpa-gateway             "sh -c 'uvicorn serv…"   gateway            40 hours ago   Up 8 minutes (healthy)   0.0.0.0:9000->8000/tcp, [::]:9000->8000/tcp
+scpa-ncf-1                scpa-ncf                 "uvicorn main:app --…"   ncf                41 hours ago   Up 8 minutes (healthy)   8003/tcp
+scpa-pipeline-1           scpa-pipeline            "uvicorn services.pi…"   pipeline           41 hours ago   Up 8 minutes (healthy)   8005/tcp
+scpa-postgres-1           pgvector/pgvector:pg15   "docker-entrypoint.s…"   postgres           8 days ago     Up 8 minutes (healthy)   0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp
+scpa-redis-1              redis:7-alpine           "docker-entrypoint.s…"   redis              8 days ago     Up 8 minutes (healthy)   6379/tcp
+scpa-sbert-1              scpa-sbert               "uvicorn main:app --…"   sbert              41 hours ago   Up 8 minutes (healthy)   8002/tcp
+scpa-scraper-1            scpa-scraper             "uvicorn services.sc…"   scraper            41 hours ago   Up 8 minutes (healthy)   8001/tcp
+scpa-scraper-worker-1     scpa-scraper-worker      "python -m services.…"   scraper-worker     7 days ago     Up 8 minutes             8005/tcp
+

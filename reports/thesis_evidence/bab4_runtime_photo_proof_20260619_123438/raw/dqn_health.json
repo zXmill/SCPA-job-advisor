@@ -1,0 +1,7 @@
+{
+  "status": "healthy",
+  "service": "dqn",
+  "model_version": "online-dqn-v2",
+  "jobs": 15,
+  "training_steps": 606
+}

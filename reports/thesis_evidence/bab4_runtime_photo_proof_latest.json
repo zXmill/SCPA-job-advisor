@@ -1,0 +1,48 @@
+{
+  "status": "ok",
+  "run_id": "20260619_123438",
+  "run_dir": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438",
+  "generated_at": "2026-06-19T12:38:14.1977652+07:00",
+  "main_contact_sheet": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\screenshots\\bab4_runtime_photo_contact_sheet.png",
+  "frontend_screenshot": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\screenshots\\frontend_home_viewport.png",
+  "runtime_summary": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\raw\\runtime_probe_summary.json",
+  "readme": "E:\\TUGAS AKHIR\\SCPA\\reports\\thesis_evidence\\bab4_runtime_photo_proof_20260619_123438\\README.md",
+  "docker_compose_status": "blocked: Docker Desktop pipe dockerDesktopLinuxEngine not available",
+  "services": {
+    "dqn": {
+      "training_steps": 606,
+      "status": "healthy",
+      "url": "http://127.0.0.1:8004",
+      "model_version": "online-dqn-v2",
+      "jobs": 15
+    },
+    "sbert": {
+      "model_loaded": true,
+      "checkpoint_hash": "a90605c4b3adbe95",
+      "status": "healthy",
+      "url": "http://127.0.0.1:8002",
+      "fallback_mode": false,
+      "embedding_dim": 384
+    },
+    "ncf": {
+      "items": 31,
+      "model_loaded": true,
+      "status": "healthy",
+      "feedback_events": 997,
+      "url": "http://127.0.0.1:8003",
+      "users": 7,
+      "model_type": "NeuMF"
+    }
+  },
+  "inference": {
+    "dqn_top_score": 0.630381,
+    "sbert_top_score": 0.7304,
+    "ncf_top_job": "job-english-cs",
+    "dqn_policy": "session_rerank",
+    "dqn_top_job": "job-english-cs",
+    "ncf_recommendation_count": 2,
+    "sbert_top_job_index": 0,
+    "ncf_top_score": 0.734161,
+    "dqn_ranked_count": 2
+  }
+}

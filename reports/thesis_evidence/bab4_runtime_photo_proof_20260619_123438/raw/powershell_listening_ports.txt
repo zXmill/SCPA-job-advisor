@@ -1,0 +1,9 @@
+
+LocalAddress LocalPort OwningProcess ProcessName
+------------ --------- ------------- -----------
+127.0.0.1         8004         20776 python
+127.0.0.1         8003         22780 python
+127.0.0.1         8002         24368 python
+127.0.0.1         3000         23488 node
+
+
