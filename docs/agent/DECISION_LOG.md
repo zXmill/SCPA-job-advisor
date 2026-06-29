@@ -482,3 +482,12 @@
 - Reason skipped: the user required real data, and LinkedIn scraping must not be added without legal/robots/ToS clearance. The CBI description was used as evidence/test shape, not production data.
 - Validation commands: focused backend/data tests, Python compile, Docker config, frontend lint/build, live DB/API probes, product-quality Selenium audit, and product artifact secret scan.
 
+
+## 2026-06-30 - Fix recommendation logo + hide expired jobs
+- Decision: Two targeted backend fixes in the gateway, no DB migration.
+- Fix 1 (logo): `_compact_recommendation_job` (services/gateway/main.py) omitted `company_logo` (and description/posted_at/source_url) from the `/api/recommendations` payload, so the Rekomendasi page always fell back to the blue-initial tile while Temukan Kerja (`/api/jobs` via `_job_payload_from_row`) showed real logos. Added the fields to the compact allow-list; `_map_pipeline_job` already routes the logo through `_proxied_company_logo_url`, so no other call site changed.
+- Fix 2 (expired): The `jobs` table has no deadline column, so "expired" = very old `posted_at`. Added a configurable freshness ceiling `JOB_CATALOG_MAX_AGE_DAYS` (default 90) enforced inside `_jobs_catalog_conditions()`, which every catalog list/facet/total query funnels through — including the "all time" range bucket. Set to 0 to disable.
+- Skipped option: adding a `deadline`/`expires_at` column + migration. Not needed since the only signal available is `posted_at`; a derived recency ceiling achieves the requested "hide automatically" behavior with zero schema risk.
+- Skipped option: surfacing an "Expired" badge in the UI. The user chose "hide automatically", which is fully a backend concern; no frontend change required.
+- Tests: added a pure unit test for `_compact_recommendation_job` field retention, an integration test asserting the recommendation slate proxies `company_logo`, and two catalog tests asserting expired jobs are hidden (and shown when the ceiling is disabled). Set `JOB_CATALOG_MAX_AGE_DAYS=0` in conftest so existing fixed-age filter tests are unaffected.
+- Validation: `pytest tests/test_jobs_filters.py tests/test_jobs_upsert.py` + related recommendation tests all pass; `docker compose config` clean.

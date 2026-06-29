@@ -112,6 +112,11 @@ HTTP_TIMEOUT_SECONDS = float(os.getenv("HTTP_TIMEOUT_SECONDS", "70"))
 HEALTH_TIMEOUT_SECONDS = float(os.getenv("HEALTH_TIMEOUT_SECONDS", "2"))
 P95_TARGET_MS = int(os.getenv("GATEWAY_P95_TARGET_MS", "150"))
 PUBLIC_GATEWAY_URL = os.getenv("PUBLIC_GATEWAY_URL", "http://localhost:8000").rstrip("/")
+# Catalog freshness ceiling: jobs older than this many days (by posted_at) are
+# treated as expired and hidden from the public catalog, facets, and counts —
+# including the "all time" range — so stale scraped listings never surface.
+# Set to 0 to disable the ceiling and show every active job regardless of age.
+JOB_CATALOG_MAX_AGE_DAYS = max(0, int(os.getenv("JOB_CATALOG_MAX_AGE_DAYS", "90")))
 FEEDBACK_OUTBOX_RETRY_ENABLED = os.getenv(
     "FEEDBACK_OUTBOX_RETRY_ENABLED", "true"
 ).lower() in {"1", "true", "yes"}
@@ -2604,10 +2609,15 @@ def _recommendation_reason_filter_scores(
 
 
 def _compact_recommendation_job(job: dict[str, Any]) -> dict[str, Any]:
+    # Keep this in sync with the fields the recommendation card renders
+    # (frontend RecItem). ``company_logo`` must be included so logos appear on
+    # the Rekomendasi page the same way they do on the /api/jobs catalog —
+    # ``_map_pipeline_job`` already routes it through ``_proxied_company_logo_url``.
     compact = {
         "id": job.get("id"),
         "title": job.get("title"),
         "company": job.get("company"),
+        "company_logo": job.get("company_logo"),
         "location": job.get("location"),
         "type": job.get("type"),
         "employment_mode": job.get("employment_mode"),
@@ -2615,7 +2625,10 @@ def _compact_recommendation_job(job: dict[str, Any]) -> dict[str, Any]:
         "seniority_level": job.get("seniority_level"),
         "min_salary": job.get("min_salary"),
         "max_salary": job.get("max_salary"),
+        "description": job.get("description"),
+        "posted_at": job.get("posted_at"),
         "source": job.get("source"),
+        "source_url": job.get("source_url"),
     }
     return {
         key: value
@@ -4207,6 +4220,14 @@ def _append_location_condition(
 def _jobs_catalog_conditions() -> tuple[list[str], dict[str, Any]]:
     conditions = ["is_active = true", "COALESCE(quality_status, 'accepted') = 'accepted'"]
     params: dict[str, Any] = {}
+
+    # Catalog freshness ceiling: hide expired (too-old) listings everywhere the
+    # catalog predicate is used — list, facets, totals, and the "all time" range.
+    if JOB_CATALOG_MAX_AGE_DAYS > 0:
+        # JOB_CATALOG_MAX_AGE_DAYS is a validated int, safe to inline.
+        conditions.append(
+            f"posted_at >= (NOW() - INTERVAL '{JOB_CATALOG_MAX_AGE_DAYS} days')"
+        )
 
     # Keep this endpoint aligned with SCPA's Indonesia-focused catalog guard.
     # Filtering and facet counts still happen globally within that catalog,

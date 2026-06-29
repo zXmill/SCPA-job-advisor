@@ -39,6 +39,11 @@ if str(_REPO_ROOT) not in sys.path:
 os.environ["JWT_SECRET"] = "test-secret-32-bytes-long-key!!!"
 os.environ["JWT_REFRESH_SECRET"] = "test-refresh-secret-32-bytes-key!!"
 os.environ.setdefault("SBERT_FORCE_FALLBACK", "1")
+# Disable the production catalog freshness ceiling for the suite: many tests
+# insert jobs at fixed ages (e.g. 80/90 days) to assert filter behavior, and
+# those should not be silently hidden. Tests that exercise the ceiling set it
+# explicitly via monkeypatch.
+os.environ.setdefault("JOB_CATALOG_MAX_AGE_DAYS", "0")
 
 # Point the gateway at the test database BEFORE import. The gateway
 # reads ``DATABASE_URL`` at module load time.
