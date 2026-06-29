@@ -17,6 +17,9 @@ from sqlalchemy import bindparam, text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
+from services.shared.job_text import canonical_dict_from_row, canonical_job_text_hash
+from services.shared.model_bundle import embedding_model_versions
+
 
 JOB_CACHE: list[dict[str, Any]] = []
 logger = logging.getLogger("scpa.pipeline.stage_1")
@@ -174,7 +177,11 @@ def _build_user(user_id: str, profile: dict[str, Any] | None, interaction_count:
     skills = profile.get("skills") or profile.get("keahlian") or ["Bahasa Inggris", "Public Speaking"]
     program_studi = profile.get("program_studi") or profile.get("jurusan") or "Sastra Inggris"
     jurusan = profile.get("jurusan") or program_studi
-    profile_text = f"{program_studi} {jurusan} {' '.join(map(str, skills))}"
+    interests = list(profile.get("interests") or [])
+    # Interests join skills in the SBERT profile text so that the semantic
+    # match reflects what the user cares about, not just what they can do.
+    interest_text = " ".join(map(str, interests))
+    profile_text = f"{program_studi} {jurusan} {' '.join(map(str, skills))} {interest_text}".strip()
     return {
         "id": str(user_id),
         "name": profile.get("name") or profile.get("nama") or "Ibnu",
@@ -182,7 +189,11 @@ def _build_user(user_id: str, profile: dict[str, Any] | None, interaction_count:
         "jurusan": jurusan,
         "university": profile.get("university") or profile.get("universitas") or "Universitas Negeri Surabaya",
         "skills": list(skills),
+        "interests": interests,
+        "location": profile.get("location"),
+        "education_level": profile.get("education_level"),
         "interaction_count": interaction_count,
+        "session_history": profile.get("session_history") or profile.get("interaction_history") or [],
         "profile_text": profile_text,
     }
 
@@ -217,11 +228,19 @@ def _normalize_scraped_jobs(raw_jobs: list[dict[str, Any]], limit: int) -> list[
                 "education_level": raw.get("education_level"),
                 "years_experience_min": raw.get("years_experience_min"),
                 "years_experience_max": raw.get("years_experience_max"),
-                "required_skills": raw.get("required_skills") or [],
-                "preferred_skills": raw.get("preferred_skills") or [],
-                "extracted_skills": raw.get("extracted_skills") or raw.get("skills") or raw.get("tags") or [],
+                "required_skills": raw.get("required_skills") or raw.get("required_skill_names") or [],
+                "preferred_skills": raw.get("preferred_skills") or raw.get("preferred_skill_names") or [],
+                "extracted_skills": raw.get("extracted_skills") or raw.get("extracted_skill_names") or [],
                 "tags": raw.get("tags") or [],
-                "skills": raw.get("skills") or raw.get("tags") or [],
+                "skills": (
+                    raw.get("required_skills")
+                    or raw.get("required_skill_names")
+                    or raw.get("extracted_skills")
+                    or raw.get("extracted_skill_names")
+                    or raw.get("skills")
+                    or raw.get("tags")
+                    or []
+                ),
                 "source_url": raw.get("source_url"),
                 "source": raw.get("source"),
                 "source_updated_at": raw.get("source_updated_at"),
@@ -245,12 +264,12 @@ def _quality_gate_summary(source_stats: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 async def _fetch_jobs(
-    client: httpx.AsyncClient, scraper_url: str, limit: int
+    client: httpx.AsyncClient, scraper_url: str, limit: int, seed_offset: int = 0
 ) -> tuple[list[dict[str, Any]], str, dict[str, Any]]:
     try:
         response = await client.post(
             f"{scraper_url}/scrape/run",
-            params={"limit": limit},
+            params={"limit": limit, "seed_offset": max(0, int(seed_offset or 0))},
             timeout=SCRAPER_RUN_TIMEOUT_SECONDS,
         )
         response.raise_for_status()
@@ -273,7 +292,7 @@ async def _fetch_jobs(
         return [], "scraper_unavailable", {"count": 0, "error": str(exc)}
 
 
-async def _load_db_jobs(limit: int) -> list[dict[str, Any]]:
+async def _load_db_jobs(limit: int, offset: int = 0) -> list[dict[str, Any]]:
     engine = _get_db_engine()
     if engine is None:
         return []
@@ -289,9 +308,9 @@ async def _load_db_jobs(limit: int) -> list[dict[str, Any]]:
                     "education_level, years_experience_min, years_experience_max, required_skill_names, "
                     "preferred_skill_names, extracted_skill_names, source_url, source_updated_at, "
                     "experience_level::text AS experience_level, posted_at, source::text AS source, "
-                    "is_active, match_data FROM jobs WHERE is_active = true ORDER BY posted_at DESC LIMIT :limit"
+                    "is_active, match_data FROM jobs WHERE is_active = true ORDER BY posted_at DESC LIMIT :limit OFFSET :offset"
                 ),
-                {"limit": limit},
+                {"limit": limit, "offset": offset},
             )
             rows = [dict(row) for row in result.mappings().all()]
     except Exception as exc:  # pylint: disable=broad-except
@@ -305,6 +324,26 @@ async def _load_db_jobs(limit: int) -> list[dict[str, Any]]:
         posted_at = row.get("posted_at")
         if posted_at is not None:
             row["posted_at"] = posted_at.isoformat() if hasattr(posted_at, "isoformat") else str(posted_at)
+        cached_embedding = match_data.get("embedding")
+        if not isinstance(cached_embedding, list):
+            cached_embedding = []
+        else:
+            import math
+            try:
+                valid = True
+                expected_dim = match_data.get("embedding_dimension")
+                if expected_dim is not None and len(cached_embedding) != expected_dim:
+                    valid = False
+                if valid:
+                    for val in cached_embedding:
+                        if not isinstance(val, (int, float)) or math.isnan(float(val)) or math.isinf(float(val)):
+                            valid = False
+                            break
+                if not valid:
+                    cached_embedding = []
+            except Exception:
+                cached_embedding = []
+
         jobs.append(
             {
                 **row,
@@ -314,9 +353,192 @@ async def _load_db_jobs(limit: int) -> list[dict[str, Any]]:
                 "skills": row.get("required_skill_names") or row.get("extracted_skill_names") or match_data.get("skills") or match_data.get("tags") or [],
                 "tags": match_data.get("tags") or match_data.get("skills") or [],
                 "salary_text": row.get("salary_text"),
+                # SBERT job-embedding cache: reuse persisted vectors so /encode only
+                # has to embed the user profile plus genuinely new/changed jobs.
+                "embedding": cached_embedding,
+                "embedding_text_hash": str(match_data.get("embedding_text_hash") or ""),
+                "embedding_model_id": match_data.get("embedding_model_id"),
+                "embedding_model_revision": match_data.get("embedding_model_revision"),
+                "embedding_dimension": match_data.get("embedding_dimension"),
+                "embedded_at": match_data.get("embedded_at"),
             }
         )
     return jobs
+
+
+async def persist_job_embeddings(jobs: list[dict[str, Any]]) -> int:
+    """Persist freshly computed SBERT job embeddings into jobs.match_data.
+
+    Uses a jsonb merge (``match_data || ...``) so unrelated keys survive.
+    Returns the number of rows updated. Failures are logged, never raised:
+    the recommendation slate is already computed at this point and a cache
+    write must not break the response.
+    """
+    engine = _get_db_engine()
+    if engine is None:
+        return 0
+    params: list[dict[str, Any]] = []
+    for job in jobs:
+        embedding = job.get("embedding")
+        text_hash = str(job.get("embedding_text_hash") or "")
+        row_id = str(job.get("id") or "")
+        if not row_id or not text_hash or not isinstance(embedding, list) or not embedding:
+            continue
+        try:
+            row_uuid = uuid.UUID(row_id)
+        except ValueError:
+            continue
+        params.append(
+            {
+                "id": row_uuid,
+                "embedding_patch": json.dumps(
+                    {
+                        "embedding": [float(value) for value in embedding],
+                        "embedding_text_hash": text_hash,
+                        "embedding_model_id": job.get("embedding_model_id"),
+                        "embedding_model_revision": job.get("embedding_model_revision"),
+                        "embedding_dimension": job.get("embedding_dimension"),
+                        "embedded_at": job.get("embedded_at"),
+                    }
+                ),
+            }
+        )
+    if not params:
+        return 0
+    try:
+        persisted = 0
+        async with engine.begin() as conn:
+            # Row-by-row execution: asyncpg's executemany reports rowcount=-1
+            # per batch, which previously produced negative "persisted" totals.
+            for param in params:
+                result = await conn.execute(
+                    text(
+                        "UPDATE jobs SET match_data = COALESCE(match_data, '{}'::jsonb) || "
+                        "CAST(:embedding_patch AS jsonb) WHERE id = :id"
+                    ),
+                    param,
+                )
+                persisted += max(int(result.rowcount or 0), 0)
+        return persisted
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.warning("job embedding persistence failed: %s", exc)
+        return 0
+
+
+# Transactional outbox (contract §8): a committed job upsert must never exist
+# without a recoverable embedding task. Executed inside the same transaction as
+# the job upsert. Skips task creation when an up-to-date ready embedding already
+# exists (unchanged rescrape => no re-embed). New job => priority 100, changed
+# semantic content => 90; the stale embedding row is demoted in the same tx so
+# online retrieval never serves a vector for outdated content.
+_OUTBOX_MARK_STALE_SQL = text(
+    "UPDATE job_embeddings SET status = 'stale', updated_at = NOW() "
+    "WHERE job_id = :id AND model_version = :model_version "
+    "AND content_hash <> :embedding_content_hash AND status = 'ready'"
+)
+_OUTBOX_INSERT_TASK_SQL = text(
+    "INSERT INTO embedding_tasks (job_id, model_version, content_hash, status, priority) "
+    "SELECT CAST(:id AS uuid), CAST(:model_version AS varchar), "
+    "  CAST(:embedding_content_hash AS varchar), 'pending', "
+    "  CASE WHEN EXISTS ("
+    "    SELECT 1 FROM job_embeddings je WHERE je.job_id = :id AND je.model_version = :model_version"
+    "  ) THEN 90 ELSE 100 END "
+    "WHERE NOT EXISTS ("
+    "  SELECT 1 FROM job_embeddings je2 WHERE je2.job_id = :id "
+    "    AND je2.model_version = :model_version "
+    "    AND je2.content_hash = :embedding_content_hash AND je2.status = 'ready'"
+    ") "
+    "ON CONFLICT (job_id, model_version, content_hash) DO NOTHING"
+)
+
+
+# Post-commit wake signal for the embedding worker. Redis is transport only:
+# pushed AFTER the outbox transaction commits, and failures merely leave the
+# worker on its poll interval (PostgreSQL remains the source of truth).
+_WAKE_LIST_KEY = "scpa:embed:wake"
+_wake_redis: Any = None
+
+
+async def _signal_embedding_worker(queued: int) -> None:
+    global _wake_redis
+    if queued <= 0:
+        return
+    redis_url = os.getenv("REDIS_URL", "").strip()
+    if not redis_url:
+        return
+    try:
+        if _wake_redis is None:
+            import redis.asyncio as aioredis
+
+            _wake_redis = aioredis.from_url(
+                redis_url, decode_responses=True, socket_connect_timeout=2
+            )
+        await _wake_redis.lpush(_WAKE_LIST_KEY, str(queued))
+        await _wake_redis.ltrim(_WAKE_LIST_KEY, 0, 99)
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.debug("embedding worker wake signal failed: %s", exc)
+
+
+# Catalog repost suppression (DATA-DEDUP-CATALOG-001): job boards repost the
+# same vacancy under new URLs, and source_url identity rightly stores each
+# repost. Within the upsert transaction we keep only the newest active row
+# per (title, company, location) fingerprint among rows sharing a fingerprint
+# with this batch — so a rescrape can never resurrect an older copy, and the
+# catalog converges instead of accumulating thousands of duplicates.
+# Deactivated rows keep their data and stay resolvable by id (saved/applied
+# references); only listing/retrieval eligibility is removed.
+_CATALOG_DEDUP_SWEEP_SQL = text(
+    """
+    WITH batch_fp AS (
+        SELECT DISTINCT lower(trim(title)) AS t, lower(trim(company)) AS c,
+               lower(coalesce(trim(location), '')) AS l
+        FROM jobs WHERE id = ANY(CAST(:ids AS uuid[]))
+    ),
+    ranked AS (
+        SELECT j.id, row_number() OVER (
+            PARTITION BY lower(trim(j.title)), lower(trim(j.company)),
+                         lower(coalesce(trim(j.location), ''))
+            ORDER BY j.posted_at DESC NULLS LAST,
+                     j.last_seen_at DESC NULLS LAST, j.id
+        ) AS rn
+        FROM jobs j
+        JOIN batch_fp b
+          ON lower(trim(j.title)) = b.t
+         AND lower(trim(j.company)) = b.c
+         AND lower(coalesce(trim(j.location), '')) = b.l
+        WHERE j.is_active AND j.quality_status = 'accepted'
+    )
+    UPDATE jobs SET is_active = false,
+        match_data = coalesce(jobs.match_data, '{}'::jsonb)
+            || jsonb_build_object('catalog_dedup_deactivated_at', NOW()::text)
+    FROM ranked WHERE jobs.id = ranked.id AND ranked.rn > 1
+    """
+)
+
+
+async def _suppress_repost_duplicates(conn: Any, job_ids: list[Any]) -> int:
+    if not job_ids:
+        return 0
+    result = await conn.execute(
+        _CATALOG_DEDUP_SWEEP_SQL, {"ids": [str(job_id) for job_id in job_ids]}
+    )
+    return max(int(result.rowcount or 0), 0)
+
+
+async def _enqueue_embedding_tasks(conn: Any, params: list[dict[str, Any]]) -> int:
+    """Create outbox tasks for upserted jobs inside the caller's transaction."""
+    queued = 0
+    for model_version in embedding_model_versions():
+        for param in params:
+            task_param = {
+                "id": param["id"],
+                "model_version": model_version,
+                "embedding_content_hash": param["embedding_content_hash"],
+            }
+            await conn.execute(_OUTBOX_MARK_STALE_SQL, task_param)
+            result = await conn.execute(_OUTBOX_INSERT_TASK_SQL, task_param)
+            queued += max(int(result.rowcount or 0), 0)
+    return queued
 
 
 async def _upsert_scraped_jobs(jobs: list[dict[str, Any]]) -> int:
@@ -335,9 +557,9 @@ async def _upsert_scraped_jobs(jobs: list[dict[str, Any]]) -> int:
         skills = job.get("skills") or job.get("tags") or []
         if not isinstance(skills, list):
             skills = [str(skills)]
-        required_skills = job.get("required_skills") or job.get("required_skill_names") or skills
+        required_skills = job.get("required_skills") or job.get("required_skill_names") or []
         preferred_skills = job.get("preferred_skills") or job.get("preferred_skill_names") or []
-        extracted_skills = job.get("extracted_skills") or job.get("extracted_skill_names") or skills
+        extracted_skills = job.get("extracted_skills") or job.get("extracted_skill_names") or []
         params.append(
             {
                 "id": _stable_uuid(identity_key),
@@ -377,7 +599,7 @@ async def _upsert_scraped_jobs(jobs: list[dict[str, Any]]) -> int:
                         "original_job_id": original_id,
                         "identity_key": identity_key,
                         "source_url": normalized_source_url or job.get("source_url"),
-                        "skills": required_skills or extracted_skills or skills,
+                        "skills": required_skills or extracted_skills,
                         "tags": job.get("tags") or skills,
                         "required_skills": required_skills,
                         "preferred_skills": preferred_skills,
@@ -420,7 +642,17 @@ async def _upsert_scraped_jobs(jobs: list[dict[str, Any]]) -> int:
                 "external_id = COALESCE(EXCLUDED.external_id, jobs.external_id), scraped_at = EXCLUDED.scraped_at, "
                 "first_seen_at = COALESCE(jobs.first_seen_at, EXCLUDED.first_seen_at), last_seen_at = EXCLUDED.last_seen_at, "
                 "quality_status = EXCLUDED.quality_status, quality_reject_reason = EXCLUDED.quality_reject_reason, "
-                "content_hash = EXCLUDED.content_hash, match_data = EXCLUDED.match_data"
+                "content_hash = EXCLUDED.content_hash, "
+                "match_data = COALESCE(jobs.match_data, '{}'::jsonb) || EXCLUDED.match_data "
+                # single-producer hash contract: the outbox hashes the
+                # POST-WRITE row through the same shared mapping the worker
+                # and reconciler use, so scraped-dict vs DB-row shape
+                # differences can never disagree again.
+                "RETURNING id, title, company, location, job_function, industry, "
+                "seniority_level, employment_type, experience_level::text AS experience_level, "
+                "description_text, description, description_sections, responsibilities, "
+                "requirements, nice_to_have, required_skill_names, preferred_skill_names, "
+                "extracted_skill_names, match_data"
             ).bindparams(
                 bindparam("responsibilities", type_=ARRAY(SqlText())),
                 bindparam("requirements", type_=ARRAY(SqlText())),
@@ -430,10 +662,39 @@ async def _upsert_scraped_jobs(jobs: list[dict[str, Any]]) -> int:
                 bindparam("preferred_skill_names", type_=ARRAY(SqlText())),
                 bindparam("extracted_skill_names", type_=ARRAY(SqlText())),
             )
-            await conn.execute(
-                upsert_stmt,
-                params,
+            # Per-row execution with RETURNING: the ON CONFLICT (source_url)
+            # path can land on an existing row whose id differs from the
+            # identity-derived uuid, and the outbox task must reference the
+            # actual row id or its FK would abort the whole transaction.
+            outbox_params: list[dict[str, Any]] = []
+            for param in params:
+                result = await conn.execute(upsert_stmt, param)
+                row = result.mappings().first()
+                if row is None:
+                    continue
+                row_dict = dict(row)
+                outbox_params.append(
+                    {
+                        "id": row_dict["id"],
+                        "embedding_content_hash": canonical_job_text_hash(
+                            canonical_dict_from_row(row_dict)
+                        ),
+                    }
+                )
+            queued = await _enqueue_embedding_tasks(conn, outbox_params)
+            if queued:
+                logger.info(
+                    "embedding outbox queued tasks=%s for upserted jobs=%s",
+                    queued,
+                    len(outbox_params),
+                )
+            suppressed = await _suppress_repost_duplicates(
+                conn, [item["id"] for item in outbox_params]
             )
+            if suppressed:
+                logger.info("catalog dedup deactivated reposts=%s", suppressed)
+        # Outside the transaction: signal only after the tasks are durable.
+        await _signal_embedding_worker(queued)
         return len(params)
     except Exception as exc:  # pylint: disable=broad-except
         logger.warning("database scraped-job upsert failed: %s", exc)
@@ -467,6 +728,7 @@ async def run_scrape_stage(
     interaction_count: int,
     refresh_jobs: bool,
     limit: int,
+    seed_offset: int = 0,
 ) -> ScrapeStageResult:
     user = _build_user(user_id, profile, interaction_count)
     skipped = bool(JOB_CACHE) and not refresh_jobs
@@ -483,7 +745,12 @@ async def run_scrape_stage(
         jobs = JOB_CACHE[:limit]
         source = "cache"
     else:
-        scraped_jobs, source, scrape_meta = await _fetch_jobs(client, scraper_url.rstrip("/"), limit)
+        scraped_jobs, source, scrape_meta = await _fetch_jobs(
+            client,
+            scraper_url.rstrip("/"),
+            limit,
+            seed_offset=seed_offset,
+        )
         upserted = await _upsert_scraped_jobs(scraped_jobs)
         refreshed_db_jobs = await _load_db_jobs(limit)
         jobs = _merge_jobs(refreshed_db_jobs, scraped_jobs, limit)

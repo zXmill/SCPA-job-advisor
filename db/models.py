@@ -41,6 +41,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -220,6 +221,12 @@ class User(Base):
         ARRAY(Float), nullable=True
     )
     cv_uploaded_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    location: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    education_level: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    graduation_year: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    interests: Mapped[List[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'::text[]"), nullable=False
+    )
 
     # ── Relationships ──
     skills: Mapped[List["UserSkill"]] = relationship(

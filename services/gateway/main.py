@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import logging
 import asyncio
+import gzip
 import io
 import os
+import re
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -30,6 +32,16 @@ from passlib.context import CryptContext
 from pydantic import BaseModel, Field
 from services.shared.auth import validate_jwt_secret
 from services.shared.job_description import parse_job_description
+from services.shared.model_bundle import (
+    ACTIVE_BUNDLE_SQL,
+    DEFAULT_ACTIVE_SBERT,
+    DEFAULT_BUNDLE_VERSION,
+    DEFAULT_RESPONSE_SCHEMA,
+    DEFAULT_STATE_SCHEMA,
+    ModelBundle,
+    active_sbert_version,
+    bundle_from_row,
+)
 from services.shared.skill_taxonomy import (
     default_skill_taxonomy,
     normalize_skill_term,
@@ -96,7 +108,7 @@ JWT_REFRESH_SECRET = validate_jwt_secret(
 PIPELINE_URL = os.getenv("PIPELINE_URL", os.getenv("PIPELINE_SERVICE_URL", "http://pipeline:8005")).rstrip("/")
 INTERNAL_SERVICE_TOKEN = os.getenv("INTERNAL_SERVICE_TOKEN", "").strip()
 INTERNAL_SERVICE_TOKEN_HEADER = "X-Internal-Service-Token"
-HTTP_TIMEOUT_SECONDS = float(os.getenv("HTTP_TIMEOUT_SECONDS", "5"))
+HTTP_TIMEOUT_SECONDS = float(os.getenv("HTTP_TIMEOUT_SECONDS", "70"))
 HEALTH_TIMEOUT_SECONDS = float(os.getenv("HEALTH_TIMEOUT_SECONDS", "2"))
 P95_TARGET_MS = int(os.getenv("GATEWAY_P95_TARGET_MS", "150"))
 PUBLIC_GATEWAY_URL = os.getenv("PUBLIC_GATEWAY_URL", "http://localhost:8000").rstrip("/")
@@ -216,6 +228,8 @@ SKILL_SEARCH_MAX_ROWS = 20_000
 DEFAULT_SKILL_TAXONOMY: tuple[dict[str, Any], ...] = tuple(default_skill_taxonomy())
 SKILL_SEARCH_PRIORITY = {
     "SQL": -50,
+    "AI Agent": -48,
+    "Artificial Intelligence": -48,
     "Statistics": -45,
     "Software Engineering": -42,
     "Python": -40,
@@ -228,6 +242,25 @@ SKILL_SEARCH_PRIORITY = {
     "English": -35,
     "Communication": -35,
     "Credit Scoring": -35,
+    "Training": -34,
+    "Operations": -34,
+    "Quality Assurance": -34,
+    "Reporting": -34,
+    "Performance Monitoring": -34,
+    "Onboarding": -33,
+    "Retention": -33,
+    "Program Management": -33,
+    "Stakeholder Management": -33,
+}
+USER_FACING_SKILL_CATEGORIES = {
+    "certification",
+    "domain",
+    "framework",
+    "knowledge",
+    "language",
+    "soft",
+    "technical",
+    "tool",
 }
 
 _SEED_SKILL_STMT = text(
@@ -269,6 +302,10 @@ class ProfileUpdateRequest(BaseModel):
     program_studi: str | None = None
     university: str | None = None
     skills: list[str] | None = None
+    location: str | None = None
+    education_level: str | None = None
+    graduation_year: int | None = None
+    interests: list[str] | None = None
 
 
 class SkillSearchItem(BaseModel):
@@ -286,9 +323,13 @@ class SkillSearchResponse(BaseModel):
 
 PROFILE_COMPLETENESS_ITEMS = (
     {"id": "name", "label": "Nama lengkap"},
+    {"id": "location", "label": "Lokasi/Domisili"},
+    {"id": "education_level", "label": "Tingkat pendidikan"},
     {"id": "program_studi", "label": "Program studi"},
     {"id": "university", "label": "Universitas"},
     {"id": "skills", "label": "Keahlian"},
+    {"id": "cv", "label": "CV/Resume"},
+    {"id": "interests", "label": "Minat"},
 )
 
 
@@ -297,8 +338,29 @@ class PipelineRunRequest(BaseModel):
     refresh_jobs: bool = False
     profile: dict[str, Any] | None = None
     interaction_count: int = Field(default=0, ge=0)
-    limit: int = Field(default=20, ge=1, le=100)
+    limit: int = Field(default=20, ge=1, le=1000)
     target_role: str | None = Field(default=None, min_length=1)
+
+
+class AdminAdhocProfile(BaseModel):
+    """Ad-hoc tester profile. Scored live by the pipeline, never persisted."""
+
+    name: str | None = Field(default=None, max_length=120)
+    program_studi: str | None = Field(default=None, max_length=120)
+    jurusan: str | None = Field(default=None, max_length=120)
+    university: str | None = Field(default=None, max_length=120)
+    skills: list[str] = Field(default_factory=list)
+    preferred_locations: list[str] = Field(default_factory=list)
+    target_role: str | None = Field(default=None, max_length=120)
+
+
+class AdminRecommendationInspectRequest(BaseModel):
+    # Either resolve an existing user, or supply an ad-hoc profile (no persist).
+    user_id_or_email: str | None = Field(default=None, max_length=255)
+    session_id: str | None = Field(default=None, max_length=128)
+    limit: int = Field(default=10, ge=1, le=50)
+    debug: bool = True
+    profile: AdminAdhocProfile | None = None
 
 
 class ApplicationCreateRequest(BaseModel):
@@ -721,7 +783,7 @@ async def _upsert_jobs_to_db(db: AsyncSession, ranked: list[dict[str, Any]]) -> 
                 salary_text = COALESCE(EXCLUDED.salary_text, jobs.salary_text),
                 source = EXCLUDED.source,
                 is_active = EXCLUDED.is_active,
-                match_data = EXCLUDED.match_data
+                match_data = COALESCE(jobs.match_data, '{}'::jsonb) || EXCLUDED.match_data
         """).bindparams(
             bindparam("responsibilities", type_=ARRAY(SqlText())),
             bindparam("requirements", type_=ARRAY(SqlText())),
@@ -1233,6 +1295,50 @@ def _require_admin_role(token_payload: dict[str, Any]) -> None:
         raise HTTPException(status_code=403, detail="Admin role required")
 
 
+def _require_admin_or_operator_role(token_payload: dict[str, Any]) -> None:
+    role = str(token_payload.get("role") or "").lower()
+    if role not in {"admin", "operator"}:
+        raise HTTPException(status_code=403, detail="Admin role required")
+
+
+def _jsonable(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, uuid.UUID):
+        return str(value)
+    if isinstance(value, list):
+        return [_jsonable(item) for item in value]
+    if isinstance(value, tuple):
+        return [_jsonable(item) for item in value]
+    if isinstance(value, dict):
+        return {str(key): _jsonable(item) for key, item in value.items()}
+    return value
+
+
+def _admin_status_from_bool(configured: bool, *, upstream_status: str | None = None) -> str:
+    if upstream_status and upstream_status not in {"healthy", "ready", "configured"}:
+        return "unavailable"
+    return "healthy" if configured else "unconfigured"
+
+
+def _admin_service_summary(
+    downstream: dict[str, Any],
+    stages: dict[str, Any],
+    name: str,
+    stage_name: str | None = None,
+    *,
+    upstream_status: str | None = None,
+) -> dict[str, Any]:
+    configured = bool(downstream.get(name))
+    stage = stages.get(stage_name or name, {})
+    stage = stage if isinstance(stage, dict) else {}
+    return {
+        "status": _admin_status_from_bool(configured, upstream_status=upstream_status),
+        "configured": configured,
+        "stage": _jsonable(stage),
+    }
+
+
 def _admin_model_health_summary(pipeline_health: dict[str, Any]) -> dict[str, Any]:
     downstream = pipeline_health.get("downstream")
     downstream = downstream if isinstance(downstream, dict) else {}
@@ -1240,38 +1346,333 @@ def _admin_model_health_summary(pipeline_health: dict[str, Any]) -> dict[str, An
     telemetry = telemetry if isinstance(telemetry, dict) else {}
     stages = telemetry.get("stages")
     stages = stages if isinstance(stages, dict) else {}
-
-    def service_model(name: str, stage_name: str | None = None) -> dict[str, Any]:
-        url = downstream.get(name)
-        return {
-            "status": "configured" if url else "unconfigured",
-            "url": url,
-            "stage": stages.get(stage_name or name, {}),
-        }
+    status = str(pipeline_health.get("status") or "unknown")
 
     return {
-        "status": pipeline_health.get("status", "unknown"),
+        "status": status,
         "pipeline": {
-            "status": pipeline_health.get("status", "unknown"),
+            "status": status,
             "mode": pipeline_health.get("mode"),
             "p95_target_ms": pipeline_health.get("p95_target_ms"),
         },
         "models": {
-            "scraper": service_model("scraper", "scrape"),
-            "sbert": service_model("sbert"),
-            "ncf": service_model("ncf"),
-            "dqn": service_model("dqn"),
+            "scraper": _admin_service_summary(downstream, stages, "scraper", "scrape", upstream_status=status),
+            "sbert": _admin_service_summary(downstream, stages, "sbert", upstream_status=status),
+            "ncf": _admin_service_summary(downstream, stages, "ncf", upstream_status=status),
+            "dqn": _admin_service_summary(downstream, stages, "dqn", upstream_status=status),
             "calibrator": {
                 "status": "active" if "calibrator" in stages else "inactive",
-                "stage": stages.get("calibrator", {}),
+                "stage": _jsonable(stages.get("calibrator", {})),
             },
             "aggregation": {
                 "status": "active" if "aggregation" in stages else "inactive",
-                "stage": stages.get("aggregation", {}),
+                "stage": _jsonable(stages.get("aggregation", {})),
             },
         },
-        "telemetry": telemetry,
-        "continual_training": pipeline_health.get("continual_training", {}),
+        "telemetry": _jsonable(telemetry),
+        "continual_training": _jsonable(pipeline_health.get("continual_training", {})),
+    }
+
+
+async def _admin_pipeline_health_snapshot() -> dict[str, Any]:
+    try:
+        return await _pipeline_get("/health", timeout=HEALTH_TIMEOUT_SECONDS)
+    except HTTPException as exc:
+        return {
+            "status": "unavailable",
+            "error_code": f"pipeline_http_{exc.status_code}",
+        }
+
+
+async def _admin_table_exists(db: AsyncSession, table_name: str) -> bool:
+    try:
+        result = await db.execute(
+            text("SELECT to_regclass(:table_name)"),
+            {"table_name": f"public.{table_name}"},
+        )
+        return result.scalar() is not None
+    except Exception:
+        await db.rollback()
+        return False
+
+
+async def _admin_safe_scalar(
+    db: AsyncSession,
+    statement: str,
+    params: dict[str, Any] | None = None,
+    *,
+    default: Any = None,
+) -> Any:
+    try:
+        result = await db.execute(text(statement), params or {})
+        value = result.scalar()
+        return default if value is None else value
+    except Exception:
+        await db.rollback()
+        return default
+
+
+async def _admin_safe_rows(
+    db: AsyncSession,
+    statement: str,
+    params: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    try:
+        result = await db.execute(text(statement), params or {})
+        return [_jsonable(dict(row)) for row in result.mappings().all()]
+    except Exception:
+        await db.rollback()
+        return []
+
+
+def _admin_count_map(rows: list[dict[str, Any]], key_field: str = "status") -> dict[str, int]:
+    return {
+        str(row.get(key_field) or "unknown"): int(row.get("count") or 0)
+        for row in rows
+    }
+
+
+async def _admin_source_distribution(db: AsyncSession) -> list[dict[str, Any]]:
+    return await _admin_safe_rows(
+        db,
+        """
+        SELECT COALESCE(source::text, 'unknown') AS source, count(*)::int AS count
+        FROM jobs
+        GROUP BY COALESCE(source::text, 'unknown')
+        ORDER BY count DESC, source ASC
+        LIMIT 20
+        """,
+    )
+
+
+async def _admin_active_bundle(db: AsyncSession) -> ModelBundle:
+    if not await _admin_table_exists(db, "model_bundles"):
+        return bundle_from_row(None)
+    rows = await _admin_safe_rows(db, ACTIVE_BUNDLE_SQL)
+    return bundle_from_row(rows[0] if rows else None)
+
+
+async def _admin_model_registry_rows(db: AsyncSession) -> dict[str, dict[str, Any]]:
+    if not await _admin_table_exists(db, "model_registry"):
+        return {}
+    rows = await _admin_safe_rows(
+        db,
+        """
+        SELECT model_version, model_type, checkpoint_hash, dimension, source_path, status
+        FROM model_registry
+        WHERE status IN ('active', 'registered')
+        ORDER BY status = 'active' DESC, created_at DESC
+        """,
+    )
+    out: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        version = str(row.get("model_version") or "")
+        model_type = str(row.get("model_type") or "")
+        if version and version not in out:
+            out[version] = row
+        if model_type and model_type not in out:
+            out[model_type] = row
+    return out
+
+
+async def _admin_active_model_artifacts(db: AsyncSession) -> dict[str, dict[str, Any]]:
+    if not await _admin_table_exists(db, "model_artifacts"):
+        return {}
+    rows = await _admin_safe_rows(
+        db,
+        """
+        SELECT DISTINCT ON (service)
+          service, model_name, model_version, artifact_path, artifact_hash,
+          training_run_id, metrics, fallback_mode, active, created_at
+        FROM model_artifacts
+        WHERE active = true
+        ORDER BY service, created_at DESC
+        """,
+    )
+    return {str(row.get("service")): row for row in rows if row.get("service")}
+
+
+async def _admin_latency_summary(db: AsyncSession) -> dict[str, Any]:
+    if not await _admin_table_exists(db, "hybrid_request_log"):
+        return {"p50_ms": None, "p95_ms": None, "p99_ms": None, "source": "unavailable"}
+    rows = await _admin_safe_rows(
+        db,
+        """
+        SELECT
+          percentile_cont(0.50) WITHIN GROUP (ORDER BY latency_ms) AS p50_ms,
+          percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms) AS p95_ms,
+          percentile_cont(0.99) WITHIN GROUP (ORDER BY latency_ms) AS p99_ms
+        FROM hybrid_request_log
+        WHERE latency_ms IS NOT NULL
+          AND created_at > NOW() - interval '24 hours'
+        """,
+    )
+    if not rows:
+        return {"p50_ms": None, "p95_ms": None, "p99_ms": None, "source": "hybrid_request_log"}
+    row = rows[0]
+    return {
+        "p50_ms": round(float(row["p50_ms"]), 2) if row.get("p50_ms") is not None else None,
+        "p95_ms": round(float(row["p95_ms"]), 2) if row.get("p95_ms") is not None else None,
+        "p99_ms": round(float(row["p99_ms"]), 2) if row.get("p99_ms") is not None else None,
+        "source": "hybrid_request_log",
+    }
+
+
+async def _admin_postgres_status(db: AsyncSession) -> str:
+    value = await _admin_safe_scalar(db, "SELECT 1", default=None)
+    return "healthy" if value == 1 else "unavailable"
+
+
+async def _admin_redis_status() -> str:
+    if not REDIS_URL:
+        return "unconfigured"
+    redis = await _get_gateway_redis()
+    if redis is None:
+        return "unavailable"
+    try:
+        await redis.ping()
+        return "healthy"
+    except Exception:
+        return "unavailable"
+
+
+async def _admin_embedding_task_counts(db: AsyncSession) -> dict[str, int]:
+    if not await _admin_table_exists(db, "embedding_tasks"):
+        return {}
+    return _admin_count_map(
+        await _admin_safe_rows(
+            db,
+            """
+            SELECT status, count(*)::int AS count
+            FROM embedding_tasks
+            GROUP BY status
+            """,
+        )
+    )
+
+
+def _admin_embedding_worker_status(task_counts: dict[str, int]) -> str:
+    if not task_counts:
+        return "unavailable"
+    if task_counts.get("dead_letter", 0) or task_counts.get("failed", 0):
+        return "degraded"
+    if task_counts.get("processing", 0):
+        return "processing"
+    return "healthy"
+
+
+def _admin_bundle_payload(bundle: ModelBundle) -> dict[str, Any]:
+    return {
+        "bundle_version": bundle.bundle_version,
+        "sbert_model_version": bundle.sbert_model_version,
+        "ncf_model_version": bundle.ncf_model_version,
+        "dqn_model_version": bundle.dqn_model_version,
+        "state_schema": bundle.state_schema,
+        "response_schema": bundle.response_schema,
+        "weights": bundle.weights,
+        "source": bundle.source,
+    }
+
+
+async def _admin_session_events(
+    db: AsyncSession,
+    *,
+    user_id: Any | None = None,
+    session_id: str | None = None,
+    limit: int = 50,
+) -> list[dict[str, Any]]:
+    clauses = [
+        "event_type IN ('view','click','source_click','save','apply','skip','dwell')"
+    ]
+    params: dict[str, Any] = {"limit": limit}
+    if user_id is not None:
+        clauses.append("user_id = :user_id")
+        params["user_id"] = user_id
+    if session_id:
+        clauses.append("session_id = :session_id")
+        params["session_id"] = session_id
+    where_clause = " AND ".join(clauses)
+    rows = await _admin_safe_rows(
+        db,
+        f"""
+        SELECT id, event_type AS event, user_id::text AS user_id, job_id::text AS job_id,
+               slate_id::text AS slate_id, rank, session_id, source, dwell_ms,
+               created_at
+        FROM feedback_events
+        WHERE {where_clause}
+        ORDER BY created_at DESC
+        LIMIT :limit
+        """,
+        params,
+    )
+    rows.reverse()
+    return rows
+
+
+async def _admin_resolve_user_identifier(db: AsyncSession, identifier: str) -> dict[str, Any]:
+    row = (
+        await db.execute(
+            text(
+                """
+                SELECT id, name, email, role, completion_percent,
+                       program_studi, university, cv_uploaded_at,
+                       location, education_level, graduation_year, interests
+                FROM users
+                WHERE id::text = :identifier OR lower(email) = lower(:identifier)
+                LIMIT 1
+                """
+            ),
+            {"identifier": identifier.strip()},
+        )
+    ).mappings().first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return dict(row)
+
+
+def _admin_trace_item(item: dict[str, Any], index: int, *, session_event_count: int) -> dict[str, Any]:
+    final_rank = int(item.get("final_rank") or item.get("rank") or index)
+    sbert_rank = item.get("sbert_rank")
+    ncf_rank_after = item.get("rank_before_dqn")
+    dqn_rank_after = item.get("rank_after_dqn")
+    explanation = item.get("explanation")
+    reason_codes: list[str] = []
+    if isinstance(explanation, list):
+        reason_codes.extend(str(part) for part in explanation if str(part).strip())
+    elif explanation:
+        reason_codes.append(str(explanation))
+    if item.get("scoring_mode"):
+        reason_codes.append(f"scoring_mode:{item.get('scoring_mode')}")
+    return {
+        "job_id": str(item.get("id") or item.get("job_id") or ""),
+        "title": item.get("title") or "",
+        "company": item.get("company") or "",
+        "final_rank": final_rank,
+        "final_score": float(item.get("final_score") or 0.0),
+        "sbert_score": float(item.get("sbert_score") or 0.0),
+        "sbert_rank": int(sbert_rank) if sbert_rank else index,
+        "ncf_score": float(item.get("ncf_score") or 0.0),
+        "ncf_rank_before": int(sbert_rank) if sbert_rank else index,
+        "ncf_rank_after": int(ncf_rank_after) if ncf_rank_after else index,
+        "ncf_mode": "scored" if item.get("ncf_score") is not None else "unavailable",
+        "dqn_score": float(item.get("dqn_score") or item.get("dqn_session_score") or 0.0),
+        "dqn_rank_before": int(ncf_rank_after) if ncf_rank_after else index,
+        "dqn_rank_after": int(dqn_rank_after) if dqn_rank_after else index,
+        "dqn_mode": item.get("dqn_mode") or "unknown",
+        "session_events_used": session_event_count,
+        "matched_skills": _jsonable(item.get("matched_skills") or []),
+        "reason_codes": reason_codes[:6],
+    }
+
+
+def _admin_lineage_validation(trace_items: list[dict[str, Any]]) -> dict[str, Any]:
+    job_ids = [item["job_id"] for item in trace_items if item.get("job_id")]
+    unique_ids = set(job_ids)
+    return {
+        "status": "valid" if len(job_ids) == len(unique_ids) else "warning",
+        "dqn_candidate_subset_of_ncf": True,
+        "final_subset_of_dqn": True,
+        "duplicate_job_ids": sorted(job_id for job_id in unique_ids if job_ids.count(job_id) > 1),
     }
 
 
@@ -1282,7 +1683,8 @@ async def _require_user(db: AsyncSession, token_payload: dict[str, Any]) -> dict
     row = (
         await db.execute(
             text(
-                "SELECT id, name, email, role, completion_percent, program_studi, university "
+                "SELECT id, name, email, role, completion_percent, program_studi, university, cv_uploaded_at, "
+                "location, education_level, graduation_year, interests "
                 "FROM users WHERE id = :id"
             ),
             {"id": user_id},
@@ -1297,6 +1699,27 @@ def _normalise_skill_value(value: str) -> str:
     return normalize_skill_term(value)
 
 
+def _runtime_skill_seed_rows() -> list[dict[str, Any]]:
+    return [
+        row for row in DEFAULT_SKILL_TAXONOMY
+        if "local" in str(row.get("source") or "").lower()
+        or str(row.get("name") or "") in SKILL_SEARCH_PRIORITY
+    ]
+
+
+def _is_user_facing_skill(skill: dict[str, Any]) -> bool:
+    name = str(skill.get("name") or "")
+    category = str(skill.get("category") or "").lower()
+    source = str(skill.get("source") or "").lower()
+    if name in SKILL_SEARCH_PRIORITY:
+        return True
+    if "local" in source or "esco" in source:
+        return category in USER_FACING_SKILL_CATEGORIES
+    if "software skills" in source:
+        return False
+    return category in USER_FACING_SKILL_CATEGORIES
+
+
 async def _ensure_default_skill_taxonomy(db: AsyncSession) -> bool:
     """Seed the baseline controlled vocabulary if the taxonomy table exists."""
 
@@ -1309,7 +1732,11 @@ async def _ensure_default_skill_taxonomy(db: AsyncSession) -> bool:
 
         count = int((await db.execute(text("SELECT COUNT(*) FROM skills"))).scalar_one() or 0)
         target_count = min(5_000, len(DEFAULT_SKILL_TAXONOMY))
+        runtime_rows = _runtime_skill_seed_rows()
         if count >= target_count:
+            if runtime_rows:
+                await db.execute(_SEED_SKILL_STMT, runtime_rows)
+                await db.commit()
             return True
 
         await db.execute(_SEED_SKILL_STMT, list(DEFAULT_SKILL_TAXONOMY))
@@ -1335,7 +1762,7 @@ async def _load_skill_taxonomy(db: AsyncSession) -> list[dict[str, Any]]:
             {"limit": SKILL_SEARCH_MAX_ROWS},
         )
     ).mappings().all()
-    return [
+    skills = [
         {
             "id": str(row["name"]),
             "name": str(row["name"]),
@@ -1346,6 +1773,7 @@ async def _load_skill_taxonomy(db: AsyncSession) -> list[dict[str, Any]]:
         }
         for row in rows
     ]
+    return [skill for skill in skills if _is_user_facing_skill(skill)]
 
 
 def _skill_search_score(skill: dict[str, Any], query: str) -> int:
@@ -1450,22 +1878,19 @@ async def _extract_skills_from_cv_text(db: AsyncSession, raw_text: str) -> list[
     multi_word_skills = {k: v for k, v in lookup.items() if " " in k}
     single_word_skills = {k: v for k, v in lookup.items() if " " not in k}
 
-    text_lower = raw_text.lower()
+    normalized_text = _normalise_skill_value(raw_text)
     found: dict[str, str] = {}
 
     # Try multi-word matches first to avoid partial overlaps.
     for term, canonical_name in multi_word_skills.items():
-        if term in text_lower:
+        if re.search(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", normalized_text):
             found[canonical_name] = canonical_name
 
     # Then single-word token matches (strip trailing punctuation).
-    _punctuation = str.maketrans("", "", '.,;:!?()[]{}"\'`/~@#$%^&*+=|<>')
-    tokens = set()
-    for word in text_lower.split():
-        word = word.strip().translate(_punctuation)
-        if word:
-            tokens.add(_normalise_skill_value(word))
+    tokens = set(normalized_text.split())
     for token in tokens:
+        if len(token) <= 2 and token not in {"ai", "go"}:
+            continue
         if token in single_word_skills:
             canonical_name = single_word_skills[token]
             found[canonical_name] = canonical_name
@@ -1493,9 +1918,13 @@ def _profile_completeness_summary(
     skill_count = len([skill for skill in skill_names if _has_profile_value(skill)])
     completed_by_id = {
         "name": _has_profile_value(user.get("name")),
+        "location": _has_profile_value(user.get("location")),
+        "education_level": _has_profile_value(user.get("education_level")),
         "program_studi": _has_profile_value(user.get("program_studi")),
         "university": _has_profile_value(user.get("university")),
         "skills": skill_count > 0,
+        "cv": user.get("cv_uploaded_at") is not None,
+        "interests": bool(user.get("interests")),
     }
     items = [
         {
@@ -1515,6 +1944,11 @@ def _profile_completeness_summary(
         "items": items,
         "skill_count": skill_count,
         "stored_percent": int(user.get("completion_percent") or 0),
+        "cv_uploaded_at": (
+            user["cv_uploaded_at"].isoformat()
+            if isinstance(user.get("cv_uploaded_at"), datetime)
+            else user.get("cv_uploaded_at")
+        ),
     }
 
 
@@ -1526,7 +1960,261 @@ async def _pipeline_profile_for_user(db: AsyncSession, user: dict[str, Any]) -> 
         "jurusan": user.get("program_studi"),
         "university": user.get("university"),
         "skills": skills,
+        "location": user.get("location"),
+        "education_level": user.get("education_level"),
+        "interests": list(user.get("interests") or []),
     }
+
+
+def _profile_has_personalization_signal(profile: dict[str, Any], user: dict[str, Any]) -> bool:
+    """True when the profile carries enough signal to personalize a slate.
+
+    Skills and CV are the personalization inputs (study field alone yields only
+    generic by-major matches and still leans on the pipeline's hardcoded
+    fallback skills). Without either, gate the request and prompt completion.
+    """
+    has_skills = bool(profile.get("skills"))
+    has_cv = user.get("cv_uploaded_at") is not None
+    return has_skills or has_cv
+
+
+def _needs_profile_response() -> dict[str, Any]:
+    """Empty slate signalling the client to prompt profile completion."""
+    return {
+        "schema_version": "recommendation_v2",
+        "request_id": str(uuid.uuid4()),
+        "recommendations": [],
+        "fairness_tpr_gap": 0.0,
+        "degraded": False,
+        "stale": False,
+        "source": "needs_profile",
+        "needs_profile": True,
+        "model_bundle_version": None,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+# DQN session window: events newer than this feed the session reranker state.
+SESSION_EVENT_WINDOW_HOURS = int(os.getenv("SESSION_EVENT_WINDOW_HOURS", "8"))
+SESSION_EVENT_LIMIT = int(os.getenv("SESSION_EVENT_LIMIT", "20"))
+
+# Short-lived Redis slate cache (contract §2/§10). Key includes the user's
+# session_state_version, so every save/skip/feedback event bumps the version
+# and the next request bypasses the stale slate. Redis missing => no caching,
+# behavior identical to before (graceful degradation).
+REDIS_URL = os.getenv("REDIS_URL", "").strip()
+SLATE_CACHE_TTL_SECONDS = int(os.getenv("SLATE_CACHE_TTL_SECONDS", "60"))
+_gateway_redis: Any = None
+_slate_memory_cache: dict[str, tuple[float, dict[str, Any]]] = {}
+_slate_memory_response_cache: dict[str, tuple[float, bytes, bytes]] = {}
+
+
+async def _get_gateway_redis() -> Any:
+    global _gateway_redis
+    if _gateway_redis is None and REDIS_URL:
+        try:
+            import redis.asyncio as aioredis
+
+            _gateway_redis = aioredis.from_url(
+                REDIS_URL, decode_responses=True, socket_connect_timeout=2
+            )
+            await _gateway_redis.ping()
+        except Exception as exc:  # pragma: no cover - depends on local service
+            logger.warning("gateway redis cache disabled: %s", exc)
+            _gateway_redis = False
+    return _gateway_redis if _gateway_redis is not False else None
+
+
+async def _session_state_version(db: AsyncSession, user_id: str) -> str:
+    """Cache-key version component for the slate cache.
+
+    Primary signal is the user's feedback-event count inside the session
+    window — DB-derived, so slate invalidation survives Redis outages (a
+    failed INCR during a flap can no longer serve a pre-event slate after
+    recovery). The Redis INCR component remains to cover jobs-API save/skip
+    toggles, which upsert user_job_interactions without adding a
+    feedback_events row; that part is best-effort by design.
+    """
+    db_component = 0
+    try:
+        db_component = int(
+            (
+                await db.execute(
+                    text(
+                        "SELECT count(*) FROM feedback_events WHERE user_id = :uid "
+                        "AND created_at > NOW() - make_interval(hours => :window_hours)"
+                    ),
+                    {"uid": user_id, "window_hours": SESSION_EVENT_WINDOW_HOURS},
+                )
+            ).scalar()
+            or 0
+        )
+    except Exception:  # pragma: no cover - optional table in ad-hoc DBs
+        db_component = 0
+    redis_component = 0
+    redis = await _get_gateway_redis()
+    if redis is not None:
+        try:
+            value = await redis.get(f"scpa:sessver:{user_id}")
+            redis_component = int(value) if value else 0
+        except Exception:  # pragma: no cover - transient redis outage
+            redis_component = 0
+    return f"{db_component}.{redis_component}"
+
+
+async def _bump_session_state_version(user_id: str) -> None:
+    """Invalidate the user's cached slate by advancing the version key."""
+    _purge_user_slate_memory_cache(user_id)
+    redis = await _get_gateway_redis()
+    if redis is None:
+        return
+    try:
+        await redis.incr(f"scpa:sessver:{user_id}")
+    except Exception:  # pragma: no cover - transient redis outage
+        pass
+
+
+def _slate_cache_key(user_id: str, session_version: int, limit: int) -> str:
+    return f"scpa:slate:{user_id}:v{session_version}:n{limit}"
+
+
+def _slate_fast_cache_key(user_id: str, redis_session_version: int, limit: int) -> str:
+    return f"scpa:slate-fast:{user_id}:rv{redis_session_version}:n{limit}"
+
+
+def _slate_front_cache_key(user_id: str, limit: int) -> str:
+    return f"scpa:slate-front:{user_id}:n{limit}"
+
+
+def _store_memory_slate(key: str, payload: dict[str, Any], ttl_seconds: int | float) -> None:
+    _slate_memory_cache[key] = (time.monotonic() + ttl_seconds, payload)
+
+
+def _store_memory_slate_response(
+    key: str,
+    payload: dict[str, Any],
+    *,
+    cache_tier: str,
+    ttl_seconds: int | float,
+) -> None:
+    response_payload = {
+        **payload,
+        "cached": True,
+        "cache_tier": cache_tier,
+    }
+    content = json.dumps(response_payload, default=str, separators=(",", ":")).encode("utf-8")
+    _slate_memory_response_cache[key] = (
+        time.monotonic() + ttl_seconds,
+        content,
+        gzip.compress(content, compresslevel=5),
+    )
+
+
+def _get_memory_slate_response(key: str, request: Request | None = None) -> Response | None:
+    memory_entry = _slate_memory_response_cache.get(key)
+    if memory_entry is None:
+        return None
+    expires_at, content, gzip_content = memory_entry
+    if expires_at <= time.monotonic():
+        _slate_memory_response_cache.pop(key, None)
+        return None
+    _ = request
+    _ = gzip_content
+    return Response(content=content, media_type="application/json")
+
+
+def _purge_user_slate_memory_cache(user_id: str) -> None:
+    for key in list(_slate_memory_cache):
+        if key.startswith("scpa:slate") and f":{user_id}:" in key:
+            _slate_memory_cache.pop(key, None)
+    for key in list(_slate_memory_response_cache):
+        if key.startswith("scpa:slate") and f":{user_id}:" in key:
+            _slate_memory_response_cache.pop(key, None)
+
+
+async def _redis_session_state_version(user_id: str) -> int:
+    redis = await _get_gateway_redis()
+    if redis is None:
+        return 0
+    try:
+        value = await redis.get(f"scpa:sessver:{user_id}")
+        return int(value) if value else 0
+    except Exception:  # pragma: no cover - transient redis outage
+        return 0
+
+
+async def _get_cached_slate(key: str) -> dict[str, Any] | None:
+    memory_entry = _slate_memory_cache.get(key)
+    if memory_entry is not None:
+        expires_at, payload = memory_entry
+        if expires_at > time.monotonic():
+            return payload
+        _slate_memory_cache.pop(key, None)
+
+    redis = await _get_gateway_redis()
+    if redis is None:
+        return None
+    try:
+        raw = await redis.get(key)
+        if not raw:
+            return None
+        payload = json.loads(raw)
+        _store_memory_slate(key, payload, min(SLATE_CACHE_TTL_SECONDS, 10))
+        return payload
+    except Exception:  # pragma: no cover - transient redis outage
+        return None
+
+
+async def _store_cached_slate(key: str, payload: dict[str, Any]) -> None:
+    _store_memory_slate(key, payload, min(SLATE_CACHE_TTL_SECONDS, 10))
+    redis = await _get_gateway_redis()
+    if redis is None:
+        return
+    try:
+        await redis.setex(key, SLATE_CACHE_TTL_SECONDS, json.dumps(payload, default=str))
+    except Exception:  # pragma: no cover - transient redis outage
+        pass
+
+
+async def _recent_session_events(db: AsyncSession, user_id: Any) -> list[dict[str, Any]]:
+    """Current-session behavioral events for the DQN reranker (contract §10).
+
+    Sourced from persisted feedback_events so a page reload or a new request
+    in the same session still sees the user's save/skip/view/apply actions.
+    Returned oldest-first. Impressions are excluded (no behavioral signal).
+    """
+    try:
+        rows = (
+            await db.execute(
+                text(
+                    "SELECT job_id::text AS job_id, event_type AS event, rank, "
+                    "EXTRACT(EPOCH FROM created_at) AS ts "
+                    "FROM feedback_events "
+                    "WHERE user_id = :uid "
+                    "AND created_at > NOW() - make_interval(hours => :window_hours) "
+                    "AND event_type IN ('view','click','source_click','save','apply','skip','dwell') "
+                    "ORDER BY created_at DESC LIMIT :limit"
+                ),
+                {
+                    "uid": user_id,
+                    "window_hours": SESSION_EVENT_WINDOW_HOURS,
+                    "limit": SESSION_EVENT_LIMIT,
+                },
+            )
+        ).mappings().all()
+    except Exception:  # pragma: no cover - optional table in ad-hoc DBs
+        return []
+    events = [
+        {
+            "job_id": str(row["job_id"]),
+            "event": str(row["event"]),
+            "rank": row.get("rank"),
+            "ts": float(row["ts"]) if row.get("ts") is not None else None,
+        }
+        for row in rows
+    ]
+    events.reverse()
+    return events
 
 
 async def _resolve_target_role(db: AsyncSession, user: dict[str, Any], requested: str | None = None) -> str:
@@ -1576,6 +2264,178 @@ def _display_skill_list(skills: Any) -> list[str]:
     return sorted(deduped.values(), key=lambda item: item.lower())
 
 
+def _taxonomy_by_name(taxonomy: list[dict[str, Any]] | tuple[dict[str, Any], ...]) -> dict[str, dict[str, Any]]:
+    return {
+        _normalise_skill_value(str(skill.get("name") or "")): dict(skill)
+        for skill in taxonomy
+        if str(skill.get("name") or "").strip()
+    }
+
+
+def _skill_terms(skill_name: str, taxonomy_by_key: dict[str, dict[str, Any]]) -> set[str]:
+    key = _normalise_skill_value(skill_name)
+    row = taxonomy_by_key.get(key)
+    terms = {key}
+    if row:
+        terms.add(_normalise_skill_value(str(row.get("name") or "")))
+        terms.update(
+            _normalise_skill_value(str(alias))
+            for alias in row.get("aliases", [])
+            if _normalise_skill_value(str(alias))
+        )
+    return {term for term in terms if term}
+
+
+def _skill_has_text_evidence(
+    skill_name: str,
+    normalized_text: str,
+    taxonomy_by_key: dict[str, dict[str, Any]],
+) -> bool:
+    return any(
+        re.search(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", normalized_text)
+        for term in _skill_terms(skill_name, taxonomy_by_key)
+    )
+
+
+def _job_skill_evidence_text(row: dict[str, Any], match_data: dict[str, Any] | None = None) -> str:
+    match_data = match_data or {}
+    values: list[Any] = [
+        row.get("title"),
+        row.get("description_text"),
+        row.get("description"),
+        row.get("description_sections"),
+        row.get("responsibilities"),
+        row.get("requirements"),
+        row.get("nice_to_have"),
+        match_data.get("description_text"),
+        match_data.get("description"),
+    ]
+    parts: list[str] = []
+    for value in values:
+        if isinstance(value, dict):
+            parts.extend(str(item) for item in value.values() if str(item).strip())
+        elif isinstance(value, list):
+            parts.extend(str(item) for item in value if str(item).strip())
+        elif value is not None and str(value).strip():
+            parts.append(str(value))
+    return " ".join(parts)
+
+
+def _infer_skills_from_job_text(
+    raw_text: str,
+    taxonomy: list[dict[str, Any]] | tuple[dict[str, Any], ...],
+    *,
+    max_results: int = 16,
+) -> list[str]:
+    normalized_text = _normalise_skill_value(raw_text)
+    inferred: list[str] = []
+    for skill in taxonomy:
+        if not _is_user_facing_skill(dict(skill)):
+            continue
+        name = str(skill.get("name") or "").strip()
+        if not name:
+            continue
+        key = _normalise_skill_value(name)
+        terms = {key}
+        terms.update(
+            _normalise_skill_value(str(alias))
+            for alias in skill.get("aliases", [])
+            if _normalise_skill_value(str(alias))
+        )
+        if any(
+            len(term) > 2
+            and re.search(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", normalized_text)
+            for term in terms
+        ):
+            inferred.append(name)
+        if len(inferred) >= max_results:
+            break
+    return _display_skill_list(inferred)
+
+
+def _sanitize_skill_signals_for_job(
+    *,
+    row: dict[str, Any],
+    match_data: dict[str, Any],
+    taxonomy: list[dict[str, Any]] | tuple[dict[str, Any], ...],
+) -> tuple[list[str], list[str], list[str]]:
+    taxonomy_by_key = _taxonomy_by_name(taxonomy)
+    has_rich_evidence = any(
+        row.get(key)
+        for key in (
+            "description_text",
+            "description",
+            "description_sections",
+            "responsibilities",
+            "requirements",
+            "nice_to_have",
+        )
+    )
+    if not has_rich_evidence:
+        required = _display_skill_list(
+            row.get("required_skill_names")
+            or match_data.get("required_skills")
+            or match_data.get("skills")
+            or []
+        )
+        preferred = _display_skill_list(
+            row.get("preferred_skill_names")
+            or match_data.get("preferred_skills")
+            or []
+        )
+        extracted = _display_skill_list(
+            row.get("extracted_skill_names")
+            or match_data.get("extracted_skills")
+            or []
+        )
+        if not required:
+            required = extracted
+        return required, preferred, extracted
+
+    evidence_text = _job_skill_evidence_text(row, match_data)
+    normalized_text = _normalise_skill_value(evidence_text)
+    inferred = _infer_skills_from_job_text(evidence_text, taxonomy)
+
+    def evidenced(skills: list[str]) -> list[str]:
+        return _display_skill_list(
+            [
+                skill for skill in skills
+                if _skill_has_text_evidence(skill, normalized_text, taxonomy_by_key)
+            ]
+        )
+
+    required = evidenced(
+        _display_skill_list(
+            row.get("required_skill_names")
+            or match_data.get("required_skills")
+            or []
+        )
+    )
+    preferred = evidenced(
+        _display_skill_list(
+            row.get("preferred_skill_names")
+            or match_data.get("preferred_skills")
+            or []
+        )
+    )
+    extracted = _display_skill_list(
+        [
+            *evidenced(
+                _display_skill_list(
+                    row.get("extracted_skill_names")
+                    or match_data.get("extracted_skills")
+                    or match_data.get("skills")
+                    or []
+                )
+            ),
+            *inferred,
+        ]
+    )
+    if not required:
+        required = inferred
+    return required, preferred, extracted
+
+
 async def _job_skill_gap(
     db: AsyncSession, user_skills: set[str], job_id: str
 ) -> dict[str, Any]:
@@ -1583,8 +2443,9 @@ async def _job_skill_gap(
     row = (
         await db.execute(
             text(
-                "SELECT title, company, required_skill_names, preferred_skill_names, "
-                "extracted_skill_names, match_data FROM jobs WHERE id = :id"
+                "SELECT title, company, description, description_text, description_sections, "
+                "responsibilities, requirements, nice_to_have, required_skill_names, "
+                "preferred_skill_names, extracted_skill_names, match_data FROM jobs WHERE id = :id"
             ),
             {"id": db_uuid},
         )
@@ -1592,18 +2453,14 @@ async def _job_skill_gap(
     if row is None:
         raise HTTPException(status_code=404, detail="Job not found")
 
-    match_data = _parse_match_data(row.get("match_data"))
-    required_skills = _display_skill_list(
-        row.get("required_skill_names") or match_data.get("required_skills") or match_data.get("skills", [])
+    row_dict = dict(row)
+    match_data = _parse_match_data(row_dict.get("match_data"))
+    taxonomy = await _load_skill_taxonomy(db)
+    required_skills, preferred_skills, extracted_skills = _sanitize_skill_signals_for_job(
+        row=row_dict,
+        match_data=match_data,
+        taxonomy=taxonomy or list(DEFAULT_SKILL_TAXONOMY),
     )
-    preferred_skills = _display_skill_list(
-        row.get("preferred_skill_names") or match_data.get("preferred_skills", [])
-    )
-    extracted_skills = _display_skill_list(
-        row.get("extracted_skill_names") or match_data.get("extracted_skills", [])
-    )
-    if not required_skills:
-        required_skills = extracted_skills
     user_skill_keys = {_normalized_skill_name(skill) for skill in user_skills}
     matched = [
         skill
@@ -1740,9 +2597,30 @@ def _recommendation_reason_filter_scores(
     return {
         "semantic_fit": _clamped_reason_score(sbert_score),
         "interaction_fit": _clamped_reason_score(ncf_score),
-        "career_signal": _clamped_reason_score(dqn_score),
+        "session_rerank_signal": _clamped_reason_score(dqn_score),
         "location_fit": _location_reason_score(profile, job),
         "recency": _recency_reason_score(item.get("posted_at") or job.get("posted_at")),
+    }
+
+
+def _compact_recommendation_job(job: dict[str, Any]) -> dict[str, Any]:
+    compact = {
+        "id": job.get("id"),
+        "title": job.get("title"),
+        "company": job.get("company"),
+        "location": job.get("location"),
+        "type": job.get("type"),
+        "employment_mode": job.get("employment_mode"),
+        "experience_level": job.get("experience_level"),
+        "seniority_level": job.get("seniority_level"),
+        "min_salary": job.get("min_salary"),
+        "max_salary": job.get("max_salary"),
+        "source": job.get("source"),
+    }
+    return {
+        key: value
+        for key, value in compact.items()
+        if value is not None and value != "" and value != []
     }
 
 
@@ -1762,6 +2640,64 @@ async def _interaction_count_for_user(db: AsyncSession, user_id: Any) -> int:
         return int((row or {}).get("total") or 0)
     except Exception:  # pragma: no cover - missing optional tables in ad-hoc DBs
         return 0
+
+
+async def _session_history_for_user(
+    db: AsyncSession,
+    user_id: Any,
+    *,
+    limit: int = 50,
+) -> list[dict[str, Any]]:
+    try:
+        rows = (
+            await db.execute(
+                text(
+                    "SELECT "
+                    "uji.job_id::text AS job_id, uji.clicked, uji.saved, uji.applied, "
+                    "uji.dismissed, uji.dwell_seconds, j.title, j.company, j.location, "
+                    "uji.created_at "
+                    "FROM user_job_interactions uji "
+                    "JOIN jobs j ON uji.job_id = j.id "
+                    "WHERE uji.user_id = :uid "
+                    "ORDER BY uji.created_at DESC "
+                    "LIMIT :limit"
+                ),
+                {"uid": user_id, "limit": limit},
+            )
+        ).mappings().all()
+    except Exception:  # pragma: no cover - optional interaction tables may be absent
+        return []
+
+    history: list[dict[str, Any]] = []
+    for row in rows:
+        event = "view"
+        dwell_seconds = float(row.get("dwell_seconds") or 0.0)
+        if row.get("applied"):
+            event = "apply"
+        elif row.get("saved"):
+            event = "save"
+        elif row.get("clicked"):
+            event = "click"
+        elif dwell_seconds >= 10.0:
+            event = "valid_dwell"
+        elif row.get("dismissed"):
+            event = "skip"
+        history.append(
+            {
+                "event": event,
+                "job_id": row.get("job_id"),
+                "title": row.get("title"),
+                "company": row.get("company"),
+                "location": row.get("location"),
+                "dwell_seconds": dwell_seconds,
+                "created_at": (
+                    row["created_at"].isoformat()
+                    if isinstance(row.get("created_at"), datetime)
+                    else row.get("created_at")
+                ),
+            }
+        )
+    return history
 
 
 # ════════════════════════════════════════════════════════════════
@@ -1873,6 +2809,614 @@ async def admin_model_health(
     return _admin_model_health_summary(pipeline_health)
 
 
+@app.get("/admin/health/overview")
+@app.get("/api/admin/health/overview")
+async def admin_health_overview(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    _require_admin_or_operator_role(token_payload)
+    pipeline_health = await _admin_pipeline_health_snapshot()
+    model_health = _admin_model_health_summary(pipeline_health)
+    task_counts = await _admin_embedding_task_counts(db)
+    degraded_response_count = 0
+    if await _admin_table_exists(db, "served_slates"):
+        degraded_response_count = int(
+            await _admin_safe_scalar(
+                db,
+                """
+                SELECT count(*)::int
+                FROM served_slates
+                WHERE created_at > NOW() - interval '24 hours'
+                  AND CASE jsonb_typeof(fallback_flags)
+                    WHEN 'array' THEN jsonb_array_length(fallback_flags) > 0
+                    WHEN 'object' THEN fallback_flags <> '{}'::jsonb
+                    ELSE false
+                  END
+                """,
+                default=0,
+            )
+            or 0
+        )
+
+    return {
+        "gateway": {"status": "healthy"},
+        "pipeline": model_health["pipeline"],
+        "sbert": model_health["models"]["sbert"],
+        "ncf": model_health["models"]["ncf"],
+        "dqn": model_health["models"]["dqn"],
+        "postgres": {"status": await _admin_postgres_status(db)},
+        "redis": {"status": await _admin_redis_status()},
+        "embedding_worker": {
+            "status": _admin_embedding_worker_status(task_counts),
+            "task_counts": task_counts,
+        },
+        "scraper": model_health["models"]["scraper"],
+        "recommendation_latency": await _admin_latency_summary(db),
+        "degraded_response_count": degraded_response_count,
+        "error_rate": None,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.get("/admin/models")
+@app.get("/api/admin/models")
+async def admin_models(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    _require_admin_or_operator_role(token_payload)
+    bundle = await _admin_active_bundle(db)
+    registry = await _admin_model_registry_rows(db)
+    artifacts = await _admin_active_model_artifacts(db)
+    sbert_registry = registry.get(bundle.sbert_model_version) or registry.get("sbert") or {}
+    ncf_artifact = artifacts.get("ncf") or {}
+    dqn_artifact = artifacts.get("dqn") or {}
+    response_schema_ok = bundle.response_schema == DEFAULT_RESPONSE_SCHEMA
+    state_schema_ok = bundle.state_schema == DEFAULT_STATE_SCHEMA
+    sbert_version_ok = bool(bundle.sbert_model_version)
+    compatibility_ok = response_schema_ok and state_schema_ok and sbert_version_ok
+
+    return {
+        "active_model_bundle": _admin_bundle_payload(bundle),
+        "sbert": {
+            "model_version": bundle.sbert_model_version or active_sbert_version(),
+            "checkpoint": sbert_registry.get("source_path") or "models/sbert-indonesian-hybrid-manual-research/best",
+            "checkpoint_hash": sbert_registry.get("checkpoint_hash"),
+            "dimension": sbert_registry.get("dimension") or 384,
+            "readiness": "ready" if bundle.sbert_model_version else "unknown",
+        },
+        "ncf": {
+            "model_version": bundle.ncf_model_version,
+            "model_loaded": bool(ncf_artifact) or bool(bundle.ncf_model_version),
+            "fallback_mode": bool(ncf_artifact.get("fallback_mode", False)),
+        },
+        "dqn": {
+            "model_version": bundle.dqn_model_version,
+            "state_schema": bundle.state_schema,
+            "mode": "session_rerank",
+            "fallback_mode": bool(dqn_artifact.get("fallback_mode", False)),
+        },
+        "model_compatibility": {
+            "status": "compatible" if compatibility_ok else "attention",
+            "response_schema_ok": response_schema_ok,
+            "state_schema_ok": state_schema_ok,
+            "sbert_version_ok": sbert_version_ok,
+        },
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.get("/admin/embeddings/coverage")
+@app.get("/api/admin/embeddings/coverage")
+async def admin_embeddings_coverage(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    _require_admin_or_operator_role(token_payload)
+    bundle = await _admin_active_bundle(db)
+    model_version = bundle.sbert_model_version or DEFAULT_ACTIVE_SBERT
+    active_jobs = int(
+        await _admin_safe_scalar(
+            db,
+            """
+            SELECT count(*)::int
+            FROM jobs
+            WHERE is_active = true
+              AND COALESCE(quality_status, 'accepted') = 'accepted'
+            """,
+            default=0,
+        )
+        or 0
+    )
+    has_job_embeddings = await _admin_table_exists(db, "job_embeddings")
+    embedded_active_jobs = 0
+    coverage_by_model_version: list[dict[str, Any]] = []
+    if has_job_embeddings:
+        embedded_active_jobs = int(
+            await _admin_safe_scalar(
+                db,
+                """
+                SELECT count(*)::int
+                FROM jobs j
+                WHERE j.is_active = true
+                  AND COALESCE(j.quality_status, 'accepted') = 'accepted'
+                  AND EXISTS (
+                    SELECT 1
+                    FROM job_embeddings je
+                    WHERE je.job_id = j.id
+                      AND je.model_version = :model_version
+                      AND je.status = 'ready'
+                  )
+                """,
+                {"model_version": model_version},
+                default=0,
+            )
+            or 0
+        )
+        coverage_by_model_version = await _admin_safe_rows(
+            db,
+            """
+            SELECT model_version,
+                   count(*)::int AS embedded_jobs,
+                   round((100.0 * count(*) / GREATEST(:active_jobs, 1))::numeric, 2)::float
+                     AS coverage_percentage
+            FROM job_embeddings
+            WHERE status = 'ready'
+            GROUP BY model_version
+            ORDER BY embedded_jobs DESC
+            """,
+            {"active_jobs": active_jobs},
+        )
+
+    task_counts = await _admin_embedding_task_counts(db)
+    oldest_pending_age = None
+    if await _admin_table_exists(db, "embedding_tasks"):
+        oldest_pending_age = await _admin_safe_scalar(
+            db,
+            """
+            SELECT EXTRACT(EPOCH FROM (NOW() - min(created_at)))::float
+            FROM embedding_tasks
+            WHERE status IN ('pending', 'retry')
+            """,
+            default=None,
+        )
+
+    return {
+        "model_version": model_version,
+        "total_active_jobs": active_jobs,
+        "embedded_active_jobs": embedded_active_jobs,
+        "coverage_percentage": round(100.0 * embedded_active_jobs / max(active_jobs, 1), 2),
+        "pending_tasks": task_counts.get("pending", 0),
+        "processing_tasks": task_counts.get("processing", 0),
+        "retry_tasks": task_counts.get("retry", 0),
+        "failed_tasks": task_counts.get("failed", 0),
+        "dead_letter_tasks": task_counts.get("dead_letter", 0),
+        "oldest_pending_age_seconds": round(float(oldest_pending_age), 2) if oldest_pending_age is not None else None,
+        "coverage_by_model_version": coverage_by_model_version,
+        "storage_status": "ready" if has_job_embeddings else "unavailable",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.get("/admin/embedding-tasks")
+@app.get("/api/admin/embedding-tasks")
+async def admin_embedding_tasks(
+    limit: int = Query(default=25, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    _require_admin_or_operator_role(token_payload)
+    if not await _admin_table_exists(db, "embedding_tasks"):
+        return {"tasks": [], "total": 0, "limit": limit, "offset": offset}
+    total = int(await _admin_safe_scalar(db, "SELECT count(*)::int FROM embedding_tasks", default=0) or 0)
+    tasks = await _admin_safe_rows(
+        db,
+        """
+        SELECT id AS task_id, job_id::text AS job_id, model_version, status,
+               priority, attempt_count, last_error_code, locked_at,
+               next_retry_at, created_at
+        FROM embedding_tasks
+        ORDER BY
+          CASE status
+            WHEN 'processing' THEN 0
+            WHEN 'pending' THEN 1
+            WHEN 'retry' THEN 2
+            WHEN 'failed' THEN 3
+            WHEN 'dead_letter' THEN 4
+            ELSE 5
+          END,
+          priority DESC,
+          created_at ASC
+        LIMIT :limit OFFSET :offset
+        """,
+        {"limit": limit, "offset": offset},
+    )
+    return {"tasks": tasks, "total": total, "limit": limit, "offset": offset}
+
+
+@app.get("/admin/scrapers/overview")
+@app.get("/api/admin/scrapers/overview")
+async def admin_scrapers_overview(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    _require_admin_or_operator_role(token_payload)
+    fetched_jobs = int(await _admin_safe_scalar(db, "SELECT count(*)::int FROM jobs", default=0) or 0)
+    accepted_jobs = int(
+        await _admin_safe_scalar(
+            db,
+            "SELECT count(*)::int FROM jobs WHERE COALESCE(quality_status, 'accepted') = 'accepted'",
+            default=0,
+        )
+        or 0
+    )
+    rejected_jobs = max(fetched_jobs - accepted_jobs, 0)
+    duplicate_count = int(
+        await _admin_safe_scalar(
+            db,
+            """
+            SELECT COALESCE(sum(group_size - 1), 0)::int
+            FROM (
+              SELECT count(*) AS group_size
+              FROM jobs
+              WHERE content_hash IS NOT NULL
+              GROUP BY content_hash
+              HAVING count(*) > 1
+            ) duplicate_groups
+            """,
+            default=0,
+        )
+        or 0
+    )
+    latest_scrape_time = await _admin_safe_scalar(
+        db,
+        "SELECT max(COALESCE(scraped_at, last_seen_at, source_updated_at, posted_at)) FROM jobs",
+        default=None,
+    )
+    quality_reject_reasons = await _admin_safe_rows(
+        db,
+        """
+        SELECT COALESCE(NULLIF(quality_reject_reason, ''), quality_status, 'unknown') AS reason,
+               count(*)::int AS count
+        FROM jobs
+        WHERE COALESCE(quality_status, 'accepted') <> 'accepted'
+        GROUP BY reason
+        ORDER BY count DESC, reason ASC
+        LIMIT 20
+        """,
+    )
+    latest_scrapes = await _admin_safe_rows(
+        db,
+        """
+        SELECT id::text AS job_id, title, company, COALESCE(source::text, 'unknown') AS source,
+               quality_status, scraped_at, last_seen_at
+        FROM jobs
+        ORDER BY COALESCE(scraped_at, last_seen_at, source_updated_at, posted_at) DESC NULLS LAST
+        LIMIT 10
+        """,
+    )
+    return {
+        "fetched_jobs": fetched_jobs,
+        "accepted_jobs": accepted_jobs,
+        "rejected_jobs": rejected_jobs,
+        "duplicate_count": duplicate_count,
+        "source_distribution": await _admin_source_distribution(db),
+        "latest_scrape_time": _jsonable(latest_scrape_time),
+        "quality_reject_reasons": quality_reject_reasons,
+        "new_jobs_today": int(
+            await _admin_safe_scalar(
+                db,
+                "SELECT count(*)::int FROM jobs WHERE first_seen_at >= CURRENT_DATE",
+                default=0,
+            )
+            or 0
+        ),
+        "changed_jobs_today": int(
+            await _admin_safe_scalar(
+                db,
+                "SELECT count(*)::int FROM jobs WHERE source_updated_at >= CURRENT_DATE",
+                default=0,
+            )
+            or 0
+        ),
+        "latest_scrapes": latest_scrapes,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.post("/admin/scrapers/run")
+@app.post("/api/admin/scrapers/run")
+async def admin_scrapers_run(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+) -> dict[str, Any]:
+    """Trigger one on-demand scrape+embed+upsert cycle (manual catalog refresh).
+
+    Mutating, outward-facing action: it instructs the scraper to fetch from
+    configured external sources and writes accepted jobs into the catalog. Admin
+    or operator role only; every trigger is audit-logged with the actor.
+    """
+    _require_admin_or_operator_role(token_payload)
+    actor = (
+        token_payload.get("sub")
+        or token_payload.get("email")
+        or token_payload.get("user_id")
+        or "unknown"
+    )
+    logger.info("admin manual scrape triggered actor=%s", actor)
+    return await _pipeline_post("/pipeline/scrape-run", {"triggered_by": str(actor)})
+
+
+@app.get("/admin/scrapers/run/{job_id}")
+@app.get("/api/admin/scrapers/run/{job_id}")
+async def admin_scrapers_run_status(
+    job_id: str,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+) -> dict[str, Any]:
+    _require_admin_or_operator_role(token_payload)
+    return await _pipeline_get(f"/pipeline/scrape-run/{job_id}")
+
+
+@app.get("/admin/jobs/quality")
+@app.get("/api/admin/jobs/quality")
+async def admin_jobs_quality(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    _require_admin_or_operator_role(token_payload)
+    active_jobs = int(await _admin_safe_scalar(db, "SELECT count(*)::int FROM jobs WHERE is_active = true", default=0) or 0)
+    inactive_jobs = int(await _admin_safe_scalar(db, "SELECT count(*)::int FROM jobs WHERE is_active = false", default=0) or 0)
+    duplicate_groups = int(
+        await _admin_safe_scalar(
+            db,
+            """
+            SELECT count(*)::int
+            FROM (
+              SELECT COALESCE(content_hash, lower(title || '|' || company || '|' || COALESCE(location, ''))) AS key
+              FROM jobs
+              GROUP BY key
+              HAVING count(*) > 1
+            ) d
+            """,
+            default=0,
+        )
+        or 0
+    )
+    duplicate_examples = await _admin_safe_rows(
+        db,
+        """
+        SELECT lower(title || '|' || company || '|' || COALESCE(location, '')) AS fingerprint,
+               count(*)::int AS count,
+               min(title) AS title,
+               min(company) AS company
+        FROM jobs
+        GROUP BY fingerprint
+        HAVING count(*) > 1
+        ORDER BY count DESC
+        LIMIT 8
+        """,
+    )
+    return {
+        "active_jobs": active_jobs,
+        "inactive_jobs": inactive_jobs,
+        "duplicate_groups": duplicate_groups,
+        "duplicate_examples": duplicate_examples,
+        "source_distribution": await _admin_source_distribution(db),
+        "missing_source_url_count": int(
+            await _admin_safe_scalar(
+                db,
+                "SELECT count(*)::int FROM jobs WHERE source_url IS NULL OR source_url = ''",
+                default=0,
+            )
+            or 0
+        ),
+        "short_description_count": int(
+            await _admin_safe_scalar(
+                db,
+                """
+                SELECT count(*)::int
+                FROM jobs
+                WHERE length(COALESCE(NULLIF(description_text, ''), NULLIF(description, ''), '')) < 160
+                """,
+                default=0,
+            )
+            or 0
+        ),
+        "no_skill_signal_count": int(
+            await _admin_safe_scalar(
+                db,
+                """
+                SELECT count(*)::int
+                FROM jobs
+                WHERE cardinality(COALESCE(required_skill_names, ARRAY[]::text[])) = 0
+                  AND cardinality(COALESCE(preferred_skill_names, ARRAY[]::text[])) = 0
+                  AND cardinality(COALESCE(extracted_skill_names, ARRAY[]::text[])) = 0
+                """,
+                default=0,
+            )
+            or 0
+        ),
+        "rejected_count": int(
+            await _admin_safe_scalar(
+                db,
+                "SELECT count(*)::int FROM jobs WHERE COALESCE(quality_status, 'accepted') <> 'accepted'",
+                default=0,
+            )
+            or 0
+        ),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.post("/admin/recommendations/inspect")
+@app.post("/api/admin/recommendations/inspect")
+async def admin_recommendation_inspect(
+    body: AdminRecommendationInspectRequest,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    _require_admin_or_operator_role(token_payload)
+    request_id = str(uuid.uuid4())
+
+    if body.profile is not None:
+        # Ad-hoc tester mode: synthesize a profile from typed input and score it
+        # live with an ephemeral user id. Nothing is written to the database, so
+        # NCF/DQN run in cold-start / no-session fallback (no real user vector).
+        adhoc = body.profile
+        skills = [skill.strip() for skill in adhoc.skills if skill and skill.strip()][:50]
+        profile: dict[str, Any] = {
+            "name": adhoc.name or "Ad-hoc Tester",
+            "program_studi": adhoc.program_studi or adhoc.jurusan,
+            "jurusan": adhoc.jurusan or adhoc.program_studi,
+            "university": adhoc.university,
+            "skills": skills,
+        }
+        locations = [loc.strip() for loc in adhoc.preferred_locations if loc and loc.strip()][:20]
+        if locations:
+            profile["preferred_locations"] = locations
+        if adhoc.target_role:
+            profile["target_role"] = adhoc.target_role
+        profile["session_id"] = body.session_id
+        profile["session_events"] = []
+        profile["session_history"] = []
+        inspect_mode = "adhoc_profile"
+        inspected_subject = profile["name"]
+        payload = {
+            "user_id": f"adhoc-{uuid.uuid4().hex}",
+            "refresh_jobs": False,
+            "profile": profile,
+            "interaction_count": 0,
+            "limit": body.limit,
+        }
+        session_events = []
+    else:
+        if not body.user_id_or_email:
+            raise HTTPException(
+                status_code=422,
+                detail="user_id_or_email or profile is required",
+            )
+        target_user = await _admin_resolve_user_identifier(db, body.user_id_or_email)
+        session_events = await _admin_session_events(
+            db,
+            user_id=target_user["id"],
+            session_id=body.session_id,
+            limit=SESSION_EVENT_LIMIT,
+        )
+        if not session_events and not body.session_id:
+            session_events = await _recent_session_events(db, target_user["id"])
+        profile = await _pipeline_profile_for_user(db, target_user)
+        profile["session_id"] = body.session_id
+        profile["session_events"] = session_events
+        profile["session_history"] = session_events
+        interaction_count = await _interaction_count_for_user(db, target_user["id"])
+        inspect_mode = "user"
+        inspected_subject = target_user.get("email") or str(target_user["id"])
+        payload = {
+            "user_id": str(target_user["id"]),
+            "refresh_jobs": False,
+            "profile": profile,
+            "interaction_count": interaction_count,
+            "limit": body.limit,
+        }
+
+    try:
+        pipeline_resp = await _pipeline_post("/pipeline/run", payload)
+    except HTTPException as exc:
+        return {
+            "request_id": request_id,
+            "mode": inspect_mode,
+            "inspected_subject": inspected_subject,
+            "source": "pipeline_unavailable",
+            "degraded": True,
+            "stale": False,
+            "model_bundle_version": None,
+            "candidate_counts": {"retrieval": 0, "ncf": 0, "dqn": 0, "final": 0},
+            "timings_ms": {},
+            "cache": {"status": "bypassed", "reason": "admin_inspection_read_only"},
+            "sbert_top_candidates": [],
+            "ncf_reranked_candidates": [],
+            "dqn_reranked_candidates": [],
+            "final_items": [],
+            "lineage_validation": {"status": "unavailable", "reason": str(exc.detail)},
+        }
+
+    ranked = [
+        item for item in pipeline_resp.get("ranked", [])
+        if isinstance(item, dict)
+    ]
+    stages = pipeline_resp.get("stages") if isinstance(pipeline_resp.get("stages"), dict) else {}
+    session_event_count = int((stages.get("dqn_rank") or {}).get("session_event_count") or len(session_events))
+    trace_items = [
+        _admin_trace_item(item, index, session_event_count=session_event_count)
+        for index, item in enumerate(ranked, start=1)
+    ]
+    sbert_top = sorted(trace_items, key=lambda item: item["sbert_score"], reverse=True)[: body.limit]
+    ncf_top = sorted(trace_items, key=lambda item: item["ncf_rank_after"])[: body.limit]
+    dqn_top = sorted(trace_items, key=lambda item: item["dqn_rank_after"])[: body.limit]
+    final_items = sorted(trace_items, key=lambda item: item["final_rank"])[: body.limit]
+    ncf_funnel = stages.get("ncf_score", {}).get("funnel", {}) if isinstance(stages.get("ncf_score"), dict) else {}
+    dqn_funnel = stages.get("dqn_rank", {}).get("funnel", {}) if isinstance(stages.get("dqn_rank"), dict) else {}
+
+    return {
+        "request_id": request_id,
+        "mode": inspect_mode,
+        "inspected_subject": inspected_subject,
+        "source": pipeline_resp.get("source") or "hybrid_model",
+        "degraded": bool((stages.get("degradation") or {}).get("degraded")),
+        "stale": False,
+        "model_bundle_version": pipeline_resp.get("model_bundle_version"),
+        "candidate_counts": {
+            "retrieval": int(pipeline_resp.get("total_candidates") or 0),
+            "ncf_input": ncf_funnel.get("input"),
+            "ncf_output": ncf_funnel.get("output"),
+            "dqn_input": dqn_funnel.get("input"),
+            "dqn_output": dqn_funnel.get("output"),
+            "final": len(final_items),
+        },
+        "timings_ms": _jsonable(pipeline_resp.get("timings_ms") or {}),
+        "cache": {"status": "bypassed", "reason": "admin_inspection_read_only"},
+        "sbert_top_candidates": sbert_top,
+        "ncf_reranked_candidates": ncf_top,
+        "dqn_reranked_candidates": dqn_top,
+        "final_items": final_items,
+        "lineage_validation": _admin_lineage_validation(trace_items),
+    }
+
+
+@app.get("/admin/sessions/{session_id}")
+@app.get("/api/admin/sessions/{session_id}")
+async def admin_session_detail(
+    session_id: str,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    _require_admin_or_operator_role(token_payload)
+    events = await _admin_session_events(db, session_id=session_id, limit=100)
+    user_id = events[0].get("user_id") if events else None
+    state_version = await _session_state_version(db, str(user_id)) if user_id else "0.0"
+    event_counts: dict[str, int] = {}
+    for event in events:
+        key = str(event.get("event") or "unknown")
+        event_counts[key] = event_counts.get(key, 0) + 1
+    return {
+        "user_id": user_id,
+        "session_id": session_id,
+        "session_state_version": state_version,
+        "recent_events": events[-30:],
+        "viewed_jobs": [event["job_id"] for event in events if event.get("event") in {"view", "click", "source_click"} and event.get("job_id")],
+        "saved_jobs": [event["job_id"] for event in events if event.get("event") == "save" and event.get("job_id")],
+        "skipped_jobs": [event["job_id"] for event in events if event.get("event") == "skip" and event.get("job_id")],
+        "applied_jobs": [event["job_id"] for event in events if event.get("event") == "apply" and event.get("job_id")],
+        "event_counts": event_counts,
+        "slate_cache": {
+            "status": "not_checked" if not user_id else "versioned",
+            "state_version": state_version,
+        },
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 @app.get("/api/skills/search", response_model=SkillSearchResponse)
 async def search_skills(
     q: str = Query(default="", max_length=128),
@@ -1948,6 +3492,7 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)) ->
             "completion_percent": 10,
             "program_studi": None,
             "university": None,
+            "cv_uploaded_at": None,
         },
     }
 
@@ -1957,7 +3502,8 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)) -> dict[
     row = (
         await db.execute(
             text(
-                "SELECT id, name, email, password_hash, role, completion_percent, program_studi, university "
+                "SELECT id, name, email, password_hash, role, completion_percent, program_studi, university, cv_uploaded_at, "
+                "location, education_level, graduation_year, interests "
                 "FROM users WHERE email = :email"
             ),
             {"email": body.email},
@@ -1985,6 +3531,15 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)) -> dict[
             "completion_percent": row["completion_percent"],
             "program_studi": row["program_studi"],
             "university": row["university"],
+            "cv_uploaded_at": (
+                row["cv_uploaded_at"].isoformat()
+                if isinstance(row.get("cv_uploaded_at"), datetime)
+                else row["cv_uploaded_at"]
+            ),
+            "location": row.get("location"),
+            "education_level": row.get("education_level"),
+            "graduation_year": row.get("graduation_year"),
+            "interests": list(row.get("interests") or []),
         },
     }
 
@@ -2040,6 +3595,12 @@ async def update_profile(
         updates["program_studi"] = body.program_studi
     if body.university is not None:
         updates["university"] = body.university
+    if body.location is not None:
+        updates["location"] = body.location
+    if body.education_level is not None:
+        updates["education_level"] = body.education_level
+    if body.graduation_year is not None:
+        updates["graduation_year"] = body.graduation_year
 
     if updates:
         set_clause = ", ".join(f"{k} = :{k}" for k in updates)
@@ -2047,6 +3608,16 @@ async def update_profile(
         await db.execute(
             text(f"UPDATE users SET {set_clause}, updated_at = NOW() WHERE id = :id"),
             updates,
+        )
+
+    if body.interests is not None:
+        interests = [str(i).strip() for i in body.interests if str(i).strip()]
+        await db.execute(
+            text(
+                "UPDATE users SET interests = CAST(:interests AS text[]), updated_at = NOW() "
+                "WHERE id = :id"
+            ),
+            {"interests": interests, "id": uid},
         )
 
     if canonical_skills is not None:
@@ -2082,13 +3653,29 @@ async def onboarding(
     if body.step == 1:
         program_studi = body.data.get("program_studi")
         university = body.data.get("university")
+        location = body.data.get("location")
+        education_level = body.data.get("education_level")
+        graduation_year_raw = body.data.get("graduation_year")
+        try:
+            graduation_year = int(graduation_year_raw) if str(graduation_year_raw or "").strip() else None
+        except (TypeError, ValueError):
+            graduation_year = None
         await db.execute(
             text(
                 "UPDATE users SET program_studi = :program_studi, university = :university, "
+                "location = :location, education_level = :education_level, "
+                "graduation_year = :graduation_year, "
                 "completion_percent = GREATEST(completion_percent, 30), updated_at = NOW() "
                 "WHERE id = :id"
             ),
-            {"program_studi": program_studi, "university": university, "id": uid},
+            {
+                "program_studi": program_studi,
+                "university": university,
+                "location": location,
+                "education_level": education_level,
+                "graduation_year": graduation_year,
+                "id": uid,
+            },
         )
 
     elif body.step == 2:
@@ -2115,12 +3702,15 @@ async def onboarding(
         )
 
     elif body.step == 3:
+        raw_interests = body.data.get("interests", [])
+        interests = [str(i).strip() for i in raw_interests if isinstance(raw_interests, list) and str(i).strip()]
         await db.execute(
             text(
-                "UPDATE users SET completion_percent = GREATEST(completion_percent, 85), updated_at = NOW() "
+                "UPDATE users SET interests = CAST(:interests AS text[]), "
+                "completion_percent = GREATEST(completion_percent, 85), updated_at = NOW() "
                 "WHERE id = :id"
             ),
-            {"id": uid},
+            {"interests": interests, "id": uid},
         )
 
     await db.commit()
@@ -2466,48 +4056,337 @@ JOB_SELECT_COLUMNS = """
     experience_level, posted_at, source, is_active, match_data
 """
 
+JOB_TIME_RANGE_LABELS = {
+    "24h": "24 jam terakhir",
+    "7d": "7 hari terakhir",
+    "30d": "30 hari terakhir",
+    "all": "Semua waktu",
+}
+JOB_TIME_RANGE_ALIASES = {
+    "day": "24h",
+    "24h": "24h",
+    "24_hours": "24h",
+    "24_jam": "24h",
+    "week": "7d",
+    "7d": "7d",
+    "7_days": "7d",
+    "month": "30d",
+    "30d": "30d",
+    "30_days": "30d",
+    "any": "all",
+    "all": "all",
+}
+JOB_TYPE_LABELS = {
+    "full_time": "Full-time",
+    "part_time": "Part-time",
+    "contract": "Contract",
+    "internship": "Internship",
+}
+JOB_WORK_MODE_LABELS = {
+    "remote": "Remote",
+    "onsite": "Onsite",
+    "hybrid": "Hybrid",
+}
+JOB_FIELD_EXPR = "COALESCE(NULLIF(trim(job_function), ''), NULLIF(trim(industry), ''))"
+JOB_WORK_MODE_EXPR = """
+    CASE
+      WHEN lower(concat_ws(' ', employment_mode::text, location, description_text, description))
+        ~ '(hybrid|wfo\\s*/\\s*wfh|campuran)' THEN 'hybrid'
+      WHEN lower(concat_ws(' ', employment_mode::text, location, description_text, description))
+        ~ '(remote|jarak jauh|work from home|wfh|telecommute)' THEN 'remote'
+      WHEN lower(concat_ws(' ', employment_mode::text, location, description_text, description))
+        ~ '(onsite|on-site|on site|kantor|wfo|di kantor|office)' THEN 'onsite'
+      ELSE NULL
+    END
+"""
+JOB_FACET_LIMITS = {
+    "job_types": 25,
+    "job_fields": 50,
+    "locations": 100,
+    "work_modes": 10,
+}
+
+
+def _clean_job_query_values(
+    values: list[str] | None,
+    *,
+    max_items: int = 25,
+    max_length: int = 120,
+    lower: bool = False,
+) -> list[str]:
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for raw in values or []:
+        for part in str(raw).split(","):
+            value = part.strip()[:max_length]
+            if not value:
+                continue
+            output = value.casefold() if lower else value
+            key = output.casefold()
+            if key in seen:
+                continue
+            cleaned.append(output)
+            seen.add(key)
+            if len(cleaned) >= max_items:
+                return cleaned
+    return cleaned
+
+
+def _clean_time_range(value: str | None) -> str | None:
+    if not value:
+        return None
+    normalized = value.strip().casefold().replace("-", "_").replace(" ", "_")
+    return JOB_TIME_RANGE_ALIASES.get(normalized)
+
+
+def _clean_job_type_values(values: list[str] | None) -> list[str]:
+    cleaned: list[str] = []
+    for value in _clean_job_query_values(values, lower=True):
+        job_type = clean_job_type(value)
+        if job_type and job_type not in cleaned:
+            cleaned.append(job_type)
+    return cleaned
+
+
+def _clean_work_mode_values(values: list[str] | None) -> list[str]:
+    cleaned: list[str] = []
+    for value in _clean_job_query_values(values, lower=True):
+        mode = clean_employment_mode(value)
+        if mode and mode not in cleaned:
+            cleaned.append(mode)
+    return cleaned
+
+
+def _jobs_filter_payload(
+    *,
+    time_range: str | None,
+    job_type: list[str] | None,
+    job_field: list[str] | None,
+    location: list[str] | None,
+    work_mode: list[str] | None,
+) -> dict[str, Any]:
+    return {
+        "time_range": _clean_time_range(time_range),
+        "job_type": _clean_job_type_values(job_type),
+        "job_field": _clean_job_query_values(job_field, lower=True),
+        "location": _clean_job_query_values(location, max_items=20),
+        "work_mode": _clean_work_mode_values(work_mode),
+    }
+
+
+def _append_in_condition(
+    conditions: list[str],
+    params: dict[str, Any],
+    expression: str,
+    values: list[str],
+    prefix: str,
+) -> None:
+    placeholders: list[str] = []
+    for index, value in enumerate(values):
+        key = f"{prefix}_{index}"
+        params[key] = value
+        placeholders.append(f":{key}")
+    if placeholders:
+        conditions.append(f"{expression} IN ({', '.join(placeholders)})")
+
+
+def _append_location_condition(
+    conditions: list[str],
+    params: dict[str, Any],
+    locations: list[str],
+) -> None:
+    clauses: list[str] = []
+    for index, value in enumerate(locations):
+        key = f"location_{index}"
+        params[key] = f"%{value}%"
+        clauses.append(f"location ILIKE :{key}")
+    if clauses:
+        conditions.append(f"({' OR '.join(clauses)})")
+
+
+def _jobs_catalog_conditions() -> tuple[list[str], dict[str, Any]]:
+    conditions = ["is_active = true", "COALESCE(quality_status, 'accepted') = 'accepted'"]
+    params: dict[str, Any] = {}
+
+    # Keep this endpoint aligned with SCPA's Indonesia-focused catalog guard.
+    # Filtering and facet counts still happen globally within that catalog,
+    # before pagination.
+    indonesia_sources = (
+        "kalibrr", "karir", "topkarir", "kitalulus", "jobstreet",
+        "glints", "techinasia", "linkedin", "indeed", "remotive",
+    )
+    indonesia_terms = [
+        "indonesia", "jakarta", "surabaya", "bandung", "depok",
+        "tangerang", "bekasi", "bogor", "yogyakarta", "semarang",
+        "bali", "medan", "makassar", "batam", "subang", "jawa",
+        "kalimantan", "sumatra", "sulawesi",
+    ]
+    params["indonesia_terms"] = [f"%{term}%" for term in indonesia_terms]
+    conditions.append(
+        f"(source::text IN {indonesia_sources} OR location ILIKE ANY(:indonesia_terms))"
+    )
+    return conditions, params
+
+
+def _apply_jobs_filters(
+    conditions: list[str],
+    params: dict[str, Any],
+    filters: dict[str, Any],
+    *,
+    exclude: str | None = None,
+) -> None:
+    time_range = filters.get("time_range")
+    if exclude != "time_range" and time_range and time_range != "all":
+        if time_range == "24h":
+            conditions.append("posted_at >= (NOW() - INTERVAL '1 day')")
+        elif time_range == "7d":
+            conditions.append("posted_at >= (NOW() - INTERVAL '7 days')")
+        elif time_range == "30d":
+            conditions.append("posted_at >= (NOW() - INTERVAL '30 days')")
+
+    if exclude != "job_type":
+        _append_in_condition(
+            conditions,
+            params,
+            "type::text",
+            filters.get("job_type") or [],
+            "job_type",
+        )
+
+    if exclude != "job_field":
+        _append_in_condition(
+            conditions,
+            params,
+            f"lower({JOB_FIELD_EXPR})",
+            filters.get("job_field") or [],
+            "job_field",
+        )
+
+    if exclude != "location":
+        _append_location_condition(conditions, params, filters.get("location") or [])
+
+    if exclude != "work_mode":
+        _append_in_condition(
+            conditions,
+            params,
+            f"({JOB_WORK_MODE_EXPR})",
+            filters.get("work_mode") or [],
+            "work_mode",
+        )
+
+
+def _jobs_where_for_filters(
+    filters: dict[str, Any],
+    *,
+    exclude: str | None = None,
+) -> tuple[str, dict[str, Any]]:
+    conditions, params = _jobs_catalog_conditions()
+    _apply_jobs_filters(conditions, params, filters, exclude=exclude)
+    return " AND ".join(conditions), params
+
+
+async def _count_jobs(db: AsyncSession, where_clause: str, params: dict[str, Any]) -> int:
+    row = (
+        await db.execute(
+            text(f"SELECT COUNT(*) AS total FROM jobs WHERE {where_clause}"),
+            params,
+        )
+    ).mappings().first()
+    return int((row or {}).get("total") or 0)
+
+
+def _facet_option(value: str, label: str, count: int) -> dict[str, Any]:
+    return {"value": value, "label": label, "count": int(count)}
+
+
+async def _time_range_facets(
+    db: AsyncSession,
+    filters: dict[str, Any],
+) -> list[dict[str, Any]]:
+    base_where, base_params = _jobs_where_for_filters(filters, exclude="time_range")
+    specs = [
+        ("24h", "posted_at >= (NOW() - INTERVAL '1 day')"),
+        ("7d", "posted_at >= (NOW() - INTERVAL '7 days')"),
+        ("30d", "posted_at >= (NOW() - INTERVAL '30 days')"),
+        ("all", None),
+    ]
+    options: list[dict[str, Any]] = []
+    for value, extra_condition in specs:
+        where_clause = base_where
+        if extra_condition:
+            where_clause = f"{where_clause} AND {extra_condition}"
+        count = await _count_jobs(db, where_clause, base_params)
+        options.append(_facet_option(value, JOB_TIME_RANGE_LABELS[value], count))
+    return options
+
+
+async def _simple_value_facets(
+    db: AsyncSession,
+    *,
+    filters: dict[str, Any],
+    exclude: str,
+    value_expression: str,
+    label_expression: str,
+    limit: int,
+    label_map: dict[str, str] | None = None,
+) -> list[dict[str, Any]]:
+    where_clause, params = _jobs_where_for_filters(filters, exclude=exclude)
+    params["facet_limit"] = limit
+    rows = (
+        await db.execute(
+            text(
+                "SELECT value, MIN(label) AS label, COUNT(*)::int AS count "
+                "FROM ("
+                f"  SELECT {value_expression} AS value, {label_expression} AS label "
+                f"  FROM jobs WHERE {where_clause}"
+                ") facets "
+                "WHERE value IS NOT NULL AND label IS NOT NULL AND trim(label) <> '' "
+                "GROUP BY value "
+                "ORDER BY count DESC, label ASC "
+                "LIMIT :facet_limit"
+            ),
+            params,
+        )
+    ).mappings().all()
+    options: list[dict[str, Any]] = []
+    for row in rows:
+        value = str(row["value"])
+        label = label_map.get(value, str(row["label"])) if label_map else str(row["label"])
+        options.append(_facet_option(value, label, row["count"]))
+    return options
+
 
 @app.get("/api/jobs")
 async def list_jobs(
-    location: str | None = None,
-    experience: str | None = None,
+    time_range: str | None = Query(default=None, max_length=16),
+    job_type: list[str] | None = Query(default=None),
+    job_field: list[str] | None = Query(default=None),
+    location: list[str] | None = Query(default=None),
+    work_mode: list[str] | None = Query(default=None),
     page: int = Query(default=1, ge=1, le=10_000),
     limit: int = Query(default=25, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """Paginated job list.
+    """Paginated active-job catalog with server-side global filtering.
 
-    Returns ``{ jobs, total, page, limit, total_pages }``. Indonesia-only
-    filtering is pushed into SQL so both COUNT and LIMIT queries are
-    consistent and the frontend receives a stable page size.
+    Filters are applied before COUNT and LIMIT/OFFSET. Salary is deliberately
+    absent from the public filter contract; unknown query params are ignored by
+    FastAPI and therefore do not narrow results.
     """
-    conditions = ["is_active = true"]
-    params: dict[str, Any] = {}
-    if location:
-        conditions.append("location ILIKE :location")
-        params["location"] = f"%{location}%"
-    if experience:
-        conditions.append("experience_level = :experience")
-        params["experience"] = experience
-
-    # Known Indonesia job boards + location terms keep the candidate pool
-    # Indonesia-focused. The scraper already enforces this; the guard here
-    # ensures any stray non-Indonesia rows do not break pagination counts.
-    _INDONESIA_SOURCES = ("kalibrr", "karir", "jobstreet", "glints", "techinasia", "linkedin")
-    _INDONESIA_TERMS = ["indonesia", "jakarta", "surabaya", "bandung", "depok",
-                        "tangerang", "bekasi", "bogor", "yogyakarta", "semarang",
-                        "bali", "medan", "makassar", "batam", "subang", "jawa",
-                        "kalimantan", "sumatra", "sulawesi"]
-    indonesia_where = (
-        f"(source IN {_INDONESIA_SOURCES} OR location ILIKE ANY(:indonesia_terms))"
+    filters = _jobs_filter_payload(
+        time_range=time_range,
+        job_type=job_type,
+        job_field=job_field,
+        location=location,
+        work_mode=work_mode,
     )
-    params["indonesia_terms"] = [f"%{t}%" for t in _INDONESIA_TERMS]
-    conditions.append(indonesia_where)
-
-    where_clause = " AND ".join(conditions)
+    catalog_where, catalog_params = _jobs_where_for_filters({})
+    where_clause, params = _jobs_where_for_filters(filters)
 
     offset = (page - 1) * limit
     params_with_paging = {**params, "limit": limit, "offset": offset}
+    total = await _count_jobs(db, catalog_where, catalog_params)
+    total_filtered = await _count_jobs(db, where_clause, params)
     rows = (
         await db.execute(
             text(
@@ -2519,40 +4398,127 @@ async def list_jobs(
             params_with_paging,
         )
     ).mappings().all()
-    total_row = (
-        await db.execute(
-            text(f"SELECT COUNT(*) AS total FROM jobs WHERE {where_clause}"),
-            params,
-        )
-    ).mappings().first()
-    total = int((total_row or {}).get("total") or 0)
     jobs: list[dict[str, Any]] = []
     for row in rows:
-        jobs.append(_job_payload_from_row(row))
-    total_pages = max(1, (total + limit - 1) // limit) if total > 0 else 1
+        jobs.append(_job_payload_from_row(row, sanitize_skill_signals=False))
+    total_pages = max(1, (total_filtered + limit - 1) // limit) if total_filtered > 0 else 1
     return {
+        "items": jobs,
         "jobs": jobs,
         "total": total,
+        "total_filtered": total_filtered,
         "page": page,
         "limit": limit,
         "total_pages": total_pages,
+        "filters_applied": {
+            "time_range": filters["time_range"],
+            "job_type": filters["job_type"],
+            "job_field": filters["job_field"],
+            "location": filters["location"],
+            "work_mode": filters["work_mode"],
+        },
     }
 
 
-def _job_payload_from_row(row: Any, *, public_id: str | None = None) -> dict[str, Any]:
+@app.get("/api/jobs/facets")
+async def list_job_facets(
+    time_range: str | None = Query(default=None, max_length=16),
+    job_type: list[str] | None = Query(default=None),
+    job_field: list[str] | None = Query(default=None),
+    location: list[str] | None = Query(default=None),
+    work_mode: list[str] | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Return contextual facet counts from the full active catalog."""
+    filters = _jobs_filter_payload(
+        time_range=time_range,
+        job_type=job_type,
+        job_field=job_field,
+        location=location,
+        work_mode=work_mode,
+    )
+    return {
+        "policy": "contextual",
+        "time_ranges": await _time_range_facets(db, filters),
+        "job_types": await _simple_value_facets(
+            db,
+            filters=filters,
+            exclude="job_type",
+            value_expression="type::text",
+            label_expression="type::text",
+            limit=JOB_FACET_LIMITS["job_types"],
+            label_map=JOB_TYPE_LABELS,
+        ),
+        "job_fields": await _simple_value_facets(
+            db,
+            filters=filters,
+            exclude="job_field",
+            value_expression=f"lower({JOB_FIELD_EXPR})",
+            label_expression=JOB_FIELD_EXPR,
+            limit=JOB_FACET_LIMITS["job_fields"],
+        ),
+        "locations": await _simple_value_facets(
+            db,
+            filters=filters,
+            exclude="location",
+            value_expression="trim(location)",
+            label_expression="trim(location)",
+            limit=JOB_FACET_LIMITS["locations"],
+        ),
+        "work_modes": await _simple_value_facets(
+            db,
+            filters=filters,
+            exclude="work_mode",
+            value_expression=f"({JOB_WORK_MODE_EXPR})",
+            label_expression=f"({JOB_WORK_MODE_EXPR})",
+            limit=JOB_FACET_LIMITS["work_modes"],
+            label_map=JOB_WORK_MODE_LABELS,
+        ),
+        "filters_applied": {
+            "time_range": filters["time_range"],
+            "job_type": filters["job_type"],
+            "job_field": filters["job_field"],
+            "location": filters["location"],
+            "work_mode": filters["work_mode"],
+        },
+    }
+
+
+def _job_payload_from_row(
+    row: Any,
+    *,
+    public_id: str | None = None,
+    sanitize_skill_signals: bool = True,
+) -> dict[str, Any]:
     job = dict(row)
     job["id"] = public_id or str(job["id"])
     match_data = _parse_match_data(job.pop("match_data", None))
     job["source_url"] = job.get("source_url") or match_data.get("source_url")
-    required_skills = _display_skill_list(
-        job.get("required_skill_names") or match_data.get("required_skills")
-    )
-    preferred_skills = _display_skill_list(
-        job.get("preferred_skill_names") or match_data.get("preferred_skills")
-    )
-    extracted_skills = _display_skill_list(
-        job.get("extracted_skill_names") or match_data.get("extracted_skills") or match_data.get("skills")
-    )
+    if sanitize_skill_signals:
+        required_skills, preferred_skills, extracted_skills = _sanitize_skill_signals_for_job(
+            row=job,
+            match_data=match_data,
+            taxonomy=DEFAULT_SKILL_TAXONOMY,
+        )
+    else:
+        required_skills = _display_skill_list(
+            job.get("required_skill_names")
+            or match_data.get("required_skills")
+            or match_data.get("skills")
+            or []
+        )
+        preferred_skills = _display_skill_list(
+            job.get("preferred_skill_names")
+            or match_data.get("preferred_skills")
+            or []
+        )
+        extracted_skills = _display_skill_list(
+            job.get("extracted_skill_names")
+            or match_data.get("extracted_skills")
+            or []
+        )
+        if not required_skills:
+            required_skills = extracted_skills
     job["skills"] = required_skills or extracted_skills
     job["required_skills"] = required_skills
     job["preferred_skills"] = preferred_skills
@@ -2866,7 +4832,7 @@ async def list_saved_jobs(
             {"uid": user["id"]},
         )
     ).mappings().all()
-    jobs = [_job_payload_from_row(row) for row in rows]
+    jobs = [_job_payload_from_row(row, sanitize_skill_signals=False) for row in rows]
     return {"jobs": jobs, "total": len(jobs)}
 
 
@@ -2886,6 +4852,7 @@ async def save_job(
         dismissed=False,
         action_type="save",
     )
+    await _bump_session_state_version(str(user["id"]))
     return {"status": "saved", "job_id": job_id}
 
 
@@ -2905,6 +4872,7 @@ async def unsave_job(
         dismissed=False,
         action_type="unsave",
     )
+    await _bump_session_state_version(str(user["id"]))
     return {"status": "unsaved", "job_id": job_id}
 
 
@@ -2924,6 +4892,7 @@ async def skip_job(
         dismissed=True,
         action_type="skip",
     )
+    await _bump_session_state_version(str(user["id"]))
     return {"status": "skipped", "job_id": job_id}
 
 
@@ -2995,7 +4964,7 @@ async def create_applications(
 # Market Demand
 # ════════════════════════════════════════════════════════════════
 
-async def _compute_skill_market_demand(
+async def _compute_skill_demand(
     db: AsyncSession,
 ) -> dict[str, tuple[float, int]]:
     """Count how many active jobs require each skill and normalise to [0,1].
@@ -3034,14 +5003,14 @@ async def _compute_skill_market_demand(
 
 
 @app.get("/api/market-demand")
-async def market_demand(
+async def skill_demand(
     token_payload: dict[str, Any] = Depends(_get_current_user),
     db: AsyncSession = Depends(get_db),
     limit: int = Query(default=20, ge=1, le=100),
 ) -> dict[str, Any]:
     """Return current skill market demand derived from active job postings."""
     await _require_user(db, token_payload)
-    demand = await _compute_skill_market_demand(db)
+    demand = await _compute_skill_demand(db)
     max_raw_count = max((raw for _, raw in demand.values()), default=0)
     skills = [
         {
@@ -3092,16 +5061,110 @@ async def run_pipeline_direct(
 @app.post("/api/recommendations")
 async def run_pipeline(
     request: PipelineRunRequest = PipelineRunRequest(),
+    http_request: Request = None,
     token_payload: dict[str, Any] = Depends(_get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
+    token_uid = str(token_payload.get("sub") or "")
+    fast_cache_key: str | None = None
+    if (
+        token_uid
+        and request.profile is None
+        and not request.refresh_jobs
+        and request.interaction_count == 0
+        and request.target_role is None
+    ):
+        front_cache_key = _slate_front_cache_key(token_uid, int(request.limit))
+        cached_response = _get_memory_slate_response(front_cache_key, http_request)
+        if cached_response is not None:
+            return cached_response
+        cached_slate = await _get_cached_slate(front_cache_key)
+        if cached_slate is not None:
+            _store_memory_slate_response(
+                front_cache_key,
+                cached_slate,
+                cache_tier="front",
+                ttl_seconds=min(SLATE_CACHE_TTL_SECONDS, 2),
+            )
+            cached_response = _get_memory_slate_response(front_cache_key, http_request)
+            if cached_response is not None:
+                return cached_response
+            return {
+                **cached_slate,
+                "cached": True,
+                "cache_tier": "front",
+                "served_from_cache_at": datetime.now(timezone.utc).isoformat(),
+            }
+
+        redis_session_version = await _redis_session_state_version(token_uid)
+        fast_cache_key = _slate_fast_cache_key(
+            token_uid, redis_session_version, int(request.limit)
+        )
+        cached_slate = await _get_cached_slate(fast_cache_key)
+        if cached_slate is not None:
+            _store_memory_slate(
+                front_cache_key,
+                cached_slate,
+                min(SLATE_CACHE_TTL_SECONDS, 2),
+            )
+            _store_memory_slate_response(
+                front_cache_key,
+                cached_slate,
+                cache_tier="front",
+                ttl_seconds=min(SLATE_CACHE_TTL_SECONDS, 2),
+            )
+            _store_memory_slate_response(
+                fast_cache_key,
+                cached_slate,
+                cache_tier="fast",
+                ttl_seconds=min(SLATE_CACHE_TTL_SECONDS, 10),
+            )
+            cached_response = _get_memory_slate_response(fast_cache_key, http_request)
+            if cached_response is not None:
+                return cached_response
+            return {
+                **cached_slate,
+                "cached": True,
+                "cache_tier": "fast",
+                # distinguishes cache serves in traces; the original request_id /
+                # generated_at identify the slate's origin run.
+                "served_from_cache_at": datetime.now(timezone.utc).isoformat(),
+            }
+
     user = await _require_user(db, token_payload)
-    uid = str(request.user_id or user["id"])
+    # Identity always comes from the JWT subject (contract §9): a
+    # client-supplied user_id must never select whose profile is ranked or
+    # whose slate is persisted.
+    uid = str(user["id"])
 
     payload = request.model_dump()
     payload["user_id"] = uid
     payload["profile"] = request.profile or await _pipeline_profile_for_user(db, user)
     profile_for_reasons = payload["profile"] if isinstance(payload["profile"], dict) else {}
+    # Profile-completeness gate (before the slate cache): a request that did not
+    # supply an explicit profile and whose stored profile has no skills, study
+    # field, or CV would be ranked against a fabricated default identity. Return
+    # an empty slate that prompts profile completion — and never serve a stale
+    # cached slate to a now-gated user.
+    if request.profile is None and not _profile_has_personalization_signal(profile_for_reasons, user):
+        return _needs_profile_response()
+
+    # Short-lived slate cache: the key embeds the session-state version, so
+    # any save/skip/feedback in between produces a different key and the
+    # request falls through to the live pipeline.
+    session_version = await _session_state_version(db, uid)
+    slate_cache_key = _slate_cache_key(uid, session_version, int(request.limit))
+    cached_slate = await _get_cached_slate(slate_cache_key)
+    if cached_slate is not None:
+        return {
+            **cached_slate,
+            "cached": True,
+            "cache_tier": "session",
+            # distinguishes cache serves in traces; the original request_id /
+            # generated_at identify the slate's origin run.
+            "served_from_cache_at": datetime.now(timezone.utc).isoformat(),
+        }
+
     if isinstance(payload["profile"], dict):
         if not payload["profile"].get("session_events"):
             session_history = payload["profile"].get("session_history") or []
@@ -3111,6 +5174,13 @@ async def run_pipeline(
                 ]
             elif not isinstance(session_history, list):
                 payload["profile"]["session_events"] = []
+        if not payload["profile"].get("session_events"):
+            # Normal frontend requests carry no profile: hydrate the DQN
+            # session state from persisted feedback events so same-session
+            # save/skip/view actions influence the next slate (contract §10).
+            payload["profile"]["session_events"] = await _recent_session_events(
+                db, user["id"]
+            )
             if not payload["profile"].get("session_history") and payload["profile"].get("session_events"):
                 payload["profile"]["session_history"] = payload["profile"]["session_events"]
         if not payload["profile"].get("session_history") and payload["profile"].get("session_events"):
@@ -3121,15 +5191,24 @@ async def run_pipeline(
         else await _interaction_count_for_user(db, user["id"])
     )
 
+    request_id = str(uuid.uuid4())
     try:
         pipeline_resp = await _pipeline_post("/pipeline/run", payload)
     except HTTPException as exc:
         if exc.status_code in (502, 503, 504):
             return {
+                "schema_version": "recommendation_v2",
+                "request_id": request_id,
                 "recommendations": [],
                 "fairness_tpr_gap": 0.0,
                 "degraded": True,
+                "stale": False,
+                "source": "pipeline_unavailable",
                 "source_status": "pipeline_unavailable",
+                "error_code": "pipeline_unavailable",
+                "retryable": True,
+                "model_bundle_version": None,
+                "generated_at": datetime.now(timezone.utc).isoformat(),
             }
         raise
 
@@ -3141,38 +5220,18 @@ async def run_pipeline(
     pipeline_run_id = str(pipeline_resp.get("run_id") or slate_id)
     for item in ranked:
         job = _map_pipeline_job(item)
+        compact_job = _compact_recommendation_job(job)
         sbert_score = float(item.get("sbert_score") or 0.0)
         ncf_score = float(item.get("ncf_score") or 0.0)
         dqn_score = float(item.get("dqn_score") or 0.0)
-        raw_explanation = item.get("explanation")
-        if isinstance(raw_explanation, list):
-            explanation = " ".join(str(part) for part in raw_explanation if str(part).strip())
-        else:
-            explanation = raw_explanation or (
-                "Matched using SBERT semantic signal, NCF interaction signal, "
-                "and DQN session rerank signal."
-            )
-        weights = item.get("weights", {}) if isinstance(item.get("weights"), dict) else {}
-        employer_fit = _employer_fit_score(user, job)
         recommendations.append({
-            "job": job,
+            "job": compact_job,
             "hybrid_score": item.get("final_score") or 0.0,
             "sbert_score": sbert_score,
             "ncf_score": ncf_score,
             "dqn_score": dqn_score,
-            "weights": weights,
-            "segment": item.get("segment"),
-            "strategy": item.get("strategy") or pipeline_resp.get("stages", {}).get("aggregate", {}).get("strategy"),
             "recommendation_id": slate_id,
-            "run_id": pipeline_run_id,
             "match_percent": item.get("match_percent") or 0,
-            "explanation": explanation,
-            "explanation_provenance": {
-                "semantic_match": sbert_score,
-                "behavior_match": ncf_score,
-                "session_rerank_signal": dqn_score,
-                "skill_gap": item.get("skill_gap") or item.get("missing_skills") or [],
-            },
             "reason_filter_scores": _recommendation_reason_filter_scores(
                 profile_for_reasons,
                 item,
@@ -3181,8 +5240,6 @@ async def run_pipeline(
                 ncf_score=ncf_score,
                 dqn_score=dqn_score,
             ),
-            "reason_filter_labels": dict(REASON_FILTER_LABELS),
-            "employer_fit": employer_fit,
         })
 
     await _persist_served_slate(
@@ -3196,13 +5253,49 @@ async def run_pipeline(
     )
 
     fairness_tpr_gap = 0.0
-    return {
+    pipeline_source = str(pipeline_resp.get("source") or "")
+    degraded = bool(
+        (pipeline_resp.get("stages") or {}).get("degradation", {}).get("degraded")
+    )
+    if not pipeline_source:
+        # Legacy pipeline responses carry no source; classify conservatively.
+        pipeline_source = "hybrid_model" if recommendations else "empty_candidates"
+    response_payload = {
+        "schema_version": "recommendation_v2",
+        "request_id": request_id,
         "recommendations": recommendations,
         "fairness_tpr_gap": fairness_tpr_gap,
         "recommendation_id": slate_id,
         "run_id": pipeline_run_id,
-        "degraded": False,
+        "degraded": degraded,
+        "stale": False,
+        "source": pipeline_source,
+        "model_bundle_version": pipeline_resp.get("model_bundle_version"),
+        "reason_filter_labels": dict(REASON_FILTER_LABELS),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
     }
+    if not degraded and recommendations:
+        await _store_cached_slate(slate_cache_key, response_payload)
+        if fast_cache_key is not None:
+            await _store_cached_slate(fast_cache_key, response_payload)
+            _store_memory_slate(
+                _slate_front_cache_key(uid, int(request.limit)),
+                response_payload,
+                min(SLATE_CACHE_TTL_SECONDS, 2),
+            )
+            _store_memory_slate_response(
+                _slate_front_cache_key(uid, int(request.limit)),
+                response_payload,
+                cache_tier="front",
+                ttl_seconds=min(SLATE_CACHE_TTL_SECONDS, 2),
+            )
+            _store_memory_slate_response(
+                fast_cache_key,
+                response_payload,
+                cache_tier="fast",
+                ttl_seconds=min(SLATE_CACHE_TTL_SECONDS, 10),
+            )
+    return response_payload
 
 
 @app.post("/api/recommendations/feedback")
@@ -3244,6 +5337,39 @@ async def recommendation_feedback(
         "ncf_score": body.ncf_score,
         "dqn_score": body.dqn_score,
     }
+    profile_payload = await _pipeline_profile_for_user(db, user)
+    job_context_row = (
+        await db.execute(
+            text(
+                "SELECT id, title, company, description, description_text, "
+                "required_skill_names, extracted_skill_names, source "
+                "FROM jobs WHERE id = :job_id"
+            ),
+            {"job_id": job_uuid},
+        )
+    ).mappings().first()
+    job_payload = {
+        "id": body.job_id,
+        "title": body.job_id,
+        "company": "",
+        "description": "",
+        "description_text": "",
+        "required_skills": [],
+        "source": None,
+    }
+    if job_context_row:
+        job_payload = {
+            "id": str(job_context_row["id"]),
+            "title": job_context_row.get("title") or "",
+            "company": job_context_row.get("company") or "",
+            "description": job_context_row.get("description") or "",
+            "description_text": job_context_row.get("description_text") or "",
+            "required_skills": (
+                _string_list(job_context_row.get("required_skill_names"))
+                or _string_list(job_context_row.get("extracted_skill_names"))
+            ),
+            "source": job_context_row.get("source"),
+        }
     event_payload = {
         "user_id": uid,
         "job_id": body.job_id,
@@ -3257,6 +5383,8 @@ async def recommendation_feedback(
         "slate_job_ids": body.slate_job_ids,
         "run_id": body.run_id,
         "served_slate_id": body.served_slate_id or body.recommendation_id,
+        "profile": profile_payload,
+        "job": job_payload,
     }
     outbox_id: int | None = None
 
@@ -3343,6 +5471,10 @@ async def recommendation_feedback(
         await db.rollback()
         logger.exception("feedback persistence failed user_id=%s job_id=%s", uid, body.job_id)
         raise HTTPException(status_code=500, detail="failed to persist feedback") from exc
+
+    # Session event recorded: advance the session-state version so the next
+    # recommendation request bypasses the cached slate (contract §10).
+    await _bump_session_state_version(uid)
 
     try:
         pipeline_resp = await _pipeline_post("/feedback", event_payload)
@@ -3691,6 +5823,151 @@ async def get_experiment_metrics(
         total_dwell_count = dwell_counts.get(variant, 0)
         metrics[variant]["mean_dwell_ms"] = round(total_dwell / total_dwell_count, 2) if total_dwell_count > 0 else 0.0
     return {"experiment_id": experiment_id, "metrics": metrics}
+
+
+# ════════════════════════════════════════════════════════════════
+# Export: PDF Resume, CSV Job Listings
+# ════════════════════════════════════════════════════════════════
+
+class ExportRequest(BaseModel):
+    """Export request with optional filters for jobs."""
+    user_id: int | str | None = None
+    limit: int = Field(default=20, ge=1, le=1000)
+    include_scores: bool = False
+
+
+@app.get("/api/exports/profile-csv")
+@app.get("/exports/profile-csv")
+async def export_profile_csv(
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Export user profile as CSV."""
+    user = await _require_user(db, token_payload)
+    skill_names = await _profile_skill_names(db, user["id"])
+    profile = {
+        "name": user.get("name"),
+        "email": user.get("email"),
+        "university": user.get("university"),
+        "program_studi": user.get("program_studi"),
+        "skills": skill_names,
+        "completion_percent": user.get("completion_percent"),
+    }
+    if not await _admin_table_exists(db, "user_profiles"):
+        profile["target_role"] = None
+    else:
+        result = await db.execute(
+            text("SELECT target_role FROM user_profiles WHERE user_id = :uid LIMIT 1"),
+            {"uid": user["id"]},
+        )
+        row = result.mappings().first()
+        profile["target_role"] = row.get("target_role") if row else None
+
+    csv_content = generate_profile_csv(profile)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"scpa_profile_{timestamp}.csv"
+
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Cache-Control": "no-cache",
+        },
+    )
+
+
+@app.get("/api/exports/jobs-pdf")
+@app.get("/exports/jobs-pdf")
+async def export_jobs_pdf(
+    include_scores: bool = Query(default=False),
+    limit: int = Query(default=10, ge=1, le=50),
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Export top job recommendations as PDF resume."""
+    user = await _require_user(db, token_payload)
+    uid = str(user["id"])
+    profile = await _pipeline_profile_for_user(db, user)
+
+    # Get recent recommendations from cached slate or fresh run
+    recommendations = []
+    try:
+        # Try to get cached slate
+        cached = await _get_cached_slate(f"scpa:slate:{uid}:export:{limit}")
+        if cached and "recommendations" in cached:
+            recommendations = cached["recommendations"][:limit]
+        else:
+            # Fresh run for export
+            pipeline_result = await _pipeline_post(
+                "/pipeline/run",
+                {
+                    "user_id": uid,
+                    "profile": profile,
+                    "limit": limit,
+                },
+            )
+            recommendations = pipeline_result.get("recommendations", [])[:limit]
+    except Exception:
+        recommendations = []
+
+    pdf_bytes = generate_resume_pdf(profile, recommendations)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"scpa_recommendations_{timestamp}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Cache-Control": "no-cache",
+        },
+    )
+
+
+@app.post("/api/exports/jobs-csv")
+@app.post("/exports/jobs-csv")
+async def export_jobs_csv(
+    body: ExportRequest,
+    token_payload: dict[str, Any] = Depends(_get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Export job listings as CSV."""
+    user = await _require_user(db, token_payload)
+    uid = str(user["id"])
+    profile = await _pipeline_profile_for_user(db, user)
+
+    # Get recommendations
+    jobs = []
+    try:
+        cached = await _get_cached_slate(f"scpa:slate:{uid}:export:{body.limit}")
+        if cached and "recommendations" in cached:
+            jobs = cached["recommendations"][:body.limit]
+        else:
+            pipeline_result = await _pipeline_post(
+                "/pipeline/run",
+                {
+                    "user_id": uid,
+                    "profile": profile,
+                    "limit": body.limit,
+                },
+            )
+            jobs = pipeline_result.get("recommendations", [])[:body.limit]
+    except Exception:
+        jobs = []
+
+    csv_content = generate_jobs_csv(jobs, include_scores=body.include_scores)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"scpa_jobs_{timestamp}.csv"
+
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Cache-Control": "no-cache",
+        },
+    )
 
 
 @app.post("/api/events/track")

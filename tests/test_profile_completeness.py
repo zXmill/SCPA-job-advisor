@@ -48,9 +48,18 @@ async def test_profile_completeness_reports_missing_profile_items(client) -> Non
 
     assert response.status_code == 200, response.text
     body = response.json()
-    assert body["percent"] == 25
+    # 8 completeness items; a fresh account has only "name" filled.
+    assert body["percent"] == round(100 * 1 / 8)
     assert body["completed_item_ids"] == ["name"]
-    assert body["missing_item_ids"] == ["program_studi", "university", "skills"]
+    assert body["missing_item_ids"] == [
+        "location",
+        "education_level",
+        "program_studi",
+        "university",
+        "skills",
+        "cv",
+        "interests",
+    ]
     assert body["stored_percent"] == 10
     assert body["skill_count"] == 0
     items = {item["id"]: item for item in body["items"]}
@@ -64,9 +73,14 @@ async def test_profile_completeness_reports_missing_profile_items(client) -> Non
         "label": "Keahlian",
         "completed": False,
     }
+    assert items["cv"] == {
+        "id": "cv",
+        "label": "CV/Resume",
+        "completed": False,
+    }
 
 
-async def test_profile_completeness_reaches_100_when_profile_is_filled(client) -> None:
+async def test_profile_completeness_reaches_100_after_profile_and_cv(client) -> None:
     registration = await _register(client)
     headers = _auth_header(registration["access_token"])
 
@@ -85,13 +99,47 @@ async def test_profile_completeness_reaches_100_when_profile_is_filled(client) -
 
     assert response.status_code == 200, response.text
     body = response.json()
-    assert body["percent"] == 100
+    # 8 items; profile+skills fills name, program_studi, university, skills (4/8 = 50%).
+    assert body["percent"] == round(100 * 4 / 8)
     assert body["completed_item_ids"] == [
         "name",
         "program_studi",
         "university",
         "skills",
     ]
-    assert body["missing_item_ids"] == []
+    assert body["missing_item_ids"] == [
+        "location",
+        "education_level",
+        "cv",
+        "interests",
+    ]
     assert body["skill_count"] == 2
-    assert all(item["completed"] for item in body["items"])
+    assert not all(item["completed"] for item in body["items"])
+
+    upload = await client.post(
+        "/api/profile/cv",
+        files={"file": ("cv.txt", b"Python SQL", "text/plain")},
+        headers=headers,
+    )
+    assert upload.status_code == 200, upload.text
+
+    completed = await client.get("/api/profile/completeness", headers=headers)
+    assert completed.status_code == 200, completed.text
+    completed_body = completed.json()
+    # 5 of 8 items filled (name, program_studi, university, skills, cv).
+    assert completed_body["percent"] == round(100 * 5 / 8)
+    assert completed_body["missing_item_ids"] == [
+        "location",
+        "education_level",
+        "interests",
+    ]
+    assert completed_body["completed_item_ids"] == [
+        "name",
+        "program_studi",
+        "university",
+        "skills",
+        "cv",
+    ]
+    assert completed_body["cv_uploaded_at"]
+    # Not fully complete: location, education_level, interests still missing.
+    assert not all(item["completed"] for item in completed_body["items"])
