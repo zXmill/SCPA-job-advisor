@@ -386,6 +386,21 @@ class Job(Base):
     skills_extracted_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime, nullable=True
     )
+    # ── Link-status checker (migration 018) ──
+    # Populated by services/pipeline/link_status_checker.py. Operational, not a
+    # domain enum → plain varchar (mirrors quality_status). Values:
+    # open | closed | expired | unreachable. The checker is the SOLE writer; the
+    # scrape upsert never touches these, so a verdict survives a re-scrape.
+    link_status: Mapped[str] = mapped_column(
+        String(16), server_default=text("'open'"), nullable=False
+    )
+    last_checked_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, nullable=True
+    )
+    consecutive_check_failures: Mapped[int] = mapped_column(
+        Integer, server_default=text("0"), nullable=False
+    )
+    last_http_status: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     # ── Relationships ──
     applications: Mapped[List["Application"]] = relationship(
@@ -442,6 +457,13 @@ class Job(Base):
             posted_at.desc(),
             "id",
             postgresql_where=text("is_active = true"),
+        ),
+        # Partial index for the checker scan + the Phase 2 visibility gate:
+        # only non-'open' rows are of interest, keeping the index tiny.
+        Index(
+            "idx_jobs_link_status",
+            "link_status",
+            postgresql_where=text("link_status <> 'open'"),
         ),
     )
 

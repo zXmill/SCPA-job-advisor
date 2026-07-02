@@ -112,6 +112,34 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  link-status-checker:
+    # Deferred action #5: re-checks each active job's source_url on a ~24h cadence
+    # and records liveness in jobs.link_status (never touches is_active). Polite
+    # defaults (per-host serialization + delay + batch cap) because run-forever
+    # starts real external traffic on `up`.
+    build:
+      context: .
+      dockerfile: services/pipeline/Dockerfile
+    command: ["python", "-m", "services.pipeline.link_status_checker", "--run-forever"]
+    environment:
+      DATABASE_URL: ${GATEWAY_DATABASE_URL:?GATEWAY_DATABASE_URL required}
+      LINK_CHECKER_RUN_FOREVER: ${LINK_CHECKER_RUN_FOREVER:-true}
+      LINK_CHECKER_INTERVAL_SECONDS: ${LINK_CHECKER_INTERVAL_SECONDS:-86400}
+      LINK_CHECKER_BATCH_LIMIT: ${LINK_CHECKER_BATCH_LIMIT:-2000}
+      LINK_CHECKER_HOST_CONCURRENCY: ${LINK_CHECKER_HOST_CONCURRENCY:-4}
+      LINK_CHECKER_REQUEST_DELAY_SECONDS: ${LINK_CHECKER_REQUEST_DELAY_SECONDS:-1}
+      LINK_CHECKER_REQUEST_TIMEOUT_SECONDS: ${LINK_CHECKER_REQUEST_TIMEOUT_SECONDS:-15}
+      LINK_CHECKER_GRACE_FAILURES: ${LINK_CHECKER_GRACE_FAILURES:-3}
+      LINK_CHECKER_UNREACHABLE_HIDE_FAILURES: ${LINK_CHECKER_UNREACHABLE_HIDE_FAILURES:-7}
+      LINK_CHECKER_REPORT_DIR: /app/reports/debug/link_status
+      LOG_LEVEL: INFO
+    volumes:
+      - ./reports/debug/link_status:/app/reports/debug/link_status
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   sbert:
     build: ./services/sbert
     environment:

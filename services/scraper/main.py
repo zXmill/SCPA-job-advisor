@@ -24,6 +24,7 @@ import httpx
 from bs4 import BeautifulSoup
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, HttpUrl
+from services.shared import url_safety
 from services.shared.job_description import parse_job_description
 from services.shared.skill_taxonomy import skill_alias_mapping
 
@@ -44,19 +45,10 @@ _SEED_PARSE_TIMEOUT_SECONDS = float(os.getenv("SCRAPER_SEED_PARSE_TIMEOUT_SECOND
 _MAX_SOURCE_RESPONSE_BYTES = int(os.getenv("SCRAPER_MAX_SOURCE_RESPONSE_BYTES", "1500000"))
 _RUNTIME_URL_CAP = max(1, int(os.getenv("SCRAPER_RUNTIME_URL_CAP", "12")))
 _RUNTIME_CONCURRENCY_CAP = max(1, int(os.getenv("SCRAPER_RUNTIME_CONCURRENCY_CAP", "1")))
-SCRAPER_ALLOWED_HOST_SUFFIXES = {
-    "linkedin.com",
-    "indeed.com",
-    "kalibrr.com",
-    "karir.com",
-    "jobstreet.com",
-    "jobstreet.co.id",
-    "glints.com",
-    "techinasia.com",
-    "remotive.com",
-    "topkarir.com",
-    "kitalulus.com",
-}
+# Canonical allowlist now lives in services/shared/url_safety.py so the pipeline
+# link-status checker reuses the exact same SSRF defense. Aliased here to keep the
+# existing scraper references and any importers working.
+SCRAPER_ALLOWED_HOST_SUFFIXES = url_safety.DEFAULT_ALLOWED_HOST_SUFFIXES
 LOCAL_SOURCE_HOSTS = {
     "id.linkedin.com",
     "www.linkedin.com",
@@ -96,91 +88,61 @@ INDONESIA_TERMS = {
 }
 
 
+# SSRF guard: thin wrappers over services.shared.url_safety that translate the
+# shared exceptions into the HTTPException(400) the scraper routes expect and
+# preserve the module-level `_resolve_host_addresses` patch seam used by tests.
 def _is_allowed_scraper_host(hostname: str) -> bool:
-    host = hostname.rstrip(".").lower()
-    return any(
-        host == allowed or host.endswith(f".{allowed}")
-        for allowed in SCRAPER_ALLOWED_HOST_SUFFIXES
-    )
+    return url_safety.is_allowed_host(hostname, SCRAPER_ALLOWED_HOST_SUFFIXES)
 
 
 def _is_unsafe_address(address: str) -> bool:
-    ip = ipaddress.ip_address(address)
-    mapped = getattr(ip, "ipv4_mapped", None)
-    if mapped is not None:
-        ip = mapped
-    return not ip.is_global
+    return url_safety.is_unsafe_address(address)
 
 
 def _resolve_host_addresses(hostname: str) -> list[str]:
     try:
-        infos = socket.getaddrinfo(hostname, None, type=socket.SOCK_STREAM)
-    except socket.gaierror as exc:
-        raise HTTPException(status_code=400, detail="scraper URL host could not be resolved") from exc
-    addresses = sorted({info[4][0] for info in infos})
-    if not addresses:
-        raise HTTPException(status_code=400, detail="scraper URL host could not be resolved")
-    return addresses
+        return url_safety.resolve_host_addresses(hostname)
+    except url_safety.HostResolutionError as exc:
+        raise HTTPException(
+            status_code=400, detail="scraper URL host could not be resolved"
+        ) from exc
 
 
 async def _resolve_host_addresses_async(hostname: str) -> list[str]:
     try:
-        infos = await asyncio.wait_for(
-            asyncio.to_thread(socket.getaddrinfo, hostname, None, type=socket.SOCK_STREAM),
-            timeout=_DNS_RESOLVE_TIMEOUT_SECONDS,
+        return await url_safety.resolve_host_addresses_async(
+            hostname, timeout=_DNS_RESOLVE_TIMEOUT_SECONDS
         )
-    except TimeoutError as exc:
-        raise HTTPException(status_code=400, detail="scraper URL host resolution timed out") from exc
-    except socket.gaierror as exc:
-        raise HTTPException(status_code=400, detail="scraper URL host could not be resolved") from exc
-    addresses = sorted({info[4][0] for info in infos})
-    if not addresses:
-        raise HTTPException(status_code=400, detail="scraper URL host could not be resolved")
-    return addresses
+    except url_safety.HostResolutionError as exc:
+        detail = (
+            "scraper URL host resolution timed out"
+            if "timed out" in str(exc)
+            else "scraper URL host could not be resolved"
+        )
+        raise HTTPException(status_code=400, detail=detail) from exc
 
 
 def _validate_scrape_url(url: str, *, resolve_dns: bool = True) -> str:
-    parsed = urlparse(url)
-    if parsed.scheme not in {"http", "https"}:
-        raise HTTPException(status_code=400, detail="scraper URL scheme is not allowed")
-    if not parsed.hostname:
-        raise HTTPException(status_code=400, detail="scraper URL host is required")
-
-    host = parsed.hostname.rstrip(".").lower()
     try:
-        if _is_unsafe_address(host):
-            raise HTTPException(
-                status_code=400,
-                detail="scraper URL resolves to private or non-public address",
-            )
-        raise HTTPException(status_code=400, detail="scraper URL host is not allowed")
-    except ValueError:
-        pass
-
-    if not _is_allowed_scraper_host(host):
-        raise HTTPException(status_code=400, detail="scraper URL host is not allowed")
-
-    if resolve_dns:
-        for address in _resolve_host_addresses(host):
-            if _is_unsafe_address(address):
-                raise HTTPException(
-                    status_code=400,
-                    detail="scraper URL resolves to private or non-public address",
-                )
-    return url
+        return url_safety.validate_url(
+            url,
+            allowed_suffixes=SCRAPER_ALLOWED_HOST_SUFFIXES,
+            resolver=_resolve_host_addresses,
+            resolve_dns=resolve_dns,
+        )
+    except url_safety.UnsafeUrlError as exc:
+        raise HTTPException(status_code=400, detail=f"scraper {exc}") from exc
 
 
 async def _validate_scrape_url_async(url: str) -> str:
-    safe_url = _validate_scrape_url(url, resolve_dns=False)
-    parsed = urlparse(safe_url)
-    host = parsed.hostname or ""
-    for address in await _resolve_host_addresses_async(host):
-        if _is_unsafe_address(address):
-            raise HTTPException(
-                status_code=400,
-                detail="scraper URL resolves to private or non-public address",
-            )
-    return safe_url
+    try:
+        return await url_safety.validate_url_async(
+            url,
+            allowed_suffixes=SCRAPER_ALLOWED_HOST_SUFFIXES,
+            resolver_async=_resolve_host_addresses_async,
+        )
+    except url_safety.UnsafeUrlError as exc:
+        raise HTTPException(status_code=400, detail=f"scraper {exc}") from exc
 
 
 async def _fetch_safe_url(
@@ -188,16 +150,17 @@ async def _fetch_safe_url(
     url: str,
     timeout: float | None = None,
 ) -> httpx.Response:
-    current_url = await _validate_scrape_url_async(url)
-    for _ in range(_MAX_SAFE_REDIRECTS + 1):
-        response = await client.get(current_url, timeout=timeout, follow_redirects=False)
-        if not response.is_redirect:
-            return response
-        location = response.headers.get("location")
-        if not location:
-            raise HTTPException(status_code=400, detail="scraper URL redirect is missing a location")
-        current_url = await _validate_scrape_url_async(urljoin(str(response.url), location))
-    raise HTTPException(status_code=400, detail="scraper URL redirect limit exceeded")
+    try:
+        return await url_safety.fetch_safe(
+            client,
+            url,
+            timeout=timeout,
+            max_redirects=_MAX_SAFE_REDIRECTS,
+            allowed_suffixes=SCRAPER_ALLOWED_HOST_SUFFIXES,
+            resolver_async=_resolve_host_addresses_async,
+        )
+    except url_safety.UnsafeUrlError as exc:
+        raise HTTPException(status_code=400, detail=f"scraper {exc}") from exc
 
 
 # Tech queries are kept so engineering candidates still flow through the
