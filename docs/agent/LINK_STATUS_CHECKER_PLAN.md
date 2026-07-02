@@ -176,7 +176,8 @@ Cannot catch: whether real boards' closed-markers match our parser (tuned via P1
 ---
 
 ## Progress tracker
-- [ ] Phase 1 — schema + checker worker (write-only)
+- [x] Phase 1 — schema + checker worker (write-only) — **DONE 2026-07-02, commit `50b8a9c`.**
+  Gates green (38 checker/SSRF tests incl. db-marked INV-1 proof; non-db suite 433 pass / 3 pre-existing SBERT env fails; alembic up/down/up + autogenerate empty-diff). Implementation review (plan-reviewer) confirmed SSRF/redirect/INV-1/429 unbreakable; its 3 robustness findings fixed pre-commit: body-size cap (streamed, 1.5MB, `LINK_CHECKER_MAX_RESPONSE_BYTES`), per-row/host/cycle error isolation, DB pool sized from host concurrency. Drift from plan shape: SSRF guard **extracted to `services/shared/url_safety.py`** (pipeline image doesn't ship `services/scraper`; importing scraper main would drag FastAPI) — scraper delegates via thin wrappers keeping the HTTPException(400) + patch-seam contract. Deferred: last-wins `validThrough` across multiple JSON-LD blocks (LOW, P2 marker tuning); TOCTOU DNS-rebind window (LOW, pre-existing in original scraper guard, not a regression).
 - [ ] Phase 2 — visibility gate + docs/honesty note
 
 ## Out of scope
